@@ -1,0 +1,387 @@
+@import "tailwindcss";
+
+/* ==========================================================================
+   SYXORIA DESIGN TOKENS
+   Single source of truth. Every component consumes these through Tailwind
+   utilities (bg-surface, text-fg-2, rounded-md, ease-out-soft …) or var().
+   Change a value here and it propagates across marketing + product.
+   ========================================================================== */
+
+@theme {
+  /* ---- Color: canvas (page backgrounds) ---- */
+  --color-canvas: #08090a;
+  --color-canvas-2: #0d0f10;
+  --color-canvas-3: #111315;
+
+  /* ---- Color: surfaces (cards, panels, inputs) ---- */
+  --color-surface: #151719;
+  --color-surface-2: #191b1d;
+  --color-surface-3: #202225;
+
+  /* ---- Color: lines ---- */
+  --color-line: #292c2f;
+  --color-line-strong: #34373a;
+
+  /* ---- Color: text ---- */
+  --color-fg: #f5f5f2;
+  --color-fg-2: #a5a8aa;
+  /* Slightly lifted from #707477 so small muted text keeps ≥4.5:1 on canvas */
+  --color-fg-3: #7d8184;
+  --color-white: #ffffff;
+
+  /* ---- Color: the single restrained accent (warm light from the concept) ---- */
+  --color-accent: #d6a871;
+  --color-accent-strong: #ecc896;
+  --color-accent-soft: rgb(214 168 113 / 0.12);
+  --color-accent-line: rgb(214 168 113 / 0.35);
+
+  /* ---- Color: status (muted — always paired with icon/label, never alone) ---- */
+  --color-positive: #8fbfa0;
+  --color-positive-soft: rgb(143 191 160 / 0.12);
+  --color-negative: #d98a7c;
+  --color-negative-soft: rgb(217 138 124 / 0.12);
+  --color-caution: #d9b877;
+  --color-caution-soft: rgb(217 184 119 / 0.12);
+  --color-info: #9fb3c8;
+  --color-info-soft: rgb(159 179 200 / 0.12);
+
+  /* ---- Typography ---- */
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  /* Sora — headings and the single warm accent line in each heading */
+  --font-display: var(--font-sora), var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+
+  /* Display scale — fluid, clamps inside the ranges from the brief */
+  --text-display: clamp(2.125rem, 1.45rem + 2.3vw, 3.75rem);
+  --text-display--line-height: 1.08;
+  --text-display--letter-spacing: -0.03em;
+  --text-headline: clamp(1.75rem, 1.35rem + 1.5vw, 2.75rem);
+  --text-headline--line-height: 1.12;
+  --text-headline--letter-spacing: -0.025em;
+  --text-title: clamp(1.1875rem, 1.08rem + 0.45vw, 1.4375rem);
+  --text-title--line-height: 1.3;
+  --text-title--letter-spacing: -0.015em;
+  --text-lead: clamp(1.0625rem, 1rem + 0.3vw, 1.1875rem);
+  --text-lead--line-height: 1.6;
+
+  --tracking-brand: 0.42em;
+  --tracking-label: 0.14em;
+
+  /* ---- Radius — deliberately tight ---- */
+  --radius-xs: 3px;
+  --radius-sm: 5px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+
+  /* ---- Elevation — lines first, shadows barely ---- */
+  --shadow-panel: 0 1px 0 0 rgb(255 255 255 / 0.03) inset, 0 24px 48px -24px rgb(0 0 0 / 0.6);
+  --shadow-float: 0 1px 0 0 rgb(255 255 255 / 0.04) inset, 0 32px 80px -32px rgb(0 0 0 / 0.85);
+  --shadow-glow: 0 0 0 1px var(--color-accent-line), 0 0 32px -8px rgb(214 168 113 / 0.35);
+
+  /* ---- Motion ---- */
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out-soft: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+
+  /* ---- Breakpoints (Tailwind defaults + wide) ---- */
+  --breakpoint-3xl: 120rem;
+
+  /* ---- Keyframes exposed as utilities ---- */
+  --animate-shimmer: shimmer 1.6s linear infinite;
+  --animate-fade-in: fade-in 0.45s var(--ease-out-soft) both;
+  --animate-pulse-soft: pulse-soft 2.4s var(--ease-in-out-soft) infinite;
+}
+
+:root {
+  /* Durations — fast: micro interactions · base: transitions · slow: large reveals */
+  --dur-fast: 180ms;
+  --dur-base: 320ms;
+  --dur-slow: 700ms;
+
+  /* Layers */
+  --z-base: 1;
+  --z-sticky: 20;
+  --z-header: 40;
+  --z-overlay: 60;
+  --z-toast: 80;
+
+  /* Layout */
+  --header-h: 4.25rem;
+  --container: 76rem;
+  --gutter: clamp(1rem, 0.6rem + 2vw, 2.5rem);
+
+  color-scheme: dark;
+}
+
+@keyframes shimmer {
+  from { background-position: -200% 0; }
+  to { background-position: 200% 0; }
+}
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes pulse-soft {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 1; }
+}
+
+/* ==========================================================================
+   BASE
+   ========================================================================== */
+
+@layer base {
+  html {
+    background: var(--color-canvas);
+    scroll-behavior: smooth;
+    scroll-padding-top: calc(var(--header-h) + 1rem);
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    background: var(--color-canvas);
+    color: var(--color-fg);
+    font-family: var(--font-sans);
+    font-feature-settings: "ss01", "cv11";
+    text-rendering: optimizeLegibility;
+  }
+  h1, h2 {
+    font-family: var(--font-display);
+  }
+  h1, h2, h3 {
+    text-wrap: balance;
+  }
+  ::selection {
+    background: rgb(214 168 113 / 0.3);
+    color: var(--color-white);
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+  /* Numeric UI always uses tabular figures */
+  .tabular { font-variant-numeric: tabular-nums; }
+
+  dialog::backdrop {
+    background: rgb(4 5 6 / 0.72);
+    backdrop-filter: blur(4px);
+  }
+}
+
+/* ==========================================================================
+   UTILITIES
+   ========================================================================== */
+
+@utility container-page {
+  width: 100%;
+  max-width: calc(var(--container) + var(--gutter) * 2);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+@utility eyebrow {
+  font-size: 0.75rem;
+  line-height: 1rem;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--color-fg-3);
+  font-weight: 500;
+}
+
+@utility hairline-x {
+  background: linear-gradient(90deg, transparent, var(--color-line-strong) 20%, var(--color-line-strong) 80%, transparent);
+  height: 1px;
+}
+
+@utility scrollbar-none {
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+}
+
+/* Slim, always-available scrollbar for side panels (sidebar). "both-edges"
+   keeps centred content centred when the collapsed rail scrolls. */
+@utility sidebar-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-line-strong) transparent;
+  scrollbar-gutter: stable both-edges;
+  &:hover { scrollbar-color: #4a4e52 transparent; }
+}
+
+@utility skeleton {
+  background: linear-gradient(90deg, var(--color-surface-2) 0%, var(--color-surface-3) 50%, var(--color-surface-2) 100%);
+  background-size: 200% 100%;
+  animation: var(--animate-shimmer);
+  border-radius: var(--radius-sm);
+}
+
+/* Scroll reveal — driven by <Reveal>, which toggles data-revealed. */
+[data-reveal] {
+  opacity: 0;
+  transform: translate3d(0, 18px, 0);
+  transition:
+    opacity var(--dur-slow) var(--ease-out-soft),
+    transform var(--dur-slow) var(--ease-out-soft);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+[data-reveal][data-revealed="true"] {
+  opacity: 1;
+  transform: none;
+}
+/* No JS → never hide content */
+.no-js [data-reveal] { opacity: 1; transform: none; }
+
+/* ==========================================================================
+   REDUCED MOTION — static, fully readable experience
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  [data-reveal] { opacity: 1; transform: none; }
+}
+
+/* ==========================================================================
+   DIALOG MOTION (native <dialog>, top layer)
+   ========================================================================== */
+.dialog-motion {
+  opacity: 0;
+  transform: translate3d(0, 10px, 0) scale(0.985);
+  transition:
+    opacity var(--dur-base) var(--ease-out-soft),
+    transform var(--dur-base) var(--ease-out-soft),
+    overlay var(--dur-base) allow-discrete,
+    display var(--dur-base) allow-discrete;
+}
+.dialog-motion[open] { opacity: 1; transform: none; }
+@starting-style {
+  .dialog-motion[open] { opacity: 0; transform: translate3d(0, 10px, 0) scale(0.985); }
+}
+.dialog-motion::backdrop {
+  opacity: 0;
+  transition: opacity var(--dur-base) var(--ease-out-soft), overlay var(--dur-base) allow-discrete, display var(--dur-base) allow-discrete;
+}
+.dialog-motion[open]::backdrop { opacity: 1; }
+@starting-style {
+  .dialog-motion[open]::backdrop { opacity: 0; }
+}
+html:has(dialog[open]) { overflow: hidden; }
+
+/* ==========================================================================
+   GROWTH TREE (components/marketing/growth-tree.tsx)
+   --d   : per-element delay in seconds (unitless)
+   --grow: 0..1 progression, set by the parent stage on scroll
+   ========================================================================== */
+.gt { --grow: 0.12; --intro: 0.2s; }
+
+.gt-draw {
+  stroke-dasharray: 1 1;
+  stroke-dashoffset: 1;
+  animation: gt-draw 1.5s var(--ease-out-soft) forwards;
+  animation-delay: calc(var(--intro) + var(--d, 0) * 1s);
+}
+.gt-fade {
+  opacity: 0;
+  animation: gt-fade 1.4s var(--ease-out-soft) forwards;
+  animation-delay: calc(var(--intro) + var(--d, 0) * 1s);
+}
+.gt-leaf {
+  opacity: 0;
+  animation: gt-fade 1.6s var(--ease-out-soft) forwards;
+  animation-delay: calc(var(--intro) + var(--d, 0) * 1s);
+}
+/* HTML layer → GPU-composited rotation; origin = trunk base (set by the component) */
+.gt-sway {
+  transform-origin: var(--sway-origin, 50% 75%);
+  will-change: transform;
+  animation: gt-sway 11s var(--ease-in-out-soft) infinite alternate;
+}
+.gt[data-paused] * { animation-play-state: paused !important; }
+.gt-pulse {
+  stroke-dasharray: 0.05 1.4;
+  stroke-dashoffset: 0.05;
+  opacity: 0;
+  animation: gt-flow 5.5s var(--ease-in-out-soft) infinite;
+  animation-delay: calc(2.4s + var(--d, 0) * 1s);
+}
+.gt-pulse-rev { animation-name: gt-flow-rev; }
+.gt-dust {
+  opacity: 0;
+  animation: gt-dust calc(var(--dur, 12) * 1s) linear infinite;
+  animation-delay: calc(var(--d, 0) * 1s);
+}
+.gt-node, .gt-label {
+  opacity: clamp(0, calc((var(--grow) - var(--t, 0)) * 5), 1);
+  transition: opacity 0.6s var(--ease-out-soft);
+}
+
+.gt-part { transition: opacity 0.8s var(--ease-out-soft); }
+.gt[data-focus] .gt-part { opacity: 0.16; }
+.gt[data-focus] .gt-prism { opacity: 0.5; }
+.gt[data-focus="roots"] .gt-roots,
+.gt[data-focus="trunk"] .gt-trunk,
+.gt[data-focus="branches"] :is(.gt-branches, .gt-trunk),
+.gt[data-focus="canopy"] :is(.gt-canopy, .gt-branches),
+.gt[data-focus="fruit"] .gt-part { opacity: 1; }
+.gt[data-focus="branches"] .gt-trunk { opacity: 0.45; }
+
+@keyframes gt-draw { to { stroke-dashoffset: 0; } }
+@keyframes gt-fade { to { opacity: 1; } }
+@keyframes gt-sway { from { transform: rotate(-0.45deg); } to { transform: rotate(0.55deg); } }
+@keyframes gt-flow {
+  0% { stroke-dashoffset: 0.05; opacity: 0; }
+  8% { opacity: 0.95; }
+  62% { opacity: 0.95; }
+  70%, 100% { stroke-dashoffset: -1; opacity: 0; }
+}
+@keyframes gt-flow-rev {
+  0% { stroke-dashoffset: -1; opacity: 0; }
+  8% { opacity: 0.8; }
+  62% { opacity: 0.8; }
+  70%, 100% { stroke-dashoffset: 0.05; opacity: 0; }
+}
+@keyframes gt-dust {
+  0% { transform: translate3d(0, 0, 0); opacity: 0; }
+  20% { opacity: 0.7; }
+  80% { opacity: 0.5; }
+  100% { transform: translate3d(6px, -54px, 0); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gt-draw { animation: none; stroke-dashoffset: 0; }
+  .gt-fade, .gt-leaf { animation: none; opacity: 1; }
+  .gt-sway { animation: none; }
+  .gt-pulse, .gt-dust { animation: none; display: none; }
+  .gt { --grow: 1 !important; }
+}
+
+/* ==========================================================================
+   MOBILE NAV SHEET
+   ========================================================================== */
+.mobile-sheet {
+  transform: translate3d(100%, 0, 0);
+  transition:
+    transform var(--dur-base) var(--ease-out-soft),
+    overlay var(--dur-base) allow-discrete,
+    display var(--dur-base) allow-discrete;
+}
+.mobile-sheet[open] { transform: none; }
+@starting-style { .mobile-sheet[open] { transform: translate3d(100%, 0, 0); } }
+.mobile-sheet-item { opacity: 0; transform: translate3d(12px, 0, 0); transition: opacity 400ms var(--ease-out-soft), transform 400ms var(--ease-out-soft); }
+.mobile-sheet[open] .mobile-sheet-item { opacity: 1; transform: none; }
+@starting-style { .mobile-sheet[open] .mobile-sheet-item { opacity: 0; transform: translate3d(12px, 0, 0); } }
+@keyframes scroll-cue {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(260%); }
+}
+.drawer-motion {
+  transform: translate3d(-100%, 0, 0);
+  transition:
+    transform var(--dur-base) var(--ease-out-soft),
+    overlay var(--dur-base) allow-discrete,
+    display var(--dur-base) allow-discrete;
+}
+.drawer-motion[open] { transform: none; }
+@starting-style { .drawer-motion[open] { transform: translate3d(-100%, 0, 0); } }

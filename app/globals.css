@@ -152,11 +152,11 @@
     text-wrap: balance;
   }
   ::selection {
-    background: rgb(214 168 113 / 0.3);
+    background: rgb(245 245 242 / 0.22);
     color: var(--color-white);
   }
   :focus-visible {
-    outline: 2px solid var(--color-accent);
+    outline: 2px solid var(--color-fg);
     outline-offset: 2px;
   }
   /* Numeric UI always uses tabular figures */
@@ -214,21 +214,6 @@
   border-radius: var(--radius-sm);
 }
 
-/* Scroll reveal — driven by <Reveal>, which toggles data-revealed. */
-[data-reveal] {
-  opacity: 0;
-  transform: translate3d(0, 18px, 0);
-  transition:
-    opacity var(--dur-slow) var(--ease-out-soft),
-    transform var(--dur-slow) var(--ease-out-soft);
-  transition-delay: var(--reveal-delay, 0ms);
-}
-[data-reveal][data-revealed="true"] {
-  opacity: 1;
-  transform: none;
-}
-/* No JS → never hide content */
-.no-js [data-reveal] { opacity: 1; transform: none; }
 
 /* ==========================================================================
    REDUCED MOTION — static, fully readable experience
@@ -240,7 +225,6 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
-  [data-reveal] { opacity: 1; transform: none; }
 }
 
 /* ==========================================================================
@@ -270,94 +254,6 @@
 html:has(dialog[open]) { overflow: hidden; }
 
 /* ==========================================================================
-   GROWTH TREE (components/marketing/growth-tree.tsx)
-   --d   : per-element delay in seconds (unitless)
-   --grow: 0..1 progression, set by the parent stage on scroll
-   ========================================================================== */
-.gt { --grow: 0.12; --intro: 0.2s; }
-
-.gt-draw {
-  stroke-dasharray: 1 1;
-  stroke-dashoffset: 1;
-  animation: gt-draw 1.5s var(--ease-out-soft) forwards;
-  animation-delay: calc(var(--intro) + var(--d, 0) * 1s);
-}
-.gt-fade {
-  opacity: 0;
-  animation: gt-fade 1.4s var(--ease-out-soft) forwards;
-  animation-delay: calc(var(--intro) + var(--d, 0) * 1s);
-}
-.gt-leaf {
-  opacity: 0;
-  animation: gt-fade 1.6s var(--ease-out-soft) forwards;
-  animation-delay: calc(var(--intro) + var(--d, 0) * 1s);
-}
-/* HTML layer → GPU-composited rotation; origin = trunk base (set by the component) */
-.gt-sway {
-  transform-origin: var(--sway-origin, 50% 75%);
-  will-change: transform;
-  animation: gt-sway 11s var(--ease-in-out-soft) infinite alternate;
-}
-.gt[data-paused] * { animation-play-state: paused !important; }
-.gt-pulse {
-  stroke-dasharray: 0.05 1.4;
-  stroke-dashoffset: 0.05;
-  opacity: 0;
-  animation: gt-flow 5.5s var(--ease-in-out-soft) infinite;
-  animation-delay: calc(2.4s + var(--d, 0) * 1s);
-}
-.gt-pulse-rev { animation-name: gt-flow-rev; }
-.gt-dust {
-  opacity: 0;
-  animation: gt-dust calc(var(--dur, 12) * 1s) linear infinite;
-  animation-delay: calc(var(--d, 0) * 1s);
-}
-.gt-node, .gt-label {
-  opacity: clamp(0, calc((var(--grow) - var(--t, 0)) * 5), 1);
-  transition: opacity 0.6s var(--ease-out-soft);
-}
-
-.gt-part { transition: opacity 0.8s var(--ease-out-soft); }
-.gt[data-focus] .gt-part { opacity: 0.16; }
-.gt[data-focus] .gt-prism { opacity: 0.5; }
-.gt[data-focus="roots"] .gt-roots,
-.gt[data-focus="trunk"] .gt-trunk,
-.gt[data-focus="branches"] :is(.gt-branches, .gt-trunk),
-.gt[data-focus="canopy"] :is(.gt-canopy, .gt-branches),
-.gt[data-focus="fruit"] .gt-part { opacity: 1; }
-.gt[data-focus="branches"] .gt-trunk { opacity: 0.45; }
-
-@keyframes gt-draw { to { stroke-dashoffset: 0; } }
-@keyframes gt-fade { to { opacity: 1; } }
-@keyframes gt-sway { from { transform: rotate(-0.45deg); } to { transform: rotate(0.55deg); } }
-@keyframes gt-flow {
-  0% { stroke-dashoffset: 0.05; opacity: 0; }
-  8% { opacity: 0.95; }
-  62% { opacity: 0.95; }
-  70%, 100% { stroke-dashoffset: -1; opacity: 0; }
-}
-@keyframes gt-flow-rev {
-  0% { stroke-dashoffset: -1; opacity: 0; }
-  8% { opacity: 0.8; }
-  62% { opacity: 0.8; }
-  70%, 100% { stroke-dashoffset: 0.05; opacity: 0; }
-}
-@keyframes gt-dust {
-  0% { transform: translate3d(0, 0, 0); opacity: 0; }
-  20% { opacity: 0.7; }
-  80% { opacity: 0.5; }
-  100% { transform: translate3d(6px, -54px, 0); opacity: 0; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .gt-draw { animation: none; stroke-dashoffset: 0; }
-  .gt-fade, .gt-leaf { animation: none; opacity: 1; }
-  .gt-sway { animation: none; }
-  .gt-pulse, .gt-dust { animation: none; display: none; }
-  .gt { --grow: 1 !important; }
-}
-
-/* ==========================================================================
    MOBILE NAV SHEET
    ========================================================================== */
 .mobile-sheet {
@@ -372,10 +268,6 @@ html:has(dialog[open]) { overflow: hidden; }
 .mobile-sheet-item { opacity: 0; transform: translate3d(12px, 0, 0); transition: opacity 400ms var(--ease-out-soft), transform 400ms var(--ease-out-soft); }
 .mobile-sheet[open] .mobile-sheet-item { opacity: 1; transform: none; }
 @starting-style { .mobile-sheet[open] .mobile-sheet-item { opacity: 0; transform: translate3d(12px, 0, 0); } }
-@keyframes scroll-cue {
-  0% { transform: translateY(-100%); }
-  100% { transform: translateY(260%); }
-}
 .drawer-motion {
   transform: translate3d(-100%, 0, 0);
   transition:
@@ -385,3 +277,34 @@ html:has(dialog[open]) { overflow: hidden; }
 }
 .drawer-motion[open] { transform: none; }
 @starting-style { .drawer-motion[open] { transform: translate3d(-100%, 0, 0); } }
+
+/* ==========================================================================
+   HOMEPAGE (components/home) — monochrome universe, scroll-driven motion
+   ========================================================================== */
+/* Genesis: the hero actions leave the tab order once the story moves on */
+.genesis:not([data-stage="0"]) .genesis-hero { visibility: hidden; }
+
+/* Product screen: rises, straightens and switches on with --s (0..1) */
+.product-screen {
+  transform-origin: 50% 100%;
+  transform:
+    translate3d(0, calc((1 - var(--s)) * 70px), 0)
+    rotateX(calc((1 - var(--s)) * 28deg))
+    scale(calc(0.9 + var(--s) * 0.1));
+  opacity: calc(0.25 + var(--s) * 0.75);
+  will-change: transform;
+}
+.product-glass { opacity: clamp(0, calc((0.9 - var(--s)) / 0.3), 1); }
+
+/* Film */
+.film-motion { opacity: 0; transition: opacity var(--dur-base) var(--ease-out-soft), overlay var(--dur-base) allow-discrete, display var(--dur-base) allow-discrete; }
+.film-motion[open] { opacity: 1; }
+@starting-style { .film-motion[open] { opacity: 0; } }
+.film-motion::backdrop { background: var(--color-canvas); }
+.film-progress { animation: film-progress linear forwards; width: 0; }
+@keyframes film-progress { to { width: 100%; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .product-screen { transform: none; opacity: 1; }
+  .product-glass { opacity: 0; }
+}

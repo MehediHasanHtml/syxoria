@@ -10,22 +10,21 @@ export const siteConfig = {
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://syxoria.com",
   locale: "en_GB",
   twitter: "@syxoria",
-  /** Set to real store URLs when the mobile apps ship; `null` renders a "coming soon" state. */
-  appLinks: {
-    ios: null as string | null,
-    android: null as string | null,
-  },
   contactEmail: "hello@syxoria.com",
+  /**
+   * Product film (MP4/WebM URL). While `null`, the homepage plays a preview
+   * sequence built from real product screenshots.
+   */
+  productFilm: null as string | null,
 } as const;
 
 export type NavLink = { label: string; href: string };
 
 export const marketingNav: NavLink[] = [
+  { label: "Evolution", href: "/#evolution" },
+  { label: "Progression", href: "/#progression" },
   { label: "Product", href: "/#product" },
-  { label: "How it works", href: "/#how-it-works" },
-  { label: "Solutions", href: "/#solutions" },
-  { label: "Pricing", href: "/#pricing" },
-  { label: "Resources", href: "/#faq" },
+  { label: "Pricing", href: "/#begin" },
 ];
 
 export const footerNav: { title: string; links: NavLink[] }[] = [
@@ -34,24 +33,21 @@ export const footerNav: { title: string; links: NavLink[] }[] = [
     links: [
       { label: "Overview", href: "/#product" },
       { label: "Modules", href: "/#modules" },
-      { label: "Integrations", href: "/#integrations" },
-      { label: "Pricing", href: "/#pricing" },
+      { label: "Pricing", href: "/#begin" },
       { label: "Open workspace", href: "/app" },
     ],
   },
   {
     title: "Company",
     links: [
-      { label: "Solutions", href: "/#solutions" },
-      { label: "Customers", href: "/#customers" },
-      { label: "Security", href: "/#security" },
+      { label: "Evolution", href: "/#evolution" },
+      { label: "Progression", href: "/#progression" },
       { label: "Contact", href: `mailto:hello@syxoria.com` },
     ],
   },
   {
     title: "Resources",
     links: [
-      { label: "FAQ", href: "/#faq" },
       { label: "Sign in", href: "/login" },
       { label: "Create account", href: "/signup" },
     ],

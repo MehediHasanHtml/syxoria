@@ -134,14 +134,6 @@ export type AnalyticsReport = {
 };
 
 /* ---------- Growth progression (the curve) ---------- */
-export type ProgressionStage = {
-  id: string;
-  label: string;
-  title: string;
-  body: string;
-  metric: { value: string; label: string };
-};
-
 /* ---------- Insights ---------- */
 export type InsightPriority = "high" | "medium" | "low";
 export type InsightStatus = "new" | "in-review" | "applied" | "dismissed" | "locked" | "processing";
@@ -210,16 +202,4 @@ export type PricingPlan = {
   highlighted: boolean;
   cta: { label: string; href: string };
   features: string[];
-};
-
-/* ---------- Growth curve (marketing + reusable with real data) ---------- */
-export type CurveStage = {
-  id: string;
-  label: string; // e.g. "Acceleration"
-  when: string; // e.g. "Month 3"
-  title: string;
-  body: string;
-  metric: { value: string; label: string };
-  /** Index into the curve's `points` array where this stage sits */
-  index: number;
 };

@@ -42,9 +42,6 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} ${sora.variable} antialiased`}>
       <body className="min-h-dvh">
-        <noscript>
-          <style>{`[data-reveal]{opacity:1!important;transform:none!important}`}</style>
-        </noscript>
         {children}
       </body>
     </html>

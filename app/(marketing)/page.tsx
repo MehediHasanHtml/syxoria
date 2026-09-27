@@ -1,27 +1,19 @@
 import type { Metadata } from "next";
-import { Hero } from "@/components/marketing/hero";
-import { HowItWorks } from "@/components/marketing/how-it-works";
-import { IntegrationsBand } from "@/components/marketing/integrations-band";
-import { Manifesto } from "@/components/marketing/manifesto";
-import { ProductSection } from "@/components/marketing/product-section";
-import { Faq } from "@/components/marketing/faq";
-import { FinalCta } from "@/components/marketing/final-cta";
-import { GrowthCurveSection } from "@/components/marketing/growth-curve-section";
-import { MobileApp } from "@/components/marketing/mobile-app";
-import { ModulesSection } from "@/components/marketing/modules-section";
-import { PricingSection } from "@/components/marketing/pricing-section";
-import { Security } from "@/components/marketing/security";
-import { Testimonial } from "@/components/marketing/testimonial";
-import { UseCases } from "@/components/marketing/use-cases";
-import { faqs, pricing } from "@/content/marketing";
+import { Begin, Voice } from "@/components/home/closing";
+import { FilmProvider } from "@/components/home/film";
+import { Genesis } from "@/components/home/genesis";
+import { Organism } from "@/components/home/organism";
+import { ProductStage } from "@/components/home/product-stage";
+import { Trajectory } from "@/components/home/trajectory";
+import { pricing } from "@/content/marketing";
 import { siteConfig } from "@/lib/site-config";
-import { getPreviewData } from "@/services/preview";
+import { getIntegrations } from "@/services/activity";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/" },
 };
 
-/** Structured data: organisation, software product with offers, FAQ. */
+/** Structured data: organisation and software product with offers. */
 function JsonLd() {
   const data = [
     {
@@ -43,11 +35,6 @@ function JsonLd() {
         .filter((p) => p.price.monthly !== null)
         .map((p) => ({ "@type": "Offer", name: p.name, price: p.price.monthly, priceCurrency: "EUR" })),
     },
-    {
-      "@context": "https://schema.org",
-      "@type": "FAQPage",
-      mainEntity: faqs.map((f) => ({ "@type": "Question", name: f.title, acceptedAnswer: { "@type": "Answer", text: f.content } })),
-    },
   ];
   return (
     <script
@@ -58,25 +45,22 @@ function JsonLd() {
   );
 }
 
+/**
+ * The homepage is one story in four movements:
+ * the universe (a tree that grows as you scroll) → progression (a rising line)
+ * → the product (a screen that switches on) → a return to the tree, fully grown.
+ */
 export default async function HomePage() {
-  const preview = await getPreviewData();
+  const integrations = await getIntegrations();
   return (
-    <>
+    <FilmProvider>
       <JsonLd />
-      <Hero data={preview} />
-      <ProductSection data={preview} />
-      <IntegrationsBand integrations={preview.integrations} />
-      <Manifesto />
-      <HowItWorks />
-      <ModulesSection data={preview} />
-      <GrowthCurveSection />
-      <UseCases />
-      <Testimonial />
-      <Security />
-      <MobileApp />
-      <PricingSection />
-      <Faq />
-      <FinalCta />
-    </>
+      <Genesis />
+      <Trajectory />
+      <ProductStage integrations={integrations.map(({ id, name }) => ({ id, name }))} />
+      <Organism />
+      <Voice />
+      <Begin />
+    </FilmProvider>
   );
 }

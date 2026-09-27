@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { ArrowRight, Menu as MenuIcon, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { ArrowNudge, ButtonLink } from "@/components/ui/button";
 import { Logo } from "@/components/shared/logo";
 import { cn } from "@/lib/cn";
 import { marketingNav } from "@/lib/site-config";
@@ -47,7 +46,7 @@ export function Header() {
       <header
         className={cn(
           "fixed inset-x-0 top-0 z-(--z-header) transition-[background-color,border-color,backdrop-filter] duration-500 ease-out-soft",
-          scrolled ? "border-b border-line/70 bg-canvas/80 backdrop-blur-xl" : "border-b border-transparent bg-transparent",
+          scrolled ? "border-b border-line/60 bg-canvas/75 backdrop-blur-xl" : "border-b border-transparent bg-transparent",
         )}
       >
         <a
@@ -64,7 +63,7 @@ export function Header() {
                 <li key={item.href}>
                   <Link
                     href={item.href}
-                    className="relative rounded-md px-3.5 py-2 text-[13.5px] text-fg-2 transition-colors duration-200 hover:text-fg after:absolute after:inset-x-3.5 after:bottom-1 after:h-px after:origin-left after:scale-x-0 after:bg-accent/70 after:transition-transform after:duration-300 after:ease-out-soft hover:after:scale-x-100"
+                    className="relative rounded-md px-3.5 py-2 text-[13.5px] text-fg-2 transition-colors duration-200 hover:text-fg after:absolute after:inset-x-3.5 after:bottom-1 after:h-px after:origin-left after:scale-x-0 after:bg-fg/60 after:transition-transform after:duration-300 after:ease-out-soft hover:after:scale-x-100"
                   >
                     {item.label}
                   </Link>
@@ -77,12 +76,12 @@ export function Header() {
               Sign in
             </Link>
             {/* wrapper owns responsive visibility so it never fights the button's display */}
-            <span className="hidden sm:block">
-              <ButtonLink href="/signup" size="sm" variant={scrolled ? "primary" : "outline"}>
-                Get started
-                <ArrowNudge />
-              </ButtonLink>
-            </span>
+            <Link
+              href="/signup"
+              className="hidden h-9 items-center rounded-full bg-fg px-4 text-[13px] font-medium text-canvas transition-colors hover:bg-white sm:inline-flex"
+            >
+              Start free
+            </Link>
             <button
               type="button"
               onClick={() => setOpen(true)}
@@ -132,13 +131,20 @@ export function Header() {
             </ul>
           </nav>
           <div className="grid gap-2 p-5">
-            <ButtonLink href="/signup" size="lg" onClick={() => setOpen(false)}>
-              Get started
-              <ArrowNudge />
-            </ButtonLink>
-            <ButtonLink href="/login" size="lg" variant="outline" onClick={() => setOpen(false)}>
+            <Link
+              href="/signup"
+              onClick={() => setOpen(false)}
+              className="inline-flex h-12 items-center justify-center rounded-full bg-fg text-sm font-medium text-canvas"
+            >
+              Start free
+            </Link>
+            <Link
+              href="/login"
+              onClick={() => setOpen(false)}
+              className="inline-flex h-12 items-center justify-center rounded-full border border-line-strong text-sm text-fg"
+            >
               Sign in
-            </ButtonLink>
+            </Link>
           </div>
         </div>
       </dialog>

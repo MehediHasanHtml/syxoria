@@ -17,7 +17,7 @@ export default function OpengraphImage() {
           flexDirection: "column",
           justifyContent: "space-between",
           padding: 80,
-          background: "radial-gradient(ellipse at 78% 40%, rgba(214,168,113,0.22), #08090a 60%)",
+          background: "#08090a",
           color: "#f5f5f2",
         }}
       >
@@ -25,13 +25,13 @@ export default function OpengraphImage() {
           <svg width="44" height="44" viewBox="0 0 32 32" fill="none">
             <path d="M16 5 27.5 26H4.5L16 5Z" stroke="#f5f5f2" strokeWidth="1.4" strokeLinejoin="round" />
             <path d="M16 26V17.4M16 17.4 11.2 12.2M16 17.4 20.8 12.2" stroke="#f5f5f2" strokeWidth="1.4" strokeLinecap="round" />
-            <circle cx="16" cy="17.4" r="1.8" fill="#d6a871" />
+            <circle cx="16" cy="17.4" r="1.8" fill="#f5f5f2" />
           </svg>
           SYXORIA
         </div>
         <div style={{ display: "flex", flexDirection: "column", fontSize: 76, lineHeight: 1.05, letterSpacing: -2 }}>
-          <span>Your company grows into</span>
-          <span style={{ color: "#ecc896" }}>a new dimension.</span>
+          <span>Your company</span>
+          <span style={{ color: "#a5a8aa" }}>takes on a new dimension.</span>
         </div>
         <div style={{ display: "flex", fontSize: 26, color: "#a5a8aa" }}>{siteConfig.tagline}</div>
       </div>

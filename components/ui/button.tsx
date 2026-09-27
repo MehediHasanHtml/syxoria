@@ -9,7 +9,7 @@ export type ButtonSize = "sm" | "md" | "lg" | "icon" | "icon-sm";
 const base =
   "group/btn relative inline-flex shrink-0 select-none items-center justify-center gap-2 whitespace-nowrap font-medium " +
   "transition-[background-color,border-color,color,transform,box-shadow,opacity] duration-200 ease-out-soft " +
-  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent " +
+  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-fg " +
   "active:scale-[0.98] disabled:pointer-events-none disabled:opacity-45 aria-disabled:pointer-events-none aria-disabled:opacity-45 " +
   "[&_svg]:size-4 [&_svg]:shrink-0";
 

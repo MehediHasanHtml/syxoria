@@ -24,40 +24,13 @@ export const marketingNav: NavLink[] = [
   { label: "Evolution", href: "/#evolution" },
   { label: "Progression", href: "/#progression" },
   { label: "Product", href: "/#product" },
-  { label: "Pricing", href: "/#begin" },
 ];
 
-export const footerNav: { title: string; links: NavLink[] }[] = [
-  {
-    title: "Product",
-    links: [
-      { label: "Overview", href: "/#product" },
-      { label: "Modules", href: "/#modules" },
-      { label: "Pricing", href: "/#begin" },
-      { label: "Open workspace", href: "/app" },
-    ],
-  },
-  {
-    title: "Company",
-    links: [
-      { label: "Evolution", href: "/#evolution" },
-      { label: "Progression", href: "/#progression" },
-      { label: "Contact", href: `mailto:hello@syxoria.com` },
-    ],
-  },
-  {
-    title: "Resources",
-    links: [
-      { label: "Sign in", href: "/login" },
-      { label: "Create account", href: "/signup" },
-    ],
-  },
-  {
-    title: "Legal",
-    links: [
-      { label: "Legal notice", href: "/legal/notice" },
-      { label: "Privacy", href: "/legal/privacy" },
-      { label: "Terms", href: "/legal/terms" },
-    ],
-  },
+/** The footer is one quiet line: the essentials, nothing to scan. */
+export const footerNav: NavLink[] = [
+  { label: "Workspace", href: "/app" },
+  { label: "Contact", href: "mailto:hello@syxoria.com" },
+  { label: "Legal notice", href: "/legal/notice" },
+  { label: "Privacy", href: "/legal/privacy" },
+  { label: "Terms", href: "/legal/terms" },
 ];

@@ -1,13 +1,11 @@
 import type { Metadata } from "next";
-import { Begin, Voice } from "@/components/home/closing";
+import { Begin } from "@/components/home/closing";
 import { FilmProvider } from "@/components/home/film";
 import { Genesis } from "@/components/home/genesis";
-import { Organism } from "@/components/home/organism";
 import { ProductStage } from "@/components/home/product-stage";
 import { Trajectory } from "@/components/home/trajectory";
 import { pricing } from "@/content/marketing";
 import { siteConfig } from "@/lib/site-config";
-import { getIntegrations } from "@/services/activity";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/" },
@@ -46,20 +44,17 @@ function JsonLd() {
 }
 
 /**
- * The homepage is one story in four movements:
+ * The homepage is one story in four movements — few words, strong moments:
  * the universe (a tree that grows as you scroll) → progression (a rising line)
  * → the product (a screen that switches on) → a return to the tree, fully grown.
  */
-export default async function HomePage() {
-  const integrations = await getIntegrations();
+export default function HomePage() {
   return (
     <FilmProvider>
       <JsonLd />
       <Genesis />
       <Trajectory />
-      <ProductStage integrations={integrations.map(({ id, name }) => ({ id, name }))} />
-      <Organism />
-      <Voice />
+      <ProductStage />
       <Begin />
     </FilmProvider>
   );

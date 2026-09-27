@@ -10,18 +10,17 @@ import { useFilm } from "./film";
 
 /**
  * Chapter one — the universe.
- * One pinned stage, one tree. The hero statement gives way to four short
- * chapters (roots → structure → branches → canopy) while the tree keeps
- * growing with the scroll. Text windows are pure CSS on `--p`.
+ * One pinned stage, one tree. The hero statement gives way to three single
+ * words (roots → structure → canopy) while the tree keeps growing with the
+ * scroll. Text windows are pure CSS on `--p`.
  */
 
 // Scroll windows [in, out] for the hero and each chapter
 const WINDOWS: [number, number][] = [
-  [-1, 0.14],
-  [0.2, 0.38],
-  [0.42, 0.6],
-  [0.64, 0.82],
-  [0.86, 1.2],
+  [-1, 0.16],
+  [0.24, 0.46],
+  [0.54, 0.76],
+  [0.84, 1.2],
 ];
 const HERO_GROWTH = 0.84;
 
@@ -46,7 +45,7 @@ export function Genesis() {
   const section = useScrollProgress<HTMLElement>(onProgress);
 
   return (
-    <section ref={section} id="evolution" aria-labelledby="hero-title" className="relative h-[480svh]" style={{ ["--p" as string]: 0 }}>
+    <section ref={section} id="evolution" aria-labelledby="hero-title" className="relative h-[400svh]" style={{ ["--p" as string]: 0 }}>
       <div ref={stageRef} data-stage="0" className="genesis sticky top-0 h-svh overflow-hidden">
         <div className="container-page relative grid h-full grid-rows-[minmax(0,1fr)_auto] pt-(--header-h) lg:grid-cols-12 lg:grid-rows-1 lg:items-center">
           {/* The tree */}
@@ -86,8 +85,7 @@ export function Genesis() {
             {genesis.chapters.map((c, i) => (
               <div key={c.id} className="col-start-1 row-start-1 self-end lg:self-center" style={layer(WINDOWS[i + 1])}>
                 <p className="tabular text-xs tracking-[0.3em] text-fg-3">{c.index}</p>
-                <h2 className="mt-5 text-headline font-light text-fg">{c.word}</h2>
-                <p className="mt-5 max-w-[24rem] text-base leading-relaxed text-fg-2 sm:text-lg">{c.line}</p>
+                <h2 className="mt-6 text-display font-light text-fg">{c.word}</h2>
               </div>
             ))}
           </div>

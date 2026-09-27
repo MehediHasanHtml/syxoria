@@ -52,7 +52,7 @@ export function Trajectory() {
   const current = trajectory.stages[Math.max(0, stage)];
 
   return (
-    <section ref={section} id="progression" aria-labelledby="progression-title" className="relative h-[380svh]">
+    <section ref={section} id="progression" aria-labelledby="progression-title" className="relative h-[300svh]">
       <div className="sticky top-0 flex h-svh flex-col overflow-hidden">
         {/* Words */}
         <div className="container-page relative z-10 pt-[calc(var(--header-h)+6svh)]">

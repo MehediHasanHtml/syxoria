@@ -1,36 +1,23 @@
 "use client";
 
-import Image, { type StaticImageData } from "next/image";
+import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Play } from "lucide-react";
 import { useCallback, useEffect, useRef, useState, type PointerEvent } from "react";
-import { IntegrationLogo } from "@/components/shared/integration-logo";
 import { product } from "@/content/home";
 import { cn } from "@/lib/cn";
 import { useScrollProgress } from "@/lib/hooks/use-scroll-progress";
 import overview from "@/public/product/dashboard-overview.png";
-import insights from "@/public/product/dashboard-insights.png";
-import projects from "@/public/product/dashboard-projects.png";
 import { useFilm } from "./film";
-
-const shots: Record<string, { image: StaticImageData; alt: string }> = {
-  overview: {
-    image: overview,
-    alt: "Syxoria overview: revenue recovered, time saved, automations, a value-created chart and the momentum score.",
-  },
-  insights: { image: insights, alt: "Syxoria insights: recommendations ranked by impact, each ready to apply or dismiss." },
-  projects: { image: projects, alt: "Syxoria projects: status, progress, owners and impact for every project." },
-};
 
 /**
  * Chapter three — the product.
- * The screen rises and straightens as you arrive, then switches on.
- * It is an entry point: hover shows a "play" cursor, click plays the film;
- * the views below switch what's on screen; the workspace is one link away.
+ * One line, one screen. The screen rises and straightens as you arrive, then
+ * switches on. It is an entry point: hover shows a "play" cursor, click plays
+ * the film; the workspace is one link away.
  */
-export function ProductStage({ integrations }: { integrations: { id: string; name: string }[] }) {
+export function ProductStage() {
   const film = useFilm();
-  const [view, setView] = useState("overview");
   const [hover, setHover] = useState(false);
   const cursor = useRef<HTMLDivElement>(null);
   const target = useRef({ x: 0, y: 0 });
@@ -70,18 +57,14 @@ export function ProductStage({ integrations }: { integrations: { id: string; nam
   }
 
   return (
-    <section ref={section} id="product" aria-labelledby="product-title" className="relative py-28 sm:py-40">
+    <section ref={section} id="product" aria-labelledby="product-title" className="relative py-36 sm:py-56">
       <div className="container-page">
-        <div className="mx-auto max-w-2xl text-center">
-          <p className="text-[11px] uppercase tracking-[0.3em] text-fg-3">{product.eyebrow}</p>
-          <h2 id="product-title" className="mt-6 text-headline font-light text-fg">
-            {product.title}
-          </h2>
-          <p className="mx-auto mt-5 max-w-md text-base leading-relaxed text-fg-3">{product.body}</p>
-        </div>
+        <h2 id="product-title" className="text-center text-headline font-light text-fg">
+          {product.title}
+        </h2>
 
         {/* The screen */}
-        <div className="mt-16 [perspective:2200px] sm:mt-20">
+        <div className="mt-20 [perspective:2200px] sm:mt-28">
           <div
             ref={screen}
             className="product-screen relative mx-auto max-w-6xl rounded-[20px] border border-line-strong bg-[#0c0d0e] p-2 sm:p-2.5"
@@ -93,20 +76,13 @@ export function ProductStage({ integrations }: { integrations: { id: string; nam
               onPointerLeave={() => setHover(false)}
               onClick={film.open}
             >
-              {Object.entries(shots).map(([id, s]) => (
-                <Image
-                  key={id}
-                  src={s.image}
-                  alt={id === view ? s.alt : ""}
-                  aria-hidden={id !== view}
-                  fill
-                  sizes="(min-width: 1200px) 1152px, 96vw"
-                  className={cn(
-                    "product-shot object-cover object-top grayscale transition-[opacity,transform,filter] duration-700 ease-out-soft group-hover:scale-[1.012] group-hover:brightness-75",
-                    id === view ? "opacity-100" : "opacity-0",
-                  )}
-                />
-              ))}
+              <Image
+                src={overview}
+                alt="Syxoria overview: revenue recovered, time saved, automations, a value-created chart and the momentum score."
+                fill
+                sizes="(min-width: 1200px) 1152px, 96vw"
+                className="product-shot object-cover object-top grayscale transition-[transform,filter] duration-700 ease-out-soft group-hover:scale-[1.012] group-hover:brightness-75"
+              />
               {/* glass: dark until the screen switches on */}
               <div aria-hidden="true" className="product-glass pointer-events-none absolute inset-0 bg-black" />
 
@@ -144,51 +120,11 @@ export function ProductStage({ integrations }: { integrations: { id: string; nam
           </div>
         </div>
 
-        {/* Views + entry */}
-        <div className="mx-auto mt-10 flex max-w-6xl flex-col items-center justify-between gap-6 sm:flex-row">
-          <div role="tablist" aria-label="Product views" className="flex items-center gap-7">
-            {product.views.map((v) => (
-              <button
-                key={v.id}
-                type="button"
-                role="tab"
-                aria-selected={view === v.id}
-                onClick={() => setView(v.id)}
-                onMouseEnter={() => setView(v.id)}
-                className={cn(
-                  "relative pb-2 text-sm transition-colors duration-300",
-                  view === v.id ? "text-fg" : "text-fg-3 hover:text-fg-2",
-                  "after:absolute after:inset-x-0 after:bottom-0 after:h-px after:origin-left after:bg-fg after:transition-transform after:duration-500 after:ease-out-soft",
-                  view === v.id ? "after:scale-x-100" : "after:scale-x-0",
-                )}
-              >
-                {v.label}
-              </button>
-            ))}
-          </div>
-          <Link href="/app" className="group inline-flex items-center gap-2 text-sm text-fg-2 transition-colors hover:text-fg">
-            Enter the workspace
+        <div className="mt-12 flex justify-center">
+          <Link href={product.enter.href} className="group inline-flex items-center gap-2 text-sm text-fg-2 transition-colors hover:text-fg">
+            {product.enter.label}
             <ArrowRight className="size-4 transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true" />
           </Link>
-        </div>
-
-        {/* Roots: the tools it connects to */}
-        <div className="mx-auto mt-28 max-w-6xl border-t border-line pt-10 sm:mt-36">
-          <p className="text-center text-[11px] uppercase tracking-[0.3em] text-fg-3">{product.integrations}</p>
-          <ul className="mt-10 grid grid-cols-5 gap-y-10 lg:grid-cols-10">
-            {integrations.map((i) => (
-              // Grayscale (not a flat silhouette) keeps each mark's inner detail;
-              // the brand colour returns on hover.
-              <li key={i.id} className="group flex flex-col items-center gap-3">
-                <IntegrationLogo
-                  id={i.id}
-                  size={28}
-                  className="opacity-75 grayscale transition-[filter,opacity] duration-500 group-hover:opacity-100 group-hover:grayscale-0"
-                />
-                <span className="text-[11px] tracking-wide text-fg-3 transition-colors duration-500 group-hover:text-fg-2">{i.name}</span>
-              </li>
-            ))}
-          </ul>
         </div>
       </div>
     </section>

@@ -6,8 +6,8 @@
  */
 
 export const genesis = {
-  titleLead: "I see your Fiverr account is suspended.",
-  titleAccent: " If you want to connect with me mehedihtml@gmail.com",
+  titleLead: "Your company",
+  titleAccent: "takes on a new dimension.",
   body: "Syxoria connects your tools, understands your business and turns every signal into progress.",
   primaryCta: { label: "Start free", href: "/signup" },
   filmCta: "Watch the film",

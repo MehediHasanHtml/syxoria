@@ -21,9 +21,9 @@ export const siteConfig = {
 export type NavLink = { label: string; href: string };
 
 export const marketingNav: NavLink[] = [
-  { label: "Evolution", href: "/#evolution" },
-  { label: "Progression", href: "/#progression" },
-  { label: "Product", href: "/#product" },
+  { label: "Modules", href: "/#modules" },
+  { label: "Workspace", href: "/#workspace" },
+  { label: "Pricing", href: "/#access" },
 ];
 
 /** The footer is one quiet line: the essentials, nothing to scan. */

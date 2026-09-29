@@ -1,44 +1,80 @@
 /**
- * Homepage copy — written as chapters of one story:
- * universe (the tree) → evolution → progression (the curve) → the product.
- * Deliberately short: few words, strong moments — the page should intrigue,
- * not explain everything.
+ * Homepage copy — one continuous story around the Core:
+ * genesis → growth → one pulse → six modules → the workspace → connections → access.
+ * Deliberately short: the Core carries the meaning, words only name the moment.
+ * Accent fragments are set in the italic serif.
  */
 
-export const genesis = {
-  titleLead: "Your company",
-  titleAccent: "takes on a new dimension.",
+export const hero = {
+  eyebrow: "The operating core",
+  titleLead: "Your company takes on a new",
+  titleAccent: "dimension.",
   body: "Syxoria connects your tools, understands your business and turns every signal into progress.",
   primaryCta: { label: "Start free", href: "/signup" },
   filmCta: "Watch the film",
-  // One word per chapter — the tree carries the meaning.
-  chapters: [
-    { id: "roots", index: "01", word: "Roots." },
-    { id: "structure", index: "02", word: "Structure." },
-    { id: "canopy", index: "03", word: "Canopy." },
+  scrollHint: "Scroll to awaken",
+};
+
+export const growth = {
+  eyebrow: "Growth",
+  titleLead: "It grows",
+  titleAccent: "with you.",
+  body: "Every module you switch on wakes a little more of the Core.",
+};
+
+export const pulse = {
+  titleLead: "A single core runs through",
+  titleAccent: "your entire company.",
+  body: "Data, tools and people — one intelligence, dense and alive.",
+};
+
+export const organism = {
+  eyebrow: "Modules",
+  titleLead: "Six modules,",
+  titleAccent: "one organism.",
+  body: "Each one does its part. Together they think as one.",
+  // `orb` is the index of the module orb lit around the Core (see productModules order)
+  moments: [
+    { id: "activity", orb: 0, index: "01", titleLead: "Your activity,", titleAccent: "in real time.", body: "Figures, requests and conversations gathered in one calm stream." },
+    { id: "priorities", orb: 3, index: "02", titleLead: "Your priorities,", titleAccent: "clarified.", body: "What matters today rises to the surface. The rest can wait." },
+    { id: "projects", orb: 4, index: "03", titleLead: "Your projects", titleAccent: "move forward.", body: "Deadlines, workload and progress balanced before they become problems." },
   ],
 };
 
-export const trajectory = {
-  eyebrow: "Progression",
-  stages: [
-    { id: "start", label: "Start", when: "Day 1", line: "Everything connected.", at: 0.06 },
-    { id: "progression", label: "Progression", when: "Month 1", line: "What you trust becomes automatic.", at: 0.5 },
-    { id: "outcome", label: "Outcome", when: "Year 1", line: "A calmer, faster company.", at: 0.95 },
-  ],
-  closing: { value: "6h 42m", label: "returned to every person, every week" },
-};
-
-export const product = {
-  title: "This is where it happens.",
+export const workspace = {
+  eyebrow: "Workspace",
+  titleLead: "Everything moves forward,",
+  titleAccent: "with you.",
+  body: "Your six modules meet in one screen. Nothing to learn, everything to see.",
   film: { label: "Play the film", duration: "0:21" },
   enter: { label: "Enter the workspace", href: "/app" },
 };
 
-export const begin = {
-  title: "Start with your roots.",
+export const connect = {
+  eyebrow: "Connections",
+  titleLead: "Connected to",
+  titleAccent: "your tools.",
+  body: "Email, chat, CRM, payments — Syxoria plugs into what you already use and lets information flow on its own.",
+  note: "40+ integrations",
+  tools: [
+    { id: "gmail", name: "Gmail" },
+    { id: "slack", name: "Slack" },
+    { id: "notion", name: "Notion" },
+    { id: "hubspot", name: "HubSpot" },
+    { id: "stripe", name: "Stripe" },
+    { id: "drive", name: "Google Drive" },
+    { id: "outlook", name: "Outlook" },
+    { id: "salesforce", name: "Salesforce" },
+  ],
+};
+
+export const access = {
+  eyebrow: "Access",
+  titleLead: "Your space,",
+  titleAccent: "wherever you are.",
   body: "Fourteen days free. No credit card.",
-  primaryCta: { label: "Start free", href: "/signup" },
+  planId: "growth",
+  primaryCta: { label: "Start free", href: "/signup?plan=growth" },
   secondaryCta: { label: "Talk to us", href: "mailto:hello@syxoria.com" },
 };
 

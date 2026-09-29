@@ -1,11 +1,13 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono, Sora } from "next/font/google";
+import { Geist, Geist_Mono, Instrument_Serif, Sora } from "next/font/google";
 import { siteConfig } from "@/lib/site-config";
 import "./globals.css";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"], display: "swap" });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"], display: "swap" });
 const sora = Sora({ variable: "--font-sora", subsets: ["latin"], display: "swap" });
+// Italic serif for the single accent fragment in each homepage title
+const serif = Instrument_Serif({ variable: "--font-instrument", weight: "400", style: ["normal", "italic"], subsets: ["latin"], display: "swap" });
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
@@ -40,7 +42,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} ${sora.variable} antialiased`}>
+    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} ${sora.variable} ${serif.variable} antialiased`}>
       <body className="min-h-dvh">
         {children}
       </body>

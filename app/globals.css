@@ -1,5 +1,15 @@
 @import "tailwindcss";
 
+/* The homepage story goes side-by-side on desktop and on any landscape screen from 640px (e.g. phones turned sideways) */
+@custom-variant side {
+  @media (min-width: 1024px), (orientation: landscape) and (min-width: 640px) {
+    @slot;
+  }
+}
+/* Phones/tablets with little height (small Android, landscape): the story tightens its words.
+   Declared after "side" so it wins where both apply. */
+@custom-variant short (@media (max-width: 1023.98px) and (max-height: 740px));
+
 /* ==========================================================================
    SYXORIA DESIGN TOKENS
    Single source of truth. Every component consumes these through Tailwind
@@ -50,6 +60,7 @@
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
   /* Sora — headings and the single warm accent line in each heading */
   --font-display: var(--font-sora), var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-instrument), ui-serif, Georgia, serif;
 
   /* Display scale — fluid, clamps inside the ranges from the brief */
   --text-display: clamp(2.125rem, 1.45rem + 2.3vw, 3.75rem);
@@ -279,22 +290,18 @@ html:has(dialog[open]) { overflow: hidden; }
 @starting-style { .drawer-motion[open] { transform: translate3d(-100%, 0, 0); } }
 
 /* ==========================================================================
-   HOMEPAGE (components/home) — monochrome universe, scroll-driven motion
+   HOMEPAGE (components/home) — one pinned scene around the Core
    ========================================================================== */
-/* Genesis: the hero actions leave the tab order once the story moves on */
-.genesis:not([data-stage="0"]) .genesis-hero { visibility: hidden; }
+/* Chapter words start hidden; the story timeline reveals them (GSAP autoAlpha). */
+.story-layer { visibility: hidden; opacity: 0; }
+.story-layer--visible { visibility: visible; opacity: 1; }
+html.lenis { scroll-behavior: auto; }
 
-/* Product screen: rises, straightens and switches on with --s (0..1) */
-.product-screen {
-  transform-origin: 50% 100%;
-  transform:
-    translate3d(0, calc((1 - var(--s)) * 70px), 0)
-    rotateX(calc((1 - var(--s)) * 28deg))
-    scale(calc(0.9 + var(--s) * 0.1));
-  opacity: calc(0.25 + var(--s) * 0.75);
-  will-change: transform;
+.scroll-hint { animation: scroll-hint 2.4s var(--ease-in-out-soft) infinite; }
+@keyframes scroll-hint {
+  0% { transform: translateY(-100%); }
+  60%, 100% { transform: translateY(200%); }
 }
-.product-glass { opacity: clamp(0, calc((0.9 - var(--s)) / 0.3), 1); }
 
 /* Film */
 .film-motion { opacity: 0; transition: opacity var(--dur-base) var(--ease-out-soft), overlay var(--dur-base) allow-discrete, display var(--dur-base) allow-discrete; }
@@ -304,7 +311,4 @@ html:has(dialog[open]) { overflow: hidden; }
 .film-progress { animation: film-progress linear forwards; width: 0; }
 @keyframes film-progress { to { width: 100%; } }
 
-@media (prefers-reduced-motion: reduce) {
-  .product-screen { transform: none; opacity: 1; }
-  .product-glass { opacity: 0; }
-}
+

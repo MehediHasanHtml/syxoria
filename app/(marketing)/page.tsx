@@ -1,9 +1,6 @@
 import type { Metadata } from "next";
-import { Begin } from "@/components/home/closing";
+import { CoreStory } from "@/components/home/core-story";
 import { FilmProvider } from "@/components/home/film";
-import { Genesis } from "@/components/home/genesis";
-import { ProductStage } from "@/components/home/product-stage";
-import { Trajectory } from "@/components/home/trajectory";
 import { pricing } from "@/content/marketing";
 import { siteConfig } from "@/lib/site-config";
 
@@ -44,18 +41,14 @@ function JsonLd() {
 }
 
 /**
- * The homepage is one story in four movements — few words, strong moments:
- * the universe (a tree that grows as you scroll) → progression (a rising line)
- * → the product (a screen that switches on) → a return to the tree, fully grown.
+ * The homepage is one continuous scene around the Core — see CoreStory for
+ * the chapters (genesis → growth → pulse → modules → workspace → connections → access).
  */
 export default function HomePage() {
   return (
     <FilmProvider>
       <JsonLd />
-      <Genesis />
-      <Trajectory />
-      <ProductStage />
-      <Begin />
+      <CoreStory />
     </FilmProvider>
   );
 }

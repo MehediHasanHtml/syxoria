@@ -89,10 +89,19 @@ export function CoreCanvas({ state, className, label, interactive = true, nodeCo
       const ro = new ResizeObserver(([e]) => scene.setSize(e.contentRect.width, e.contentRect.height));
       ro.observe(el);
       document.addEventListener("visibilitychange", sync);
+      // the cursor (mouse only) warms the stone under it and gently turns the camera
       const onMove = (e: PointerEvent) => {
-        if (e.pointerType === "mouse") scene.setPointer((e.clientX / window.innerWidth) * 2 - 1, 1 - (e.clientY / window.innerHeight) * 2);
+        if (e.pointerType !== "mouse") return;
+        const r = cv.getBoundingClientRect();
+        scene.setPointer(((e.clientX - r.left) / r.width) * 2 - 1, 1 - ((e.clientY - r.top) / r.height) * 2);
       };
-      if (interactive) window.addEventListener("pointermove", onMove, { passive: true });
+      const onLeave = (e: MouseEvent) => {
+        if (!e.relatedTarget) scene.setPointer(0, 0, false);
+      };
+      if (interactive) {
+        window.addEventListener("pointermove", onMove, { passive: true });
+        document.addEventListener("mouseout", onLeave);
+      }
       const onLost = (e: Event) => {
         e.preventDefault();
         scene.stop();
@@ -104,6 +113,7 @@ export function CoreCanvas({ state, className, label, interactive = true, nodeCo
         ro.disconnect();
         document.removeEventListener("visibilitychange", sync);
         window.removeEventListener("pointermove", onMove);
+        document.removeEventListener("mouseout", onLeave);
         cv.removeEventListener("webglcontextlost", onLost);
       });
     })();

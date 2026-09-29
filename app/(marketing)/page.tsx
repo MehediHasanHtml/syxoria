@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
-import { CoreStory } from "@/components/home/core-story";
+import { CoreExperience } from "@/components/home/core-experience";
 import { FilmProvider } from "@/components/home/film";
+import { Pricing } from "@/components/home/pricing";
+import { SectionNavigation } from "@/components/home/section-navigation";
+import { SmoothScrollProvider } from "@/components/home/smooth-scroll";
 import { pricing } from "@/content/marketing";
 import { siteConfig } from "@/lib/site-config";
 
@@ -41,14 +44,19 @@ function JsonLd() {
 }
 
 /**
- * The homepage is one continuous scene around the Core — see CoreStory for
- * the chapters (genesis → growth → pulse → modules → workspace → connections → access).
+ * The homepage: one pinned scene around the Core that the visitor scrolls
+ * through and explores (core → one core → modules → workspace → integrations,
+ * see CoreExperience), then pricing. The numbered navigation jumps to any of them.
  */
 export default function HomePage() {
   return (
-    <FilmProvider>
-      <JsonLd />
-      <CoreStory />
-    </FilmProvider>
+    <SmoothScrollProvider>
+      <FilmProvider>
+        <JsonLd />
+        <CoreExperience />
+        <Pricing />
+        <SectionNavigation />
+      </FilmProvider>
+    </SmoothScrollProvider>
   );
 }

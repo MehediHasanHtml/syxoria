@@ -119,6 +119,8 @@
 
   /* Layout */
   --header-h: 4.25rem;
+  /* room kept free on the right for the numbered section navigation (homepage) */
+  --rail-w: 0px;
   --container: 76rem;
   --gutter: clamp(1rem, 0.6rem + 2vw, 2.5rem);
 
@@ -197,6 +199,15 @@
   text-transform: uppercase;
   color: var(--color-fg-3);
   font-weight: 500;
+}
+
+/* The homepage container: like container-page, but clear of the numbered navigation on the right */
+@utility container-story {
+  width: 100%;
+  max-width: calc(var(--container) + var(--gutter) * 2 + var(--rail-w));
+  margin-inline: auto;
+  padding-left: var(--gutter);
+  padding-right: calc(var(--gutter) + var(--rail-w));
 }
 
 @utility hairline-x {
@@ -292,6 +303,27 @@ html:has(dialog[open]) { overflow: hidden; }
 /* ==========================================================================
    HOMEPAGE (components/home) — one pinned scene around the Core
    ========================================================================== */
+@media (min-width: 768px) {
+  :root { --rail-w: 3.25rem; }
+}
+@media (min-width: 1536px) {
+  :root { --rail-w: 0px; }
+}
+/* The opening sequence (homepage): only the forming Core and the loader are on screen */
+body:has([data-opening]) :is(header, [data-rail]) { opacity: 0; visibility: hidden; }
+.preloader-flare {
+  background: linear-gradient(90deg, transparent, rgb(255 205 150 / 0.15) 25%, rgb(255 236 214 / 0.95) 50%, rgb(255 205 150 / 0.15) 75%, transparent);
+  box-shadow: 0 0 14px 1px rgb(255 190 120 / 0.45);
+  opacity: 0;
+  transform: translate(-50%, -50%) scaleX(0);
+}
+.preloader-flare--on { animation: preloader-flare 900ms var(--ease-out-soft) forwards; }
+@keyframes preloader-flare {
+  0% { opacity: 0; transform: translate(-50%, -50%) scaleX(0); }
+  30% { opacity: 1; transform: translate(-50%, -50%) scaleX(1); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scaleX(1); }
+}
+
 /* Chapter words start hidden; the story timeline reveals them (GSAP autoAlpha). */
 .story-layer { visibility: hidden; opacity: 0; }
 .story-layer--visible { visibility: visible; opacity: 1; }
@@ -302,6 +334,27 @@ html.lenis { scroll-behavior: auto; }
   0% { transform: translateY(-100%); }
   60%, 100% { transform: translateY(200%); }
 }
+
+/* Scroll reveal (components/home/scroll-reveal.tsx): only hidden once JS has armed it */
+.reveal { transition: opacity var(--dur-slow) var(--ease-out-soft), transform var(--dur-slow) var(--ease-out-soft); }
+.reveal[data-reveal="pending"] { opacity: 0; transform: translate3d(0, 24px, 0); }
+@media (prefers-reduced-motion: reduce) {
+  .reveal[data-reveal="pending"] { opacity: 1; transform: none; }
+}
+
+/* Side sheets (module details, integrations) */
+.sheet-motion {
+  transform: translate3d(100%, 0, 0);
+  transition:
+    transform 450ms var(--ease-out-soft),
+    overlay 450ms allow-discrete,
+    display 450ms allow-discrete;
+}
+.sheet-motion[open] { transform: none; }
+@starting-style { .sheet-motion[open] { transform: translate3d(100%, 0, 0); } }
+.sheet-motion::backdrop { opacity: 0; transition: opacity var(--dur-base) var(--ease-out-soft), overlay var(--dur-base) allow-discrete, display var(--dur-base) allow-discrete; }
+.sheet-motion[open]::backdrop { opacity: 1; }
+@starting-style { .sheet-motion[open]::backdrop { opacity: 0; } }
 
 /* Film */
 .film-motion { opacity: 0; transition: opacity var(--dur-base) var(--ease-out-soft), overlay var(--dur-base) allow-discrete, display var(--dur-base) allow-discrete; }

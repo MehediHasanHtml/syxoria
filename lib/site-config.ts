@@ -23,7 +23,8 @@ export type NavLink = { label: string; href: string };
 export const marketingNav: NavLink[] = [
   { label: "Modules", href: "/#modules" },
   { label: "Workspace", href: "/#workspace" },
-  { label: "Pricing", href: "/#access" },
+  { label: "Integrations", href: "/#integrations" },
+  { label: "Pricing", href: "/#pricing" },
 ];
 
 /** The footer is one quiet line: the essentials, nothing to scan. */

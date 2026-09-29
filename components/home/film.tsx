@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Pause, Play, RotateCcw, X } from "lucide-react";
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import gsap from "gsap";
 import { filmScenes } from "@/content/home";
 import { cn } from "@/lib/cn";
 import { siteConfig } from "@/lib/site-config";
@@ -11,10 +12,17 @@ import overview from "@/public/product/dashboard-overview.png";
 import insights from "@/public/product/dashboard-insights.png";
 import projects from "@/public/product/dashboard-projects.png";
 
-const images = { overview, insights, projects };
+export const filmImages = { overview, insights, projects };
 const SCENE_MS = 4200;
 
-const FilmContext = createContext<{ open: () => void } | null>(null);
+type OpenOptions = {
+  /** screen rect the film grows out of (e.g. the product screen that was clicked) */
+  from?: DOMRect;
+  /** preview scene to start on */
+  scene?: number;
+};
+
+const FilmContext = createContext<{ open: (options?: OpenOptions) => void } | null>(null);
 
 /** Opens the product film from anywhere on the homepage. */
 export function useFilm() {
@@ -24,12 +32,12 @@ export function useFilm() {
 }
 
 export function FilmProvider({ children }: { children: ReactNode }) {
-  const [open, setOpen] = useState(false);
-  const value = useMemo(() => ({ open: () => setOpen(true) }), []);
+  const [open, setOpen] = useState<OpenOptions | null>(null);
+  const value = useMemo(() => ({ open: (options: OpenOptions = {}) => setOpen(options) }), []);
   return (
     <FilmContext.Provider value={value}>
       {children}
-      {open && <FilmDialog onClose={() => setOpen(false)} />}
+      {open && <FilmDialog options={open} onClose={() => setOpen(null)} />}
     </FilmContext.Provider>
   );
 }
@@ -38,13 +46,28 @@ export function FilmProvider({ children }: { children: ReactNode }) {
  * Full-screen product film. Plays `siteConfig.productFilm` when provided;
  * until then, a cinematic preview sequence of the real product screens.
  */
-function FilmDialog({ onClose }: { onClose: () => void }) {
+function FilmDialog({ options, onClose }: { options: OpenOptions; onClose: () => void }) {
   const ref = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
     const d = ref.current;
-    if (d && !d.open) d.showModal();
-  }, []);
+    if (!d) return;
+    if (!d.open) d.showModal();
+    // the full demo grows out of the screen that was clicked
+    const frame = d.querySelector<HTMLElement>("[data-film-frame]");
+    const from = options.from;
+    if (!frame || !from || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const to = frame.getBoundingClientRect();
+    const tween = gsap.fromTo(
+      frame,
+      { x: from.left - to.left, y: from.top - to.top, scaleX: from.width / to.width, scaleY: from.height / to.height, transformOrigin: "0 0" },
+      { x: 0, y: 0, scaleX: 1, scaleY: 1, duration: 0.8, ease: "power3.inOut", clearProps: "transform" },
+    );
+    return () => {
+      tween.kill();
+      gsap.set(frame, { clearProps: "transform" });
+    };
+  }, [options]);
 
   return (
     <dialog
@@ -71,9 +94,9 @@ function FilmDialog({ onClose }: { onClose: () => void }) {
         </div>
         <div className="grid min-h-0 flex-1 place-items-center px-4 pb-8 sm:px-8">
           {siteConfig.productFilm ? (
-            <video src={siteConfig.productFilm} controls autoPlay playsInline className="aspect-video w-full max-w-6xl bg-black" />
+            <video data-film-frame src={siteConfig.productFilm} controls autoPlay playsInline className="aspect-video w-full max-w-6xl bg-black" />
           ) : (
-            <PreviewSequence />
+            <PreviewSequence initialScene={options.scene ?? 0} />
           )}
         </div>
       </div>
@@ -81,8 +104,8 @@ function FilmDialog({ onClose }: { onClose: () => void }) {
   );
 }
 
-function PreviewSequence() {
-  const [scene, setScene] = useState(0);
+function PreviewSequence({ initialScene }: { initialScene: number }) {
+  const [scene, setScene] = useState(initialScene);
   const [playing, setPlaying] = useState(true);
   const [ended, setEnded] = useState(false);
   const last = filmScenes.length - 1;
@@ -104,7 +127,7 @@ function PreviewSequence() {
 
   return (
     <div className="flex w-full max-w-6xl flex-col gap-5">
-      <div className="relative aspect-[16/10] w-full overflow-hidden rounded-lg border border-line bg-black">
+      <div data-film-frame className="relative aspect-[16/10] w-full overflow-hidden rounded-lg border border-line bg-black">
         {filmScenes.map((s, i) => (
           <div
             key={i}
@@ -115,7 +138,7 @@ function PreviewSequence() {
             )}
           >
             <Image
-              src={images[s.image]}
+              src={filmImages[s.image]}
               alt=""
               fill
               sizes="(min-width: 1200px) 2048px, 100vw"

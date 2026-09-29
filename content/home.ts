@@ -1,61 +1,84 @@
+import type { ModuleKey } from "@/types";
+
 /**
- * Homepage copy — one continuous story around the Core:
- * genesis → growth → one pulse → six modules → the workspace → connections → access.
- * Deliberately short: the Core carries the meaning, words only name the moment.
- * Accent fragments are set in the italic serif.
+ * Homepage copy — one short story around the Core:
+ * the Core → one core → six modules → the workspace → integrations → pricing.
+ * Deliberately brief: the Core carries the meaning, words name the moment and
+ * the details wait one hover or tap away. Accent fragments are set in the
+ * italic serif.
  */
 
 export const hero = {
-  eyebrow: "The operating core",
+  eyebrow: "The OS for growing companies",
   titleLead: "Your company takes on a new",
   titleAccent: "dimension.",
   body: "Syxoria connects your tools, understands your business and turns every signal into progress.",
   primaryCta: { label: "Start free", href: "/signup" },
   filmCta: "Watch the film",
+  coreHint: "Open the core",
   scrollHint: "Scroll to awaken",
 };
 
-export const growth = {
-  eyebrow: "Growth",
-  titleLead: "It grows",
-  titleAccent: "with you.",
-  body: "Every module you switch on wakes a little more of the Core.",
-};
-
-export const pulse = {
+export const oneCore = {
+  eyebrow: "One core",
   titleLead: "A single core runs through",
   titleAccent: "your entire company.",
-  body: "Data, tools and people — one intelligence, dense and alive.",
+  body: "Your business lives in a dozen tools. Syxoria gathers every signal into one core that understands it.",
+  steps: [
+    { title: "Connect", body: "Email, CRM, payments and files, plugged in once." },
+    { title: "Understand", body: "Every signal linked to its client, project and number." },
+    { title: "Act", body: "The next step prepared. You approve, it’s done." },
+  ],
 };
 
-export const organism = {
+export const modules = {
   eyebrow: "Modules",
   titleLead: "Six modules,",
-  titleAccent: "one organism.",
-  body: "Each one does its part. Together they think as one.",
-  // `orb` is the index of the module orb lit around the Core (see productModules order)
-  moments: [
-    { id: "activity", orb: 0, index: "01", titleLead: "Your activity,", titleAccent: "in real time.", body: "Figures, requests and conversations gathered in one calm stream." },
-    { id: "priorities", orb: 3, index: "02", titleLead: "Your priorities,", titleAccent: "clarified.", body: "What matters today rises to the surface. The rest can wait." },
-    { id: "projects", orb: 4, index: "03", titleLead: "Your projects", titleAccent: "move forward.", body: "Deadlines, workload and progress balanced before they become problems." },
-  ],
+  titleAccent: "one core.",
+  body: "Each module does one job. Because they share one core, they think as one.",
+  hint: { pointer: "Hover a branch to open it", touch: "Tap a module to open it" },
+  open: "Open",
+};
+
+/** What each module looks like in the product — shown in its detail sheet. */
+export const moduleExamples: Record<ModuleKey, { title: string; detail: string; impact: string }> = {
+  lume: { title: "Two deals have gone quiet", detail: "No contact in 12 days. Lume found an unanswered question in one thread.", impact: "€24,000 pipeline" },
+  nexo: { title: "4 invoices can be followed up today", detail: "Clients with a good payment history, 14+ days overdue.", impact: "€6,380 cash in" },
+  volt: { title: "Kickoff scheduling can run on its own", detail: "Slots proposed and invites sent after signature — with your approval.", impact: "≈ 6h saved / month" },
+  kairo: { title: "Momentum is up this week", detail: "Three goals moved forward; one leading indicator needs attention.", impact: "+12% momentum" },
+  zento: { title: "The team is over capacity on Friday", detail: "Two deadlines overlap. Moving one review keeps everyone on track.", impact: "3 deadlines safe" },
+  orion: { title: "Quarter summary is ready", detail: "Decisions, numbers and open questions, gathered for the board.", impact: "Ready in 1 click" },
 };
 
 export const workspace = {
   eyebrow: "Workspace",
   titleLead: "Everything moves forward,",
   titleAccent: "with you.",
-  body: "Your six modules meet in one screen. Nothing to learn, everything to see.",
-  film: { label: "Play the film", duration: "0:21" },
+  body: "Your six modules meet in one calm screen. Syxoria prepares the work — you stay in control.",
+  steps: ["Everything arrives in one stream", "Syxoria proposes the next step", "You approve — it’s done"],
+  demo: {
+    label: "Play the demo",
+    duration: "0:21",
+    hint: { pointer: "Hover to preview · click to open", touch: "Tap to preview" },
+    live: "Live preview",
+    openFull: "Open the full demo",
+    tapAgain: "Tap again to open the full demo",
+  },
   enter: { label: "Enter the workspace", href: "/app" },
+  cards: {
+    insight: { module: "Nexo", title: "4 invoices can be followed up today", impact: "€6,380", action: "Review" },
+    momentum: { module: "Kairo", label: "Momentum", value: "+12%", note: "this week" },
+  },
 };
 
-export const connect = {
-  eyebrow: "Connections",
+type Tool = { name: string; logo?: string };
+
+export const integrations = {
+  eyebrow: "Integrations",
   titleLead: "Connected to",
   titleAccent: "your tools.",
   body: "Email, chat, CRM, payments — Syxoria plugs into what you already use and lets information flow on its own.",
-  note: "40+ integrations",
+  // shown around the Core (examples, not the full list)
   tools: [
     { id: "gmail", name: "Gmail" },
     { id: "slack", name: "Slack" },
@@ -66,16 +89,32 @@ export const connect = {
     { id: "outlook", name: "Outlook" },
     { id: "salesforce", name: "Salesforce" },
   ],
+  more: {
+    label: "More integrations",
+    count: "40+",
+    note: "Shown here: a few examples.",
+    title: "40+ integrations, and counting",
+    body: "Syxoria connects to the services your company already runs on — and to everything else through its API and webhooks.",
+    groups: [
+      { name: "Communication", tools: [{ name: "Gmail", logo: "gmail" }, { name: "Outlook", logo: "outlook" }, { name: "Slack", logo: "slack" }, { name: "Microsoft Teams" }, { name: "Google Calendar" }, { name: "Zoom" }, { name: "WhatsApp Business" }] },
+      { name: "Sales & CRM", tools: [{ name: "HubSpot", logo: "hubspot" }, { name: "Salesforce", logo: "salesforce" }, { name: "Pipedrive" }, { name: "Intercom" }, { name: "Calendly" }] },
+      { name: "Finance & payments", tools: [{ name: "Stripe", logo: "stripe" }, { name: "PayPal", logo: "paypal" }, { name: "QuickBooks" }, { name: "Xero" }, { name: "Pennylane" }, { name: "Qonto" }] },
+      { name: "Documents & knowledge", tools: [{ name: "Notion", logo: "notion" }, { name: "Google Drive", logo: "drive" }, { name: "Excel", logo: "excel" }, { name: "Dropbox" }, { name: "Confluence" }, { name: "DocuSign" }] },
+      { name: "Projects & operations", tools: [{ name: "Asana" }, { name: "Trello" }, { name: "Jira" }, { name: "Linear" }, { name: "Airtable" }, { name: "Zapier" }] },
+      { name: "Commerce & support", tools: [{ name: "Shopify" }, { name: "Zendesk" }, { name: "Mailchimp" }] },
+    ] satisfies { name: string; tools: Tool[] }[],
+    api: "Anything else connects through the Syxoria API and webhooks.",
+    request: { label: "Request an integration", href: "mailto:hello@syxoria.com?subject=Integration%20request" },
+  },
 };
 
-export const access = {
-  eyebrow: "Access",
-  titleLead: "Your space,",
-  titleAccent: "wherever you are.",
-  body: "Fourteen days free. No credit card.",
-  planId: "growth",
-  primaryCta: { label: "Start free", href: "/signup?plan=growth" },
-  secondaryCta: { label: "Talk to us", href: "mailto:hello@syxoria.com" },
+export const pricingIntro = {
+  eyebrow: "Pricing",
+  titleLead: "Simple plans that",
+  titleAccent: "grow with you.",
+  billing: { monthly: "Monthly", yearly: "Yearly", save: "Save 17%" },
+  highlight: "Most chosen",
+  notes: ["All six modules in every plan", "14 days free — no credit card", "Cancel anytime", "Prices exclude VAT, per workspace"],
 };
 
 /** Scenes for the product film preview (used until the real film is delivered). */

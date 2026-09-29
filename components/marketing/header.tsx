@@ -45,7 +45,7 @@ export function Header() {
       <div ref={sentinel} aria-hidden="true" className="absolute inset-x-0 top-0 h-6" />
       <header
         className={cn(
-          "fixed inset-x-0 top-0 z-(--z-header) transition-[background-color,border-color,backdrop-filter] duration-500 ease-out-soft",
+          "fixed inset-x-0 top-0 z-(--z-header) transition-[background-color,border-color,backdrop-filter,opacity] duration-500 ease-out-soft",
           scrolled ? "border-b border-line/60 bg-canvas/75 backdrop-blur-xl" : "border-b border-transparent bg-transparent",
         )}
       >

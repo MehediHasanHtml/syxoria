@@ -4,35 +4,35 @@ import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
 
 /**
- * The opening sequence — the Core being formed, never shown whole:
+ * The opening sequence — the Core being formed, one step at a time:
  *
- *   00 → 20%   a point of light travels along a thin curve (no WebGL needed yet)
- *   20 → 99%   shards of the real Core materialise one by one, apart (see `onProgress`)
- *   100%       a short pulse; the shards fly together and the landing page
+ *   00 → 20%   a point of light travels along a thin curve (covers the time three.js takes to load)
+ *   20 → 80%   the Core's six pieces materialise one after another (see `onProgress`),
+ *              and a word marks each milestone — 20, 40, 60, 80 — and stays, so it can be read
+ *   100%       a short pulse; the pieces fly together and the landing page
  *              reveals the complete Core for the first time (see `onLaunch`)
  *
- * The overlay is transparent: the Core's canvas shows through it, over a
- * curtain the page draws (CoreExperience). Skipped for reduced motion.
+ * The count moves at a steady pace, so nothing piles up at the end. The
+ * overlay is transparent: the Core's canvas shows through it, over a curtain
+ * the page draws (CoreExperience). Skipped for reduced motion.
  */
 
-// 0 → 20%: the light sets off (covers the time three.js takes to load)
-const LINE_MS = 650;
-// 20 → 99%: the shards form
-const FORM_MS = 1500;
+// 0 → 20%: the light sets off
+const LINE_MS = 550;
+// 20 → 100%: the Core forms, milestone after milestone
+const FORM_MS = 2100;
 // never hold the page for the 3D scene: past this, the sequence goes on without it
 const HOLD_MAX_MS = 2400;
 // the pulse at 100%, before the page takes over
-const LAUNCH_MS = 900;
+const LAUNCH_MS = 850;
 
+/** The milestones: each word arrives with its step of the Core. */
 const STAGES: [number, string][] = [
-  [0, "Initialising"],
-  [12, "Connecting"],
-  [28, "Analysing"],
-  [46, "Synchronising"],
-  [67, "Optimising"],
-  [89, "Finalising"],
-  [99, "Ready"],
-  [100, "Launching"],
+  [20, "Connecting"],
+  [40, "Understanding"],
+  [60, "Organising"],
+  [80, "Orchestrating"],
+  [100, "Ready"],
 ];
 
 // the progression curve, in a 1000×1000 box stretched over the screen
@@ -40,7 +40,8 @@ const STAGES: [number, string][] = [
 const CURVE = "M -20 840 C 220 815, 420 735, 600 650 S 850 530, 955 490";
 
 const easeOut = (t: number) => 1 - Math.pow(1 - t, 3);
-const easeInOut = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+// nearly linear, softened at both ends: an even pace from milestone to milestone
+const steady = (t: number) => 0.8 * t + 0.2 * (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 
 type Props = {
   /** the Core's scene has compiled and can draw */
@@ -56,7 +57,8 @@ type Props = {
 export function Preloader({ ready, onProgress, onLaunch, onDone }: Props) {
   const [phase, setPhase] = useState<"counting" | "launch" | "gone">("counting");
   const count = useRef<HTMLSpanElement>(null);
-  const label = useRef<HTMLSpanElement>(null);
+  const words = useRef<HTMLOListElement>(null);
+  const ticks = useRef<HTMLDivElement>(null);
   const curve = useRef<SVGPathElement>(null);
   const trail = useRef<SVGPathElement>(null);
   const dot = useRef<HTMLSpanElement>(null);
@@ -80,17 +82,25 @@ export function Preloader({ ready, onProgress, onLaunch, onDone }: Props) {
 
     const path = curve.current;
     const length = path?.getTotalLength() ?? 0;
+    const wordEls = [...(words.current?.children ?? [])] as HTMLElement[];
+    const tickEls = [...(ticks.current?.children ?? [])] as HTMLElement[];
     let start = 0;
     let prev = 0;
     let formStart = 0;
     let shown = 0;
+    let reached = -1;
     let raf = 0;
     const timers: number[] = [];
 
     const draw = (p: number, pct: number) => {
       if (count.current) count.current.textContent = String(pct).padStart(2, "0");
-      const stage = STAGES.findLast(([at]) => pct >= at)?.[1] ?? "";
-      if (label.current && label.current.textContent !== stage) label.current.textContent = stage;
+      // milestones: the word of the current one is lit, the ones before stay, dimmed
+      const stage = STAGES.findLastIndex(([at]) => pct >= at);
+      if (stage !== reached) {
+        reached = stage;
+        wordEls.forEach((w, i) => (w.dataset.state = i < stage ? "past" : i === stage ? "on" : ""));
+        tickEls.forEach((t, i) => t.toggleAttribute("data-on", i <= stage));
+      }
       trail.current?.setAttribute("stroke-dashoffset", String(1 - p));
       if (path && dot.current) {
         const pt = path.getPointAtLength(length * p);
@@ -106,13 +116,13 @@ export function Preloader({ ready, onProgress, onLaunch, onDone }: Props) {
       prev = now;
       if (!formStart && t >= LINE_MS && (readyRef.current || t >= HOLD_MAX_MS)) formStart = now;
       const goal = formStart
-        ? 0.2 + 0.79 * easeInOut(Math.min(1, (now - formStart) / FORM_MS))
+        ? 0.2 + 0.8 * steady(Math.min(1, (now - formStart) / FORM_MS))
         : t < LINE_MS
           ? 0.2 * easeOut(t / LINE_MS)
-          : 0.2 + 0.05 * (1 - Math.exp(-(t - LINE_MS) / 700));
+          : 0.2 + 0.03 * (1 - Math.exp(-(t - LINE_MS) / 700));
       // eased towards the goal, so a busy main thread never makes it jump
-      shown += (goal - shown) * Math.min(1, dt / 70);
-      const formed = formStart && now - formStart >= FORM_MS && shown > 0.985;
+      shown += (goal - shown) * Math.min(1, dt / 60);
+      const formed = formStart && now - formStart >= FORM_MS && shown > 0.99;
       if (formed) shown = 0.99;
       draw(shown, Math.min(99, Math.floor(shown * 100)));
       cb.current.onProgress?.(shown);
@@ -134,7 +144,7 @@ export function Preloader({ ready, onProgress, onLaunch, onDone }: Props) {
             }, LAUNCH_MS),
             window.setTimeout(() => setPhase("gone"), LAUNCH_MS + 200),
           );
-        }, 220),
+        }, 180),
       );
     };
     raf = requestAnimationFrame(tick);
@@ -175,18 +185,30 @@ export function Preloader({ ready, onProgress, onLaunch, onDone }: Props) {
       </span>
 
       <div className={cn("container-page relative flex h-full flex-col justify-between py-7 transition-opacity duration-500", launching && "opacity-0 delay-200")}>
-        <p className="text-[11px] font-medium uppercase tracking-brand text-fg-2">Syxoria</p>
-        <div className="flex justify-end pb-[8svh] sm:pb-[6svh]">
-          <div className="min-w-[9rem]">
-            <p className="flex items-start font-display font-extralight leading-none text-fg">
+        <p className="font-mono text-[11px] font-medium uppercase tracking-brand text-fg-2">Syxoria</p>
+        <div className="flex items-end justify-between gap-8 pb-[8svh] sm:pb-[6svh]">
+          {/* the milestones, as they are reached */}
+          <ol ref={words} className="preloader-words grid gap-1.5 font-mono text-[10.5px] uppercase tracking-[0.3em]">
+            {STAGES.map(([at, word]) => (
+              <li key={word} className="flex items-baseline gap-3">
+                <span className="tabular text-fg-3">{String(at).padStart(3, "0")}</span>
+                {word}
+              </li>
+            ))}
+          </ol>
+          <div className="min-w-[9rem] text-right">
+            <p className="flex items-start justify-end font-display font-extralight leading-none text-fg">
               <span ref={count} className="tabular text-[clamp(2.75rem,2rem+3vw,4.5rem)] tracking-tight">
                 00
               </span>
               <span className="ml-1 mt-2 text-sm text-fg-2">%</span>
             </p>
-            <span ref={label} className="mt-3 block text-[10px] uppercase tracking-[0.32em] text-fg-3">
-              Initialising
-            </span>
+            {/* five ticks: the milestones, lighting as they are passed */}
+            <div ref={ticks} className="preloader-ticks mt-4 flex justify-end gap-1.5">
+              {STAGES.map(([at]) => (
+                <span key={at} className="h-px w-5 bg-white/15 transition-colors duration-500" />
+              ))}
+            </div>
           </div>
         </div>
       </div>

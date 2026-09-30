@@ -23,10 +23,10 @@ export function ModulesChapter({ focus, explore, onOpen }: { focus: number | nul
   return (
     <Layer name="modules" className={LEFT} labelledBy="modules-title">
       <div className={COL}>
-        <Eyebrow data-r>{modules.eyebrow}</Eyebrow>
-        <div data-r className="mt-6 short:mt-3">
-          <Title id="modules-title" lead={modules.titleLead} accent={modules.titleAccent} />
-        </div>
+        <Eyebrow data-r index={3}>
+          {modules.eyebrow}
+        </Eyebrow>
+        <Title data-r data-split id="modules-title" lead={modules.titleLead} accent={modules.titleAccent} className="mt-6 short:mt-3" />
 
         {/* The information panel — fixed height so exploring never moves the layout */}
         <div data-r aria-live="polite" className="mt-5 h-[7.75rem] short:mt-3 short:h-[4.5rem] sm:h-[7.25rem]">
@@ -37,8 +37,10 @@ export function ModulesChapter({ focus, explore, onOpen }: { focus: number | nul
             </div>
           ) : (
             <div key={active.key} className="animate-fade-in">
-              <p className="flex items-baseline gap-3 text-[11px] uppercase tracking-[0.24em]">
-                <span className="tabular text-fg-3">{pad(focus)}</span>
+              <p className="flex items-baseline gap-3 font-mono text-[10.5px] uppercase tracking-[0.24em]">
+                <span className="tabular text-fg-3">
+                  {pad(focus)} / {pad(productModules.length - 1)}
+                </span>
                 <span className="text-fg">{active.name}</span>
                 <span className="text-accent">{active.role}</span>
               </p>

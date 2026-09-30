@@ -7,17 +7,17 @@ import { cn } from "@/lib/cn";
 import { useFilm } from "../film";
 import { COL, Eyebrow, LEFT, Layer, Title } from "./primitives";
 
-/** 01 — First impression: what Syxoria is, beside a dormant graphite Core. */
+/** 01 — First impression: what Syxoria is, beside the Core floating in the dark. */
 export function HeroChapter() {
   const film = useFilm();
   return (
     <Layer name="hero" className={cn(LEFT, "story-layer--visible")}>
       <div className={COL}>
-        <Eyebrow data-r>{hero.eyebrow}</Eyebrow>
-        <div data-r className="mt-6 short:mt-3">
-          <Title as="h1" id="hero-title" lead={hero.titleLead} accent={hero.titleAccent} />
-        </div>
-        <p data-r className="mt-6 max-w-[26rem] text-[15px] leading-relaxed text-fg-2 short:mt-3 short:text-[14px] sm:text-base">
+        <Eyebrow data-r index={1}>
+          {hero.eyebrow}
+        </Eyebrow>
+        <Title data-r data-split as="h1" id="hero-title" lead={hero.titleLead} accent={hero.titleAccent} className="mt-6 short:mt-3" />
+        <p data-r data-split className="mt-6 max-w-[26rem] text-[15px] leading-relaxed text-fg-2 short:mt-3 short:text-[14px] sm:text-base">
           {hero.body}
         </p>
         <div data-r className="mt-9 flex flex-wrap items-center gap-x-7 gap-y-4 short:mt-5">

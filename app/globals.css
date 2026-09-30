@@ -324,6 +324,33 @@ body:has([data-opening]) :is(header, [data-rail]) { opacity: 0; visibility: hidd
   100% { opacity: 0; transform: translate(-50%, -50%) scaleX(1); }
 }
 
+/* Loader milestones: each word arrives with its step and stays, dimmed, once passed */
+.preloader-words li { opacity: 0; transform: translate3d(0, 6px, 0); color: var(--color-fg); transition: opacity 600ms var(--ease-out-soft), transform 600ms var(--ease-out-soft), color 600ms var(--ease-out-soft); }
+.preloader-words li[data-state="on"] { opacity: 1; transform: none; }
+.preloader-words li[data-state="past"] { opacity: 1; transform: none; color: var(--color-fg-3); }
+.preloader-ticks [data-on] { background: var(--color-fg); }
+
+/* Titles split into lines: each line rises out of its own mask */
+.split-line { will-change: transform; }
+
+/* Pricing glass: a soft light that follows the cursor (position eased in JS: --gx, --gy, --go) */
+.glass-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(380px circle at var(--gx, 50%) var(--gy, 0%), rgb(255 232 205 / 0.085), transparent 65%);
+  opacity: var(--go, 0);
+}
+.glass-panel::after {
+  content: "";
+  position: absolute;
+  inset: 0 12% auto;
+  height: 1px;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.22), transparent);
+}
+
 /* Chapter words start hidden; the story timeline reveals them (GSAP autoAlpha). */
 .story-layer { visibility: hidden; opacity: 0; }
 .story-layer--visible { visibility: visible; opacity: 1; }

@@ -4,31 +4,40 @@ import { cn } from "@/lib/cn";
 /**
  * Building blocks shared by the story's chapters. Words sit at the bottom of
  * small screens (the Core above them) and in a side column on desktop.
+ *
+ * Reveal hooks for the story timeline: `data-r` marks a piece that comes in;
+ * with `data-split` it is split into lines that rise out of their masks
+ * (static text only — React must not re-render its content).
  */
 
 export const LEFT = "bottom-0 pb-[max(2.5rem,env(safe-area-inset-bottom))] side:bottom-auto side:top-[calc(50%+var(--header-h)/2)] side:-translate-y-1/2 side:pb-0";
+/** Anchored low, like a caption: for chapters where the Core and what surrounds it need the room. */
+export const LOW = "bottom-0 pb-[max(2.5rem,env(safe-area-inset-bottom))] side:pb-[9svh]";
 export const COL = "max-w-[34rem] side:max-w-[27rem] xl:max-w-[30rem] short:max-w-[21rem]";
 
-export function Title({ lead, accent, as: Tag = "h2", id, className }: { lead: string; accent: string; as?: "h1" | "h2"; id?: string; className?: string }) {
+type Reveal = { "data-r"?: boolean; "data-split"?: boolean };
+
+export function Title({ lead, accent, as: Tag = "h2", id, className, ...rest }: { lead: string; accent: string; as?: "h1" | "h2"; id?: string; className?: string } & Reveal) {
   return (
-    <Tag id={id} className={cn("font-display text-display font-light text-fg short:text-[1.85rem]", className)}>
-      {lead} <em className="font-serif text-[1.08em] font-normal italic tracking-normal text-fg">{accent}</em>
+    <Tag {...rest} id={id} className={cn("font-display text-display font-extralight tracking-[-0.045em] text-fg short:text-[1.85rem]", className)}>
+      {lead} <em className="font-serif text-[1.1em] font-normal italic tracking-[-0.01em] text-fg">{accent}</em>
     </Tag>
   );
 }
 
-export function Eyebrow({ children, className, ...rest }: { children: ReactNode; className?: string; "data-r"?: boolean }) {
+/** The chapter's index and name, set in mono: "02 — One core". */
+export function Eyebrow({ index, children, className, ...rest }: { index?: number; children: ReactNode; className?: string } & Reveal) {
   return (
-    <p {...rest} className={cn("text-[11px] font-medium uppercase tracking-[0.3em] text-fg-3", className)}>
+    <p {...rest} className={cn("font-mono text-[10.5px] uppercase tracking-[0.32em] text-fg-3", className)}>
+      {index !== undefined && <span className="tabular text-fg-2">{String(index).padStart(2, "0")} — </span>}
       {children}
     </p>
   );
 }
 
 /**
- * A chapter's words. Hidden until the story timeline reveals it; `[data-r]`
- * children stagger in. Only links and buttons take the pointer, so the Core
- * behind stays reachable.
+ * A chapter's words. Hidden until the story timeline reveals it. Only links
+ * and buttons take the pointer, so the Core behind stays reachable.
  */
 export function Layer({ name, className, children, labelledBy }: { name: string; className?: string; children: ReactNode; labelledBy?: string }) {
   return (

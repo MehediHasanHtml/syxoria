@@ -24,10 +24,11 @@ export const oneCore = {
   titleLead: "A single core runs through",
   titleAccent: "your entire company.",
   body: "Your business lives in a dozen tools. Syxoria gathers every signal into one core that understands it.",
+  // each step is written on the Core, at the zone where it happens
   steps: [
-    { title: "Connect", body: "Email, CRM, payments and files, plugged in once." },
-    { title: "Understand", body: "Every signal linked to its client, project and number." },
-    { title: "Act", body: "The next step prepared. You approve, it’s done." },
+    { title: "Connect", zone: "Signals in", body: "Email, CRM, payments and files flow in — plugged in once." },
+    { title: "Understand", zone: "The heart", body: "Every signal linked to its client, project and number." },
+    { title: "Act", zone: "Action out", body: "The next step prepared. You approve, it’s done." },
   ],
 };
 
@@ -36,7 +37,7 @@ export const modules = {
   titleLead: "Six modules,",
   titleAccent: "one core.",
   body: "Each module does one job. Because they share one core, they think as one.",
-  hint: { pointer: "Hover a branch to open it", touch: "Tap a module to open it" },
+  hint: { pointer: "Scroll through them, or hover a branch", touch: "Scroll through them, or tap a module" },
   open: "Open",
 };
 

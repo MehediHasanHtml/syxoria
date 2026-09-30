@@ -2,7 +2,7 @@
 
 import { useEffect, useImperativeHandle, useRef, type Ref } from "react";
 import { IntegrationLogo } from "@/components/shared/integration-logo";
-import { hero, integrations } from "@/content/home";
+import { hero, integrations, oneCore } from "@/content/home";
 import { cn } from "@/lib/cn";
 import type { CoreAnchors } from "@/lib/core/state";
 import { productModules } from "@/lib/mock-data/modules";
@@ -33,6 +33,7 @@ export function CoreOverlay({ ref, focus, explore, onOpenCore }: { ref: Ref<Core
   const branchEls = useRef<(HTMLButtonElement | null)[]>([]);
   const toolEls = useRef<(HTMLDivElement | null)[]>([]);
   const coreEl = useRef<HTMLButtonElement>(null);
+  const zoneEls = useRef<(HTMLDivElement | null)[]>([]);
   const toolSizes = useRef(new Map<HTMLElement, { w: number; h: number }>());
   // branch target widths, with the full name and with the number only
   const branchWidths = useRef(new Map<HTMLElement, { full: number; compact: number }>());
@@ -132,6 +133,62 @@ export function CoreOverlay({ ref, focus, explore, onOpenCore }: { ref: Ref<Core
             }
         for (const p of placed) p.el.style.transform = `translate3d(${p.x.toFixed(1)}px, ${p.y.toFixed(1)}px, 0)`;
 
+        // The three zones: each step of "one core" is written where it happens on the Core,
+        // away from its centre, joined to its spot by a fine leader line
+        a.zones.forEach((p, i) => {
+          const z = zoneEls.current[i];
+          if (!z) return;
+          const shown = p.alpha > 0.02;
+          if (z.style.visibility !== (shown ? "visible" : "hidden")) z.style.visibility = shown ? "visible" : "hidden";
+          if (!shown) return;
+          const label = z.lastElementChild as HTMLElement;
+          const line = z.firstElementChild as HTMLElement;
+          // the label sits outside the Core's silhouette, in the zone's direction from its centre
+          // (a zone facing the viewer, like the heart, has no clear direction: it goes to the left)
+          let dx = p.x - a.core.x;
+          let dy = p.y - a.core.y;
+          if (Math.hypot(dx, dy) < a.core.r * 0.35) {
+            dx = -1;
+            dy = -0.15;
+          }
+          const len = Math.hypot(dx, dy);
+          const ux = dx / len;
+          const uy = dy / len;
+          const lw = label.offsetWidth;
+          const lh = label.offsetHeight;
+          const out = a.core.r * 1.2 + 28;
+          const place = (side: number) => {
+            const x = a.core.x + side * Math.max(Math.abs(ux), 0.55) * out + (side < 0 ? -lw : 0);
+            return { x, fits: x >= MARGIN && x + lw <= right };
+          };
+          // where it has no room on its own side, it goes to the other side of the Core —
+          // and where neither side has room (phones), below the Core
+          let left = ux < 0;
+          let spot = place(left ? -1 : 1);
+          if (!spot.fits) {
+            const other = place(left ? 1 : -1);
+            if (other.fits) {
+              left = !left;
+              spot = other;
+            }
+          }
+          const below = !spot.fits;
+          const lx = Math.min(Math.max(below ? a.core.x - lw / 2 : spot.x, MARGIN), right - lw);
+          let ly = below ? a.core.y + a.core.r * 1.3 + 18 : a.core.y + uy * out * 0.8 - lh / 2;
+          ly = Math.min(Math.max(ly, TOP), H - MARGIN - lh);
+          if (overlaps(lx, ly, lw, lh, words, 12) && words) ly = Math.max(TOP, words.top - lh - 16);
+          // the line runs from the zone to the label's near edge
+          const ex = below ? lx + lw / 2 : left ? lx + lw : lx;
+          const ey = below ? ly - 6 : ly + lh / 2;
+          const lineLen = Math.hypot(ex - p.x, ey - p.y);
+          z.style.opacity = p.alpha.toFixed(3);
+          line.style.transform = `translate3d(${p.x.toFixed(1)}px, ${p.y.toFixed(1)}px, 0) rotate(${Math.atan2(ey - p.y, ex - p.x).toFixed(4)}rad)`;
+          line.style.width = `${lineLen.toFixed(1)}px`;
+          label.style.transform = `translate3d(${lx.toFixed(1)}px, ${ly.toFixed(1)}px, 0)`;
+          const side = below ? "below" : left ? "left" : "right";
+          if (label.dataset.side !== side) label.dataset.side = side;
+        });
+
         // The Core as a target
         const c = coreEl.current;
         if (c) {
@@ -196,6 +253,22 @@ export function CoreOverlay({ ref, focus, explore, onOpenCore }: { ref: Ref<Core
           </button>
         );
       })}
+
+      {oneCore.steps.map((s, i) => (
+        <div key={s.title} ref={(n) => void (zoneEls.current[i] = n)} aria-hidden="true" className="invisible absolute inset-0">
+          {/* leader line, with the zone's spot at its origin */}
+          <span className="absolute left-0 top-0 h-px origin-left bg-gradient-to-r from-[rgb(255_196_140/0.9)] via-white/35 to-white/15 will-change-transform">
+            <span className="absolute -left-1 -top-1 size-2 rounded-full bg-[rgb(255_214_170)] shadow-[0_0_12px_3px_rgb(255_150_70/0.6)]" />
+          </span>
+          <div className="group absolute left-0 top-0 w-max max-w-[15rem] will-change-transform data-[side=below]:text-center data-[side=left]:text-right sm:max-w-[17rem]">
+            <p className="font-mono text-[10.5px] uppercase tracking-[0.26em] text-fg-2 [text-shadow:0_1px_14px_rgb(0_0_0/0.9)]">
+              <span className="text-accent">{String(i + 1).padStart(2, "0")}</span> — {s.zone}
+            </p>
+            <p className="mt-1.5 font-display text-[19px] font-extralight leading-tight tracking-[-0.02em] text-fg [text-shadow:0_1px_14px_rgb(0_0_0/0.9)] sm:text-[22px]">{s.title}</p>
+            <p className="mt-1 text-[13px] leading-snug text-fg-2 [text-shadow:0_1px_14px_rgb(0_0_0/0.9)] max-sm:hidden">{s.body}</p>
+          </div>
+        </div>
+      ))}
 
       {integrations.tools.map((t, i) => (
         <div

@@ -1,7 +1,7 @@
 /**
- * The homepage's sections, in order. The first five live inside the pinned
- * Core story and are positions on its scroll timeline (0 → 100); pricing is a
- * regular section after it.
+ * The homepage's sections, in order — all of them positions on the one pinned
+ * Core story's scroll timeline (0 → 100), from the first look at the Core to
+ * pricing in front of its vitrine.
  *
  *   start  where the section begins (the numbered navigation turns active)
  *   land   where a jump to it lands — the moment its content is fully shown
@@ -9,23 +9,29 @@
 export type Chapter = { id: string; label: string; start: number; land: number };
 
 /** Story height in viewports; the pinned range is one viewport less. */
-export const STORY_VH = 10;
+export const STORY_VH = 9;
 
 export const STORY_CHAPTERS: Chapter[] = [
   { id: "core", label: "Core", start: 0, land: 0 },
-  { id: "one-core", label: "One core", start: 6, land: 19 },
-  { id: "modules", label: "Modules", start: 24, land: 43 },
-  { id: "workspace", label: "Workspace", start: 60, land: 70 },
-  { id: "integrations", label: "Integrations", start: 77, land: 86 },
+  { id: "one-core", label: "One core", start: 7, land: 15 },
+  { id: "modules", label: "Modules", start: 34, land: 45 },
+  { id: "workspace", label: "Workspace", start: 63, land: 71 },
+  { id: "integrations", label: "Integrations", start: 77, land: 84 },
+  { id: "pricing", label: "Pricing", start: 90, land: 99 },
 ];
 
-export const PRICING_SECTION = { id: "pricing", label: "Pricing" };
+export const NAV_SECTIONS = STORY_CHAPTERS.map(({ id, label }) => ({ id, label }));
 
-export const NAV_SECTIONS = [...STORY_CHAPTERS.map(({ id, label }) => ({ id, label })), PRICING_SECTION];
+const index = (id: string) => STORY_CHAPTERS.findIndex((c) => c.id === id);
+/** The one-core chapter — its three zones are lit on the Core. */
+export const ONE_CORE_CHAPTER = index("one-core");
+/** The modules chapter — the one where the Core can be explored. */
+export const MODULES_CHAPTER = index("modules");
+export const WORKSPACE_CHAPTER = index("workspace");
+export const PRICING_CHAPTER = index("pricing");
 
-/** Index of the modules chapter — the one where the Core can be explored. */
-export const MODULES_CHAPTER = STORY_CHAPTERS.findIndex((c) => c.id === "modules");
-export const WORKSPACE_CHAPTER = STORY_CHAPTERS.findIndex((c) => c.id === "workspace");
+/** Where, in the modules chapter, the scroll walks through the six modules one by one. */
+export const MODULE_WALK = { from: 46, to: 60 };
 
 /** A timeline position as a CSS offset from the top of the story. */
 export const storyOffset = (at: number) => `${(at / 100) * (STORY_VH - 1) * 100}svh`;

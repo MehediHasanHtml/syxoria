@@ -10,11 +10,11 @@ export function IntegrationsChapter({ onMore }: { onMore: () => void }) {
   return (
     <Layer name="integrations" className={cn(LEFT, "side:top-auto side:bottom-[12svh] side:translate-y-0")} labelledBy="integrations-title">
       <div className={COL}>
-        <Eyebrow data-r>{integrations.eyebrow}</Eyebrow>
-        <div data-r className="mt-6 short:mt-3">
-          <Title id="integrations-title" lead={integrations.titleLead} accent={integrations.titleAccent} />
-        </div>
-        <p data-r className="mt-5 max-w-[25rem] text-[15px] leading-relaxed text-fg-2 short:mt-3 short:text-[14px]">
+        <Eyebrow data-r index={5}>
+          {integrations.eyebrow}
+        </Eyebrow>
+        <Title data-r data-split id="integrations-title" lead={integrations.titleLead} accent={integrations.titleAccent} className="mt-6 short:mt-3" />
+        <p data-r data-split className="mt-5 max-w-[25rem] text-[15px] leading-relaxed text-fg-2 short:mt-3 short:text-[14px]">
           {integrations.body}
         </p>
         <div data-r className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-3 short:mt-4">

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { CoreExperience } from "@/components/home/core-experience";
 import { FilmProvider } from "@/components/home/film";
-import { Pricing } from "@/components/home/pricing";
 import { SectionNavigation } from "@/components/home/section-navigation";
 import { SmoothScrollProvider } from "@/components/home/smooth-scroll";
 import { pricing } from "@/content/marketing";
@@ -45,8 +44,9 @@ function JsonLd() {
 
 /**
  * The homepage: one pinned scene around the Core that the visitor scrolls
- * through and explores (core → one core → modules → workspace → integrations,
- * see CoreExperience), then pricing. The numbered navigation jumps to any of them.
+ * through and explores — core → one core → modules → workspace →
+ * integrations → pricing (see CoreExperience). The numbered navigation jumps
+ * to any of them.
  */
 export default function HomePage() {
   return (
@@ -54,7 +54,6 @@ export default function HomePage() {
       <FilmProvider>
         <JsonLd />
         <CoreExperience />
-        <Pricing />
         <SectionNavigation />
       </FilmProvider>
     </SmoothScrollProvider>

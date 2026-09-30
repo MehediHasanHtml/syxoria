@@ -51,12 +51,12 @@ float snoise(vec3 v){
 }
 `;
 
-/** Inner light: soft amber → champagne → warm white (no deep ember red). Returns HDR colour. */
+/** Heat ramp: deep ember → orange → gold → white-hot. Returns HDR colour. */
 const HEAT = /* glsl */ `
 vec3 heat(float h){
-  vec3 c = mix(vec3(0.62,0.34,0.14), vec3(1.0,0.66,0.34), smoothstep(0.0,1.0,h));
-  c = mix(c, vec3(1.0,0.84,0.62), smoothstep(0.9,2.4,h));
-  c = mix(c, vec3(1.0,0.95,0.88), smoothstep(2.4,5.0,h));
+  vec3 c = mix(vec3(0.42,0.07,0.01), vec3(1.0,0.40,0.09), smoothstep(0.0,1.0,h));
+  c = mix(c, vec3(1.0,0.72,0.38), smoothstep(0.9,2.4,h));
+  c = mix(c, vec3(1.0,0.93,0.8), smoothstep(2.4,5.0,h));
   return c*h;
 }
 `;
@@ -64,15 +64,17 @@ vec3 heat(float h){
 /* ---------------------------------------------------------------- the rock */
 
 /**
- * The rock is cut into shards (aShard: outward direction + distance). Opening
- * the Core moves each shard out along its direction; the triangles that bridge
- * two shards stretch across the gap and are lit as the Core's inner light.
+ * The rock is cut into six petals around its heart (aShard: the direction a
+ * petal moves when the Core opens + how far). Opening parts them like a
+ * flower; the triangles that bridge two petals stretch across the gap and are
+ * lit as the Core's inner light.
  */
 export const rockVert = /* glsl */ `
 attribute float aCavity;
 attribute vec4 aShard;
 attribute float aSeam;
 attribute float aShardId;
+attribute float aOrder;
 uniform float uOpen;
 uniform float uScatter;    // opening sequence: 1 = shards float apart, 0 = the assembled Core
 uniform float uTease;      // how many shards have appeared (0..1)
@@ -91,19 +93,22 @@ void main(){
   vObj = position;
   vId = aShardId;
   vec3 dir = aShard.xyz;
-  vec3 p = position + dir * aShard.w * uOpen;
-  // the order in which the shards appear during the opening
-  float order = fract(aShardId*0.618 + 0.13);
-  vShow = smoothstep(order*0.8, order*0.8 + 0.2, uTease);
+  // a petal opens outwards and folds back a little, pivoting near its outer edge
+  vec3 axis = normalize(cross(vec3(0.0, 0.0, 1.0), dir) + 1e-4);
+  vec3 pivot = dir*0.55;
+  vec3 p = rotateAxis(position - pivot, axis, 0.22*uOpen) + pivot;
+  p += dir * aShard.w * uOpen;
+  // shards appear one after another during the opening sequence
+  vShow = smoothstep(aOrder*0.8, aOrder*0.8 + 0.2, uTease);
   if (uScatter > 0.0) {
     float r1 = h11(aShardId), r2 = h11(aShardId + 17.0), r3 = h11(aShardId + 41.0);
-    vec3 c = dir*0.8;
-    vec3 axis = normalize(vec3(r1 - 0.5, r2 - 0.5, r3 - 0.5) + 1e-3);
+    vec3 c = dir*0.6;
+    vec3 ax = normalize(vec3(r1 - 0.5, r2 - 0.5, r3 - 0.5) + 1e-3);
     float ang = uScatter*(1.2 + 2.2*r2) + uTime*(0.08 + 0.12*r3)*uScatter;
-    vec3 away = dir*(0.5 + 1.1*r2) + vec3((r1 - 0.5)*2.4, (r3 - 0.5)*1.2, (r2 - 0.5)*1.6);
+    vec3 away = dir*(0.7 + 0.9*r2) + vec3((r1 - 0.5)*1.2, (r3 - 0.5)*0.8, (r2 - 0.5)*1.4);
     // shards still to come wait further out and drift in as they form
     away += dir*1.2*(1.0 - vShow);
-    p = c + rotateAxis(p - c, axis, ang) + away*uScatter;
+    p = c + rotateAxis(p - c, ax, ang) + away*uScatter;
   }
   vec4 w = modelMatrix * vec4(p, 1.0);
   vWorld = w.xyz;
@@ -120,8 +125,9 @@ uniform float uTime;
 uniform float uAwaken;
 uniform float uOpen;
 uniform float uScatter;
-uniform float uGlow;       // dormant ember deep in the hollows (0..1)
 uniform vec4 uProbe;       // xyz: point under the cursor (object space), w: strength
+uniform vec4 uZones[3];    // the brain's three zones: xyz direction (object space), w: how lit
+uniform float uBump;       // strength of the micro relief (world units)
 uniform vec3 uKeyDir;
 uniform vec3 uKeyColor;
 uniform vec3 uFillDir;
@@ -157,14 +163,32 @@ vec2 voronoi(vec3 x){
 }
 void main(){
   // faceted normal from screen derivatives, softened with the smooth one
-  vec3 fN = normalize(cross(dFdx(vWorld), dFdy(vWorld)));
-  vec3 N = normalize(mix(normalize(vNormalW), fN, 0.45));
+  vec3 dpx = dFdx(vWorld);
+  vec3 dpy = dFdy(vWorld);
+  vec3 fN = normalize(cross(dpx, dpy));
+  vec3 N = normalize(mix(normalize(vNormalW), fN, 0.55));
   vec3 V = normalize(cameraPosition - vWorld);
   if (dot(N, V) < 0.0) N = -N;
-  // triangles bridging two shards (their corners carry different shard ids) are the gap;
+  // the silhouette rim reads the shape, not the grain: taken before the relief
+  float fres = pow(1.0 - max(dot(N, V), 0.0), 3.0);
+
+  // micro relief: a rough, crisp stone surface (derivative bump mapping, no texture)
+  float grain = snoise(vObj*9.0)*0.5 + snoise(vObj*23.0)*0.25;
+  float bump = snoise(vObj*11.0)*0.7 + snoise(vObj*24.0)*0.3;
+  {
+    float bx = dFdx(bump);
+    float by = dFdy(bump);
+    vec3 r1 = cross(dpy, N);
+    vec3 r2 = cross(N, dpx);
+    float det = dot(dpx, r1);
+    vec3 grad = sign(det) * (bx*r1 + by*r2);
+    N = normalize(abs(det)*N - uBump*grad);
+  }
+
+  // triangles bridging two petals (their corners carry different ids) are the gap;
   // how far they have stretched says how wide it has opened
   float bridge = step(1e-4, fwidth(vId));
-  float sw = length(dFdx(vWorld)) + length(dFdy(vWorld));
+  float sw = length(dpx) + length(dpy);
   float sr = length(dFdx(vRest)) + length(dFdy(vRest));
   float gap = bridge * smoothstep(1.3, 2.4, sw / (sr + 1e-6));
 
@@ -177,38 +201,40 @@ void main(){
     front = (1.0 - smoothstep(0.0, 0.07, vShow*1.08 - grow)) * step(vShow, 0.999);
   }
 
-  // anthracite: a clean, honed grey stone with a satin sheen
-  float grain = snoise(vObj*9.0)*0.5 + snoise(vObj*23.0)*0.25;
-  float tone = 0.085 + 0.012*snoise(vObj*1.8) + 0.004*grain;
-  vec3 albedo = vec3(tone*0.97, tone, tone*1.04);
+  // near-black volcanic stone, a faint warm cast
+  float tone = 0.02 + 0.012*snoise(vObj*2.4) + 0.006*grain;
+  vec3 albedo = vec3(tone*1.04, tone, tone*0.94);
 
   // the cursor wakes the stone locally, like a hand held over embers
   vec3 dp = vObj - uProbe.xyz;
   float probe = uProbe.w * exp(-dot(dp, dp) * 3.5);
-  float aw = clamp(uAwaken + probe*0.5, 0.0, 1.3);
+  // the three zones: each lights its own region of the Core
+  vec3 nObj = normalize(vObj);
+  float zone = 0.0;
+  for (int i = 0; i < 3; i++) {
+    vec4 z = uZones[i];
+    // the heart (zone 1) spreads its light further the more it is lit
+    float k = i == 1 ? mix(9.0, 3.2, z.w) : 6.5;
+    zone += z.w * exp(-(1.0 - dot(nObj, z.xyz)) * k);
+  }
+  float aw = clamp(uAwaken + probe*0.5 + zone*0.55, 0.0, 1.4);
 
   float diff = max(dot(N, uKeyDir), 0.0);
   float fill = max(dot(N, uFillDir), 0.0);
   vec3 H = normalize(uKeyDir + V);
   float glint = smoothstep(0.35, 0.85, grain + 0.45);
-  float spec = pow(max(dot(N, H), 0.0), 34.0) * (0.6 + 0.4*glint);
-  float fres = pow(1.0 - max(dot(N, V), 0.0), 3.0);
-  // the rim is cool while dormant and warms as the Core wakes
-  vec3 rim = mix(vec3(0.5, 0.54, 0.6)*0.22, uRimColor*0.2, smoothstep(0.3, 0.9, aw) * 0.6);
-  vec3 col = albedo * (uKeyColor*diff*1.55 + uFillColor*fill*0.6 + 0.05)
-           + uKeyColor*spec*0.32
-           + rim*fres;
-  // the hollows fall into shadow: depth, not soot
-  col *= 1.0 - 0.6*vCavity*vCavity;
+  float spec = pow(max(dot(N, H), 0.0), 38.0) * (0.15 + 0.85*glint);
+  vec3 col = albedo * (uKeyColor*diff*1.2 + uFillColor*fill*0.7 + 0.05)
+           + uKeyColor*spec*0.16
+           + uRimColor*fres*0.28;
 
   // fissures: cell borders of a warped voronoi field, only in "open" zones
   vec3 q = vObj*2.5 + 0.28*vec3(snoise(vObj*1.6), snoise(vObj*1.6+7.1), snoise(vObj*1.6+3.3));
   vec2 v = voronoi(q);
   float edge = v.y - v.x;
-  float zone = smoothstep(-0.3, 0.55, snoise(vObj*1.2 + 2.0));
-  // fewer, finer veins of light: a lit stone, not a cracked coal
-  float reach = clamp(zone*0.35 + vCavity*1.2 + probe*0.6, 0.0, 1.0);
-  float width = mix(0.006, 0.05, clamp(aw, 0.0, 1.0)) * reach + 1e-4;
+  float zoneMask = smoothstep(-0.3, 0.55, snoise(vObj*1.2 + 2.0));
+  float reach = clamp(zoneMask*0.85 + vCavity*1.6 + probe*0.6 + zone*0.7, 0.0, 1.0);
+  float width = mix(0.02, 0.085, clamp(aw, 0.0, 1.0)) * reach + 1e-4;
   float crack = 1.0 - smoothstep(0.0, width, edge);
   crack *= crack;
   float spill = (1.0 - smoothstep(0.0, width*4.5, edge)) * reach;
@@ -216,26 +242,28 @@ void main(){
   float pulse = 0.88 + 0.12*sin(uTime*1.25) + 0.05*sin(uTime*3.1);
   float cav = vCavity*vCavity;
   float core = cav * (0.45 + 0.9*flow + 1.2*crack);
-  // the seams the Core will split along glow first
-  float seam = 1.0 - smoothstep(0.0, 0.006 + 0.014*aw + 0.02*uOpen, vSeam);
-  seam *= seam;
-  float h = (crack*reach*(0.4+flow)*2.6 + core*1.2 + spill*0.15 + seam*(0.5+flow)*(0.7 + 1.4*uOpen)) * aw * pulse;
-  // faint light would read as a stain on the grey: light only shows once it is really there
-  h = max(h - 0.12, 0.0) * 1.15;
+  // the seams the Core opens along glow first, as it gets ready to part
+  float seam = 1.0 - smoothstep(0.0, 0.004 + 0.012*uOpen, vSeam);
+  seam *= seam * smoothstep(0.0, 0.25, uOpen);
+  float h = (crack*reach*(0.4+flow)*3.2 + core*1.9 + spill*0.3 + seam*(0.6+flow)*2.0) * aw * pulse;
   col += heat(h);
-  // surfaces near the light catch it
-  col += vec3(1.0,0.7,0.42) * spill * aw * 0.05 * diff;
+  // surfaces near the heat catch its light
+  col += vec3(1.0,0.45,0.12) * spill * aw * 0.08 * diff;
 
-  // opened: the gap between the shards is lit from within
-  col = mix(col, heat((0.7 + 1.1*flow) * (0.35 + 0.65*uOpen)), gap * step(0.002, uOpen));
+  // opened: the stone really parts — no skin across the gap, you see into it: a dark inner
+  // shell warmed by the nucleus, and every broken rim lit
+  if (uOpen > 0.002) {
+    if (gap > 0.35) discard;
+    float rim = 1.0 - smoothstep(0.0, 0.05, vSeam);
+    col += heat(1.1 + 0.9*flow) * rim * smoothstep(0.0, 0.3, uOpen);
+    if (!gl_FrontFacing) col = albedo*0.6 + heat((0.22 + 0.3*flow) * uOpen) + heat(1.4) * rim * uOpen;
+  }
 
-  // scattered: light catches each shard’s broken edges, and its inner face holds a little of the Core’s light
+  // scattered: light catches each shard’s broken edges
   if (uScatter > 0.001) {
-    // a loose piece of the Core: darker and glossier, its broken edge holding the inner light
     float broken = 1.0 - smoothstep(0.0, 0.13, vSeam);
-    col *= mix(1.0, gl_FrontFacing ? 0.38 : 0.2, uScatter);
-    col += uKeyColor * pow(max(dot(N, H), 0.0), 80.0) * 0.8 * uScatter;
-    col += heat(1.0) * fres * 0.16 * uScatter;
+    col *= mix(1.0, gl_FrontFacing ? 0.6 : 0.3, uScatter);
+    col += uKeyColor * pow(max(dot(N, H), 0.0), 80.0) * 0.6 * uScatter;
     col += heat(1.3 + 0.8*flow) * (broken*1.2 + front*1.0) * uScatter;
   }
 
@@ -349,30 +377,68 @@ void main(){
 `;
 
 /**
- * A branch of the Core: graphite by default, a warm sap near the Core. When
- * explored it warms along its length and a slow pulse of light travels out.
+ * Anything that leaves or reaches the Core (module branches, tool links, the
+ * signals of the zones). Every line starts at the Core (vU = 0): it is hot
+ * there, like sap, and cools to graphite along its length. Light travels
+ * along it — outwards (uFlow 1) or into the Core (uFlow -1).
  */
 export const branchFrag = /* glsl */ `
 uniform float uTime;
-uniform float uGrow;       // grown from the Core outwards (0..1)
+uniform float uGrow;       // how much of the line is drawn (0..1)
+uniform float uGrowFrom;   // 0: drawn from the Core outwards · 1: from the far end in
 uniform float uHi;         // explored (0..1)
-uniform float uDim;        // another branch is explored (0..1)
+uniform float uDim;        // another line is explored (0..1)
 uniform float uIntensity;
+uniform float uFlow;       // 1 outwards, -1 inwards
+uniform float uPulse;      // strength of the travelling light
 uniform vec3 uCool;
 uniform vec3 uWarm;
 varying float vU;
 varying vec3 vWorld;
 varying vec3 vNormalW;
 void main(){
-  if (vU > uGrow) discard;
+  float u = mix(vU, 1.0 - vU, uGrowFrom);
+  if (u > uGrow) discard;
   vec3 V = normalize(cameraPosition - vWorld);
   float edge = 1.0 - abs(dot(normalize(vNormalW), V));
-  float sap = pow(1.0 - vU, 2.2);
-  float tip = smoothstep(0.08, 0.0, uGrow - vU) * step(uGrow, 0.999);
-  float travel = exp(-pow((fract(uTime*0.2) - vU) * 7.0, 2.0)) * uHi;
+  float sap = pow(1.0 - vU, 2.4);
+  float tip = smoothstep(0.08, 0.0, uGrow - u) * step(uGrow, 0.999);
+  float ph = fract(vU*1.4 - uTime*0.22*uFlow);
+  float comet = uFlow > 0.0 ? exp(-(1.0 - ph)*9.0) : exp(-ph*9.0);
   vec3 col = uCool * (0.45 + 0.55*edge) * (1.0 - 0.65*uDim);
-  col += uWarm * (sap*(0.18 + 1.1*uHi)*(1.0 - 0.6*uDim) + travel*0.9 + tip*1.1 + 0.35*uHi);
+  col += uWarm * (sap*(0.45 + 1.1*uHi)*(1.0 - 0.6*uDim) + comet*(uPulse + 1.2*uHi) + tip*1.1 + 0.3*uHi);
   gl_FragColor = vec4(col * uIntensity, 1.0);
+}
+`;
+
+/* ------------------------------------------------------------- the stars */
+
+/** A distant starfield: fine cold points, a few warm ones, some slowly twinkling. */
+export const starVert = /* glsl */ `
+attribute vec4 aSeed;
+uniform float uTime;
+uniform float uPixel;
+varying float vAlpha;
+varying float vWarm;
+void main(){
+  vec4 mv = modelViewMatrix * vec4(position, 1.0);
+  float tw = 0.55 + 0.45*sin(uTime*(0.4 + aSeed.y*1.4) + aSeed.x*40.0);
+  vAlpha = mix(0.3, 1.0, aSeed.z) * mix(1.0, tw, step(0.65, aSeed.w));
+  vWarm = step(0.88, aSeed.y);
+  gl_PointSize = mix(0.8, 2.3, aSeed.z*aSeed.z*aSeed.z) * uPixel;
+  gl_Position = projectionMatrix * mv;
+}
+`;
+
+export const starFrag = /* glsl */ `
+uniform float uIntensity;
+varying float vAlpha;
+varying float vWarm;
+void main(){
+  float d = length(gl_PointCoord - 0.5) * 2.0;
+  float a = pow(max(1.0 - d, 0.0), 1.6) * vAlpha;
+  vec3 c = mix(vec3(0.86,0.9,1.0), vec3(1.0,0.86,0.7), vWarm);
+  gl_FragColor = vec4(c * a * uIntensity, 1.0);
 }
 `;
 

@@ -12,7 +12,9 @@ type Props = {
   /** Pointer parallax */
   interactive?: boolean;
   nodeCount?: number;
-  /** Screen positions of the module orbs and tool nodes, every frame. */
+  /** An HTML element (the product screen) the scene places in 3D beside the Core. */
+  screen?: HTMLElement | null;
+  /** Screen positions of the module branches, tool nodes and zones, every frame. */
   onFrame?: (anchors: CoreAnchors) => void;
   /** Called once the scene has compiled and drawn its first frame (or failed to). */
   onReady?: () => void;
@@ -23,7 +25,7 @@ type Props = {
  * text paints first; the canvas only renders while it is on screen and the
  * tab is visible. Without WebGL, a quiet CSS glow stands in.
  */
-export function CoreCanvas({ state, className, label, interactive = true, nodeCount, onFrame, onReady }: Props) {
+export function CoreCanvas({ state, className, label, interactive = true, nodeCount, screen, onFrame, onReady }: Props) {
   const wrap = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "failed">("loading");
@@ -68,6 +70,7 @@ export function CoreCanvas({ state, className, label, interactive = true, nodeCo
           reducedMotion: reduced,
           nodeCount,
           rockGeometry,
+          screen: screen ?? undefined,
           onFrame: (a) => callbacks.current.onFrame?.(a),
         });
       } catch {
@@ -122,7 +125,7 @@ export function CoreCanvas({ state, className, label, interactive = true, nodeCo
       disposed = true;
       cleanup.reverse().forEach((fn) => fn());
     };
-  }, [state, interactive, nodeCount]);
+  }, [state, interactive, nodeCount, screen]);
 
   return (
     <div ref={wrap} role={label ? "img" : undefined} aria-label={label} aria-hidden={label ? undefined : true} className={cn("overflow-hidden", className)}>

@@ -14,7 +14,7 @@ export const hero = {
   titleAccent: "dimension.",
   body: "Syxoria connects your tools, understands your business and turns every signal into progress.",
   primaryCta: { label: "Start free", href: "/signup" },
-  filmCta: "Watch the film",
+  filmCta: "Watch the live demo",
   coreHint: "Open the core",
   scrollHint: "Scroll to awaken",
 };
@@ -37,7 +37,7 @@ export const modules = {
   titleLead: "Six modules,",
   titleAccent: "one core.",
   body: "Each module does one job. Because they share one core, they think as one.",
-  hint: { pointer: "Scroll through them, or hover a branch", touch: "Scroll through them, or tap a module" },
+  hint: { pointer: "Scroll through them, or point at the Core", touch: "Scroll through them, or tap a module" },
   open: "Open",
 };
 
@@ -58,18 +58,21 @@ export const workspace = {
   body: "Your six modules meet in one calm screen. Syxoria prepares the work — you stay in control.",
   steps: ["Everything arrives in one stream", "Syxoria proposes the next step", "You approve — it’s done"],
   demo: {
-    label: "Play the demo",
-    duration: "0:21",
-    hint: { pointer: "Hover to preview · click to open", touch: "Tap to preview" },
-    live: "Live preview",
-    openFull: "Open the full demo",
-    tapAgain: "Tap again to open the full demo",
+    label: "Watch it run",
+    live: "Live",
+    openFull: "Open fullscreen",
+    hint: { pointer: "Keep scrolling — it runs. Click the screen to open it fullscreen.", touch: "Keep scrolling — it runs. Tap the screen to open it fullscreen." },
+    summary: "A short session in the Syxoria workspace: a payment arrives and is linked to its client, Nexo proposes following up four invoices, you review and approve, Volt sends the reminders, and the numbers update.",
+    // the session the screen plays — `at` is where each moment starts (0..1, see LiveDashboard)
+    steps: [
+      { at: 0.0, title: "It comes alive", body: "Every module, at a glance." },
+      { at: 0.2, title: "A payment lands", body: "Linked to its client by Nexo." },
+      { at: 0.3, title: "Nexo proposes", body: "4 invoices to follow up — €6,380." },
+      { at: 0.41, title: "You approve", body: "One look, one click." },
+      { at: 0.63, title: "Volt carries it out", body: "Sent, tracked — the numbers move." },
+    ],
   },
   enter: { label: "Enter the workspace", href: "/app" },
-  cards: {
-    insight: { module: "Nexo", title: "4 invoices can be followed up today", impact: "€6,380", action: "Review" },
-    momentum: { module: "Kairo", label: "Momentum", value: "+12%", note: "this week" },
-  },
 };
 
 type Tool = { name: string; logo?: string };
@@ -117,12 +120,3 @@ export const pricingIntro = {
   highlight: "Most chosen",
   notes: ["All six modules in every plan", "14 days free — no credit card", "Cancel anytime", "Prices exclude VAT, per workspace"],
 };
-
-/** Scenes for the product film preview (used until the real film is delivered). */
-export const filmScenes = [
-  { image: "overview", caption: "Everything, in one calm place.", zoom: 1, origin: "50% 50%" },
-  { image: "overview", caption: "Progress, made visible.", zoom: 1.7, origin: "38% 62%" },
-  { image: "insights", caption: "Signals, before they become problems.", zoom: 1.08, origin: "50% 40%" },
-  { image: "insights", caption: "Act in one click. You stay in control.", zoom: 1.75, origin: "72% 50%" },
-  { image: "projects", caption: "Every project, growing.", zoom: 1.1, origin: "55% 45%" },
-] as const;

@@ -51,12 +51,20 @@ float snoise(vec3 v){
 }
 `;
 
-/** Heat ramp: deep ember → orange → gold → white-hot. Returns HDR colour. */
+
+/**
+ * The Core's light, as uniforms shared by every material (see PALETTES in
+ * look.ts): the heat ramp deep → bright → hot → white-hot. Returns HDR colour.
+ */
 const HEAT = /* glsl */ `
+uniform vec3 uHeat0;
+uniform vec3 uHeat1;
+uniform vec3 uHeat2;
+uniform vec3 uHeat3;
 vec3 heat(float h){
-  vec3 c = mix(vec3(0.42,0.07,0.01), vec3(1.0,0.40,0.09), smoothstep(0.0,1.0,h));
-  c = mix(c, vec3(1.0,0.72,0.38), smoothstep(0.9,2.4,h));
-  c = mix(c, vec3(1.0,0.93,0.8), smoothstep(2.4,5.0,h));
+  vec3 c = mix(uHeat0, uHeat1, smoothstep(0.0,1.0,h));
+  c = mix(c, uHeat2, smoothstep(0.9,2.4,h));
+  c = mix(c, uHeat3, smoothstep(2.4,5.0,h));
   return c*h;
 }
 `;
@@ -64,14 +72,15 @@ vec3 heat(float h){
 /* ---------------------------------------------------------------- the rock */
 
 /**
- * The rock is cut into six petals around its heart (aShard: the direction a
- * petal moves when the Core opens + how far). Opening parts them like a
- * flower; the triangles that bridge two petals stretch across the gap and are
- * lit as the Core's inner light.
+ * The rock is cut into six fragments around its heart, one per module. Each
+ * opens its own way (aShard: direction + distance · aPetal: delay, fold,
+ * twist, lift), so the Core parts irregularly, like something alive; the one
+ * being explored lifts a little further (uPetalHi).
  */
 export const rockVert = /* glsl */ `
 attribute float aCavity;
 attribute vec4 aShard;
+attribute vec4 aPetal;
 attribute float aSeam;
 attribute float aShardId;
 attribute float aOrder;
@@ -79,6 +88,7 @@ uniform float uOpen;
 uniform float uScatter;    // opening sequence: 1 = shards float apart, 0 = the assembled Core
 uniform float uTease;      // how many shards have appeared (0..1)
 uniform float uTime;
+uniform float uPetalHi[6];
 varying vec3 vObj;
 varying vec3 vWorld;
 varying vec3 vRest;
@@ -87,24 +97,29 @@ varying float vCavity;
 varying float vSeam;
 varying float vShow;
 varying float vId;
+varying float vHi;
 float h11(float n){ return fract(sin(n*127.1 + 311.7) * 43758.5453); }
 vec3 rotateAxis(vec3 v, vec3 a, float ang){ float c = cos(ang), s = sin(ang); return v*c + cross(a, v)*s + a*dot(a, v)*(1.0 - c); }
 void main(){
   vObj = position;
   vId = aShardId;
   vec3 dir = aShard.xyz;
-  // a petal opens outwards and folds back a little, pivoting near its outer edge
+  float hi = uPetalHi[int(aShardId + 0.5)];
+  vHi = hi;
+  // each fragment starts parting at its own moment, and moves its own way
+  float o = smoothstep(aPetal.x, aPetal.x + 0.72, uOpen);
   vec3 axis = normalize(cross(vec3(0.0, 0.0, 1.0), dir) + 1e-4);
   vec3 pivot = dir*0.55;
-  vec3 p = rotateAxis(position - pivot, axis, 0.22*uOpen) + pivot;
-  p += dir * aShard.w * uOpen;
+  vec3 p = rotateAxis(position - pivot, axis, aPetal.y*o) + pivot;
+  p = rotateAxis(p, normalize(dir), aPetal.z*o);
+  p += dir * (aShard.w*o + 0.07*hi*smoothstep(0.3, 1.0, uOpen)) + vec3(0.0, aPetal.w*o, 0.0);
   // shards appear one after another during the opening sequence
   vShow = smoothstep(aOrder*0.8, aOrder*0.8 + 0.2, uTease);
   if (uScatter > 0.0) {
     float r1 = h11(aShardId), r2 = h11(aShardId + 17.0), r3 = h11(aShardId + 41.0);
     vec3 c = dir*0.6;
     vec3 ax = normalize(vec3(r1 - 0.5, r2 - 0.5, r3 - 0.5) + 1e-3);
-    float ang = uScatter*(1.2 + 2.2*r2) + uTime*(0.08 + 0.12*r3)*uScatter;
+    float ang = uScatter*(1.2 + 2.2*r2) + uTime*(0.06 + 0.08*r3)*uScatter;
     vec3 away = dir*(0.7 + 0.9*r2) + vec3((r1 - 0.5)*1.2, (r3 - 0.5)*0.8, (r2 - 0.5)*1.4);
     // shards still to come wait further out and drift in as they form
     away += dir*1.2*(1.0 - vShow);
@@ -133,6 +148,7 @@ uniform vec3 uKeyColor;
 uniform vec3 uFillDir;
 uniform vec3 uFillColor;
 uniform vec3 uRimColor;
+uniform vec3 uSpill;
 varying vec3 vObj;
 varying vec3 vWorld;
 varying vec3 vRest;
@@ -141,6 +157,7 @@ varying float vCavity;
 varying float vSeam;
 varying float vShow;
 varying float vId;
+varying float vHi;
 ${NOISE}
 ${HEAT}
 vec3 hash33(vec3 p){
@@ -185,7 +202,7 @@ void main(){
     N = normalize(abs(det)*N - uBump*grad);
   }
 
-  // triangles bridging two petals (their corners carry different ids) are the gap;
+  // triangles bridging two fragments (their corners carry different ids) are the gap;
   // how far they have stretched says how wide it has opened
   float bridge = step(1e-4, fwidth(vId));
   float sw = length(dpx) + length(dpy);
@@ -198,7 +215,7 @@ void main(){
     if (bridge > 0.5) discard;
     float grow = snoise(vObj*5.0)*0.5 + 0.5;
     if (grow > vShow*1.08) discard;
-    front = (1.0 - smoothstep(0.0, 0.07, vShow*1.08 - grow)) * step(vShow, 0.999);
+    front = (1.0 - smoothstep(0.0, 0.05, vShow*1.08 - grow)) * step(vShow, 0.999);
   }
 
   // near-black volcanic stone, a faint warm cast
@@ -208,16 +225,23 @@ void main(){
   // the cursor wakes the stone locally, like a hand held over embers
   vec3 dp = vObj - uProbe.xyz;
   float probe = uProbe.w * exp(-dot(dp, dp) * 3.5);
-  // the three zones: each lights its own region of the Core
   vec3 nObj = normalize(vObj);
-  float zone = 0.0;
-  for (int i = 0; i < 3; i++) {
-    vec4 z = uZones[i];
-    // the heart (zone 1) spreads its light further the more it is lit
-    float k = i == 1 ? mix(9.0, 3.2, z.w) : 6.5;
-    zone += z.w * exp(-(1.0 - dot(nObj, z.xyz)) * k);
-  }
-  float aw = clamp(uAwaken + probe*0.5 + zone*0.55, 0.0, 1.4);
+  float t = uTime;
+
+  // the brain's three zones, each with its own behaviour:
+  //   connect (0)     light runs IN along the fissures, converging on its area — signals arriving
+  //   understand (1)  the heart glows, its light spreading the more it is lit
+  //   act (2)         pulses leave its area and run OUT along the fissures — action going out
+  float dIn = 1.0 - dot(nObj, uZones[0].xyz);
+  float dHeart = 1.0 - dot(nObj, uZones[1].xyz);
+  float dOut = 1.0 - dot(nObj, uZones[2].xyz);
+  float zone = uZones[0].w * exp(-dIn*7.0) * 0.6
+             + uZones[1].w * exp(-dHeart * mix(9.0, 3.2, uZones[1].w))
+             + uZones[2].w * exp(-dOut*7.0) * 0.6;
+  float waveIn = pow(0.5 + 0.5*sin(dIn*30.0 + t*3.2), 6.0) * smoothstep(0.8, 0.05, dIn) * uZones[0].w;
+  float waveOut = pow(0.5 + 0.5*sin(dOut*30.0 - t*3.2), 6.0) * smoothstep(0.8, 0.05, dOut) * uZones[2].w;
+  float waves = waveIn + waveOut;
+  float aw = clamp(uAwaken + probe*0.5 + zone*0.55 + vHi*0.3, 0.0, 1.4);
 
   float diff = max(dot(N, uKeyDir), 0.0);
   float fill = max(dot(N, uFillDir), 0.0);
@@ -233,41 +257,87 @@ void main(){
   vec2 v = voronoi(q);
   float edge = v.y - v.x;
   float zoneMask = smoothstep(-0.3, 0.55, snoise(vObj*1.2 + 2.0));
-  float reach = clamp(zoneMask*0.85 + vCavity*1.6 + probe*0.6 + zone*0.7, 0.0, 1.0);
+  float reach = clamp(zoneMask*0.85 + vCavity*1.6 + probe*0.6 + zone*0.7 + waves*0.6 + vHi*0.5, 0.0, 1.0);
   float width = mix(0.02, 0.085, clamp(aw, 0.0, 1.0)) * reach + 1e-4;
   float crack = 1.0 - smoothstep(0.0, width, edge);
   crack *= crack;
   float spill = (1.0 - smoothstep(0.0, width*4.5, edge)) * reach;
-  float flow = 0.5 + 0.5*snoise(vObj*3.4 + vec3(0.0, uTime*0.32, uTime*0.18));
-  float pulse = 0.88 + 0.12*sin(uTime*1.25) + 0.05*sin(uTime*3.1);
+  float flow = 0.5 + 0.5*snoise(vObj*3.4 + vec3(0.0, t*0.32, t*0.18));
+  float pulse = 0.88 + 0.12*sin(t*1.25) + 0.05*sin(t*3.1);
   float cav = vCavity*vCavity;
   float core = cav * (0.45 + 0.9*flow + 1.2*crack);
   // the seams the Core opens along glow first, as it gets ready to part
   float seam = 1.0 - smoothstep(0.0, 0.004 + 0.012*uOpen, vSeam);
   seam *= seam * smoothstep(0.0, 0.25, uOpen);
   float h = (crack*reach*(0.4+flow)*3.2 + core*1.9 + spill*0.3 + seam*(0.6+flow)*2.0) * aw * pulse;
+  // the zones' travelling light, carried by the fissures
+  h += waves * (crack*4.2 + spill*0.6) * pulse;
   col += heat(h);
   // surfaces near the heat catch its light
-  col += vec3(1.0,0.45,0.12) * spill * aw * 0.08 * diff;
+  col += uSpill * spill * aw * 0.08 * diff;
 
   // opened: the stone really parts — no skin across the gap, you see into it: a dark inner
-  // shell warmed by the nucleus, and every broken rim lit
+  // shell warmed by the nucleus, and every broken rim lit (brighter on the module explored)
   if (uOpen > 0.002) {
     if (gap > 0.35) discard;
-    float rim = 1.0 - smoothstep(0.0, 0.05, vSeam);
-    col += heat(1.1 + 0.9*flow) * rim * smoothstep(0.0, 0.3, uOpen);
-    if (!gl_FrontFacing) col = albedo*0.6 + heat((0.22 + 0.3*flow) * uOpen) + heat(1.4) * rim * uOpen;
+    // only the real broken edges: thin, and not at the heart where every seam meets
+    float rim = (1.0 - smoothstep(0.0, 0.022, vSeam)) * smoothstep(0.12, 0.42, length(vObj.xy));
+    col += heat((0.65 + 0.5*flow) * (1.0 + 0.5*vHi)) * rim * smoothstep(0.0, 0.3, uOpen);
+    // inside: dark stone, lit only along its own fissures by the nucleus
+    if (!gl_FrontFacing) col = albedo*0.45 + heat((crack*1.5 + spill*0.15 + 0.05 + 0.06*flow) * uOpen * (1.0 + 0.6*vHi)) + heat(0.9) * rim * uOpen;
   }
 
-  // scattered: light catches each shard’s broken edges
+  // scattered (the opening sequence): deep, polished pieces whose broken edges hold a low light
   if (uScatter > 0.001) {
-    float broken = 1.0 - smoothstep(0.0, 0.13, vSeam);
-    col *= mix(1.0, gl_FrontFacing ? 0.6 : 0.3, uScatter);
-    col += uKeyColor * pow(max(dot(N, H), 0.0), 80.0) * 0.6 * uScatter;
-    col += heat(1.3 + 0.8*flow) * (broken*1.2 + front*1.0) * uScatter;
+    float broken = 1.0 - smoothstep(0.0, 0.09, vSeam);
+    col *= mix(1.0, gl_FrontFacing ? 0.8 : 0.35, uScatter);
+    col += uKeyColor * pow(max(dot(N, H), 0.0), 60.0) * 0.3 * uScatter;
+    col += uRimColor * fres * 0.12 * uScatter;
+    col += heat(0.5 + 0.4*flow) * (broken*0.5 + front*0.65) * uScatter;
   }
 
   gl_FragColor = vec4(col, 1.0);
+}
+`;
+
+/* ------------------------------------------------------------- debris */
+
+/** Small stone chips drifting out of the opened Core (instanced). */
+export const debrisVert = /* glsl */ `
+varying vec3 vWorld;
+varying vec3 vObj;
+void main(){
+  vec4 local = vec4(position, 1.0);
+  #ifdef USE_INSTANCING
+  local = instanceMatrix * local;
+  #endif
+  vObj = position;
+  vec4 w = modelMatrix * local;
+  vWorld = w.xyz;
+  gl_Position = projectionMatrix * viewMatrix * w;
+}
+`;
+
+export const debrisFrag = /* glsl */ `
+uniform vec3 uKeyDir;
+uniform vec3 uKeyColor;
+uniform vec3 uRimColor;
+uniform float uIntensity;
+varying vec3 vWorld;
+varying vec3 vObj;
+${HEAT}
+void main(){
+  vec3 N = normalize(cross(dFdx(vWorld), dFdy(vWorld)));
+  vec3 V = normalize(cameraPosition - vWorld);
+  if (dot(N, V) < 0.0) N = -N;
+  float diff = max(dot(N, uKeyDir), 0.0);
+  float fres = pow(1.0 - max(dot(N, V), 0.0), 2.5);
+  vec3 H = normalize(uKeyDir + V);
+  vec3 col = vec3(0.022, 0.021, 0.02) * (uKeyColor*diff*1.3 + 0.08)
+           + uKeyColor * pow(max(dot(N, H), 0.0), 50.0) * 0.25
+           + uRimColor * fres * 0.25
+           + heat(0.9) * fres * 0.35;
+  gl_FragColor = vec4(col * uIntensity, 1.0);
 }
 `;
 
@@ -325,12 +395,14 @@ void main(){
 
 export const emberFrag = /* glsl */ `
 uniform float uIntensity;
+uniform vec3 uEmber0;
+uniform vec3 uEmber1;
 varying float vAlpha;
 varying float vHeat;
 void main(){
   float d = length(gl_PointCoord - 0.5) * 2.0;
   float a = pow(max(1.0 - d, 0.0), 2.2) * vAlpha;
-  vec3 c = mix(vec3(1.0,0.46,0.12), vec3(1.0,0.82,0.55), vHeat);
+  vec3 c = mix(uEmber0, uEmber1, vHeat);
   gl_FragColor = vec4(c * a * uIntensity * 2.2, 1.0);
 }
 `;
@@ -361,7 +433,7 @@ void main(){
 }
 `;
 
-/* ------------------------------------------------------ branches & wiring */
+/* ------------------------------------------------------------ the wiring */
 
 export const branchVert = /* glsl */ `
 varying float vU;
@@ -377,36 +449,37 @@ void main(){
 `;
 
 /**
- * Anything that leaves or reaches the Core (module branches, tool links, the
- * signals of the zones). Every line starts at the Core (vU = 0): it is hot
- * there, like sap, and cools to graphite along its length. Light travels
- * along it — outwards (uFlow 1) or into the Core (uFlow -1).
+ * A wire between the Core and a tool. It starts at the Core (vU = 0): hot
+ * there, like sap, cooling to graphite along its length; light travels into
+ * the Core (uFlow -1). Pointing at the tool sends one brighter pulse along
+ * it (uShot: where the pulse is, uShotAmt: how bright).
  */
 export const branchFrag = /* glsl */ `
 uniform float uTime;
 uniform float uGrow;       // how much of the line is drawn (0..1)
-uniform float uGrowFrom;   // 0: drawn from the Core outwards · 1: from the far end in
-uniform float uHi;         // explored (0..1)
-uniform float uDim;        // another line is explored (0..1)
+uniform float uHi;         // pointed at (0..1)
+uniform float uDim;        // another wire is pointed at (0..1)
 uniform float uIntensity;
 uniform float uFlow;       // 1 outwards, -1 inwards
 uniform float uPulse;      // strength of the travelling light
+uniform float uShot;
+uniform float uShotAmt;
 uniform vec3 uCool;
 uniform vec3 uWarm;
 varying float vU;
 varying vec3 vWorld;
 varying vec3 vNormalW;
 void main(){
-  float u = mix(vU, 1.0 - vU, uGrowFrom);
-  if (u > uGrow) discard;
+  if (vU > uGrow) discard;
   vec3 V = normalize(cameraPosition - vWorld);
   float edge = 1.0 - abs(dot(normalize(vNormalW), V));
   float sap = pow(1.0 - vU, 2.4);
-  float tip = smoothstep(0.08, 0.0, uGrow - u) * step(uGrow, 0.999);
+  float tip = smoothstep(0.08, 0.0, uGrow - vU) * step(uGrow, 0.999);
   float ph = fract(vU*1.4 - uTime*0.22*uFlow);
   float comet = uFlow > 0.0 ? exp(-(1.0 - ph)*9.0) : exp(-ph*9.0);
-  vec3 col = uCool * (0.45 + 0.55*edge) * (1.0 - 0.65*uDim);
-  col += uWarm * (sap*(0.45 + 1.1*uHi)*(1.0 - 0.6*uDim) + comet*(uPulse + 1.2*uHi) + tip*1.1 + 0.3*uHi);
+  float shot = exp(-pow((vU - uShot) * 9.0, 2.0)) * uShotAmt;
+  vec3 col = uCool * (0.45 + 0.55*edge + 0.5*uHi) * (1.0 - 0.6*uDim);
+  col += uWarm * (sap*(0.45 + 0.6*uHi)*(1.0 - 0.5*uDim) + comet*uPulse*(1.0 - 0.5*uDim) + tip*1.1 + 0.25*uHi + shot*3.0);
   gl_FragColor = vec4(col * uIntensity, 1.0);
 }
 `;
@@ -437,7 +510,7 @@ varying float vWarm;
 void main(){
   float d = length(gl_PointCoord - 0.5) * 2.0;
   float a = pow(max(1.0 - d, 0.0), 1.6) * vAlpha;
-  vec3 c = mix(vec3(0.86,0.9,1.0), vec3(1.0,0.86,0.7), vWarm);
+  vec3 c = mix(vec3(0.86,0.9,1.0), vec3(1.0,0.92,0.84), vWarm);
   gl_FragColor = vec4(c * a * uIntensity, 1.0);
 }
 `;
@@ -453,11 +526,12 @@ void main(){
 }
 `;
 
-/** Topographic contour lines, a warm pool of light under the Core. */
+/** Topographic contour lines, a pool of the Core's light under it. */
 export const floorFrag = /* glsl */ `
 uniform float uOpacity;
 uniform float uAwaken;
 uniform float uTime;
+uniform vec3 uPool;
 varying vec3 vWorld;
 ${NOISE}
 void main(){
@@ -469,7 +543,7 @@ void main(){
   float fade = smoothstep(19.0, 4.0, r) * smoothstep(1.45, 2.4, r);
   vec3 col = vec3(0.62,0.62,0.6) * line * 0.05 * fade;
   float pool = exp(-r*0.7) * uAwaken;
-  col += vec3(1.0,0.5,0.16) * pool * (0.02 + line*0.22) * smoothstep(1.3, 2.0, r);
+  col += uPool * pool * (0.02 + line*0.22) * smoothstep(1.3, 2.0, r);
   gl_FragColor = vec4(col * uOpacity, 1.0);
 }
 `;
@@ -489,10 +563,11 @@ void main(){
 }
 `;
 
-/** Black marble: fine pale veins, lacquered highlight, heat from above. */
+/** Black marble: fine pale veins, lacquered highlight, the Core's light from above. */
 export const plinthFrag = /* glsl */ `
 uniform vec3 uKeyDir;
 uniform vec3 uKeyColor;
+uniform vec3 uGlow;
 uniform float uAwaken;
 uniform float uTopY;
 uniform float uOpacity;
@@ -516,9 +591,9 @@ void main(){
 
   float top = step(0.9, N.y);
   float r = length(vWorld.xz);
-  col += vec3(1.0,0.7,0.42) * top * exp(-r*r*2.2) * uAwaken * 0.14;
+  col += uGlow * top * exp(-r*r*2.2) * uAwaken * 0.14;
   float side = 1.0 - top;
-  col += vec3(1.0,0.7,0.42) * side * exp(-(uTopY - vWorld.y)*9.0) * uAwaken * 0.15;
+  col += uGlow * side * exp(-(uTopY - vWorld.y)*9.0) * uAwaken * 0.15;
   gl_FragColor = vec4(col, uOpacity);
 }
 `;
@@ -527,13 +602,14 @@ void main(){
 
 export const glassFrag = /* glsl */ `
 uniform float uOpacity;
+uniform vec3 uTint;
 varying vec2 vUv;
 void main(){
   float sheen = smoothstep(0.08, 0.0, abs(vUv.x - vUv.y*0.55 - 0.18)) * 0.6
               + smoothstep(0.03, 0.0, abs(vUv.x - vUv.y*0.55 - 0.32)) * 0.3;
   float edge = smoothstep(0.1, 0.0, min(min(vUv.x, 1.0-vUv.x), min(vUv.y, 1.0-vUv.y)));
   float base = 0.006 + edge*0.02 + sheen*0.035 + smoothstep(0.3, 0.0, vUv.y)*0.012;
-  gl_FragColor = vec4(vec3(0.9,0.78,0.6) * base * uOpacity, 1.0);
+  gl_FragColor = vec4(uTint * base * uOpacity, 1.0);
 }
 `;
 

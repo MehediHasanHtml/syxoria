@@ -18,9 +18,9 @@ import { cn } from "@/lib/cn";
  */
 
 // 0 → 20%: the light sets off
-const LINE_MS = 550;
+const LINE_MS = 600;
 // 20 → 100%: the Core forms, milestone after milestone
-const FORM_MS = 2100;
+const FORM_MS = 3100;
 // never hold the page for the 3D scene: past this, the sequence goes on without it
 const HOLD_MAX_MS = 2400;
 // the pulse at 100%, before the page takes over
@@ -178,7 +178,7 @@ export function Preloader({ ready, onProgress, onLaunch, onDone }: Props) {
         <span className={cn("preloader-flare absolute left-1/2 top-1/2 h-px w-[140vw]", launching && "preloader-flare--on")} />
         <span
           className={cn(
-            "absolute left-1/2 top-1/2 size-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white shadow-[0_0_10px_3px_rgb(255_222_185/0.9),0_0_36px_10px_rgb(255_170_95/0.35)] transition-[transform,opacity] duration-500 ease-out-soft",
+            "absolute left-1/2 top-1/2 size-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white shadow-[0_0_10px_3px_var(--core-glow),0_0_36px_10px_var(--core-glow)] transition-[transform,opacity] duration-500 ease-out-soft",
             launching && "scale-[3] opacity-0",
           )}
         />

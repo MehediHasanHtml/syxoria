@@ -7,26 +7,26 @@ import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js"
 import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
 import { CSS3DObject, CSS3DRenderer } from "three/addons/renderers/CSS3DRenderer.js";
 import { mergeVertices } from "three/addons/utils/BufferGeometryUtils.js";
+import { PALETTES, type CorePalette } from "./look";
 import { createNoise3D, fbm, mulberry32, smoothstep } from "./noise";
 import * as S from "./shaders";
 import { DEFAULT_STATE, type Anchor, type CoreAnchors, type CoreState } from "./state";
 
 /**
  * The Core — Syxoria's signature object and the company's brain: a dense,
- * near-black mass with a living heat in its fissures, floating in the dark.
+ * near-black mass with a living light in its fissures, floating in the dark.
  *
  * Everything is built once and driven by one flat numeric state (`CoreState`)
- * that GSAP scrubs with the scroll. Whatever leaves or reaches the Core is
- * part of one body that turns with it, so it always comes from the same place:
+ * that GSAP scrubs with the scroll. Its parts belong to one body that turns
+ * with it, so every function always lives in the same place:
  *
- *   · three zones on its surface — signals flow in, the heart lights, action flows out
- *   · six petals that part like a flower around a lit nucleus
- *   · six module branches growing from that nucleus, each through its own seam
+ *   · three zones on its surface — signals run in, the heart understands, action runs out
+ *   · six fragments around a lit nucleus, one per module — they part, each its own way
  *   · the tools, wired to it by roots that leave its surface
- *   · the product screen (live HTML, placed in the same 3D space)
+ *   · the product screen: a real monitor (live HTML) standing in the same 3D space
  *
- * The visitor adds two things on top: the cursor warms the stone under it,
- * and the branch they explore (`focus`) reaches out and lights up.
+ * The visitor adds on top: the cursor warms the stone under it, points at a
+ * module's fragment (it lifts and lights) or at a tool (a pulse runs down its wire).
  */
 
 export type { Anchor, CoreAnchors, CoreState };
@@ -38,9 +38,10 @@ export type CoreSceneOptions = {
   interactive?: boolean;
   reducedMotion?: boolean;
   nodeCount?: number;
+  palette?: CorePalette;
   /** pre-built rock (see buildRockGeometry) so the caller can spread the work over several frames */
   rockGeometry?: THREE.BufferGeometry;
-  /** an HTML element (the product screen) placed in the scene beside the Core */
+  /** an HTML element (the front of the product monitor) placed in the scene beside the Core */
   screen?: HTMLElement;
   onFrame?: (anchors: CoreAnchors) => void;
 };
@@ -54,46 +55,56 @@ const CORE_Y = 0.12;
 /** The Core stays compact: everything around it scales with it. */
 const CORE_SIZE = 0.8;
 export const ROCK_DETAIL = { high: 34, low: 18 };
-/** Branch directions (degrees, around the axis that faces the camera): three on the left, three on the right. */
-const BRANCH_ANGLES = [120, 180, 240, 60, 0, 300];
-/** The petals sit between the branches, so every branch leaves through a seam. */
-const PETAL_ANGLES = [30, 90, 150, 210, 270, 330];
+
+/**
+ * The six fragments, one per module, in module order (clockwise from the top).
+ * Deliberately uneven — spacing, how far, when, fold, twist, lift — so the
+ * Core opens like something alive, not a mechanism.
+ */
+const PETALS = [
+  { angle: 94, amount: 0.2, delay: 0.0, fold: 0.3, twist: 0.07, lift: 0.04, z: -0.18 },
+  { angle: 33, amount: 0.12, delay: 0.15, fold: 0.15, twist: -0.11, lift: 0.025, z: -0.3 },
+  { angle: -31, amount: 0.17, delay: 0.06, fold: 0.25, twist: 0.09, lift: -0.03, z: -0.12 },
+  { angle: -86, amount: 0.09, delay: 0.25, fold: 0.11, twist: -0.05, lift: -0.05, z: -0.26 },
+  { angle: -152, amount: 0.16, delay: 0.1, fold: 0.22, twist: 0.13, lift: -0.02, z: -0.2 },
+  { angle: 148, amount: 0.19, delay: 0.03, fold: 0.28, twist: -0.08, lift: 0.035, z: -0.15 },
+];
 /** The brain's three zones (object space): where signals come in, the heart, where action leaves. */
 export const ZONE_DIRS = [new THREE.Vector3(-0.8, 0.5, 0.42), new THREE.Vector3(0.12, -0.1, 1), new THREE.Vector3(0.78, -0.42, 0.5)].map((v) => v.normalize());
-/** The product screen: its size in the scene, and the orbit angle it is set up to be seen from. */
-const SCREEN_PX = 1200;
+
+/** The product monitor: its front in CSS px (screen + bezel), its width and depth in the scene. */
+export const MONITOR = { w: 1248, h: 798, depth: 30 };
 const SCREEN_W = 2.9;
 export const SCREEN_AZ = 1.75;
-const WARM = new THREE.Color(1.0, 0.5, 0.16);
+
 const GRAPHITE_LINE = new THREE.Color(0.2, 0.2, 0.21);
-const EDGE = new THREE.Color(1.0, 0.8, 0.6);
-const NODE_IDLE = new THREE.Color(1.0, 0.82, 0.62);
-const NODE_LIT = new THREE.Color(1.0, 0.7, 0.4);
 const ORIGIN_2D = new THREE.Vector2();
 const KEY_DIR = new THREE.Vector3(-0.55, 0.8, 0.45).normalize();
+const color = (rgb: readonly number[]) => new THREE.Color(rgb[0], rgb[1], rgb[2]);
 
 type LineMat = THREE.ShaderMaterial & {
-  uniforms: Record<"uTime" | "uGrow" | "uGrowFrom" | "uHi" | "uDim" | "uIntensity" | "uFlow" | "uPulse", THREE.IUniform<number>> & {
+  uniforms: Record<"uTime" | "uGrow" | "uHi" | "uDim" | "uIntensity" | "uFlow" | "uPulse" | "uShot" | "uShotAmt", THREE.IUniform<number>> & {
     uCool: THREE.IUniform<THREE.Color>;
     uWarm: THREE.IUniform<THREE.Color>;
   };
 };
 
-function lineMaterial({ flow = 1, pulse = 0.25, growFrom = 0 } = {}): LineMat {
+function lineMaterial({ flow = -1, pulse = 0.8 } = {}): LineMat {
   return new THREE.ShaderMaterial({
     vertexShader: S.branchVert,
     fragmentShader: S.branchFrag,
     uniforms: {
       uTime: { value: 0 },
       uGrow: { value: 0 },
-      uGrowFrom: { value: growFrom },
       uHi: { value: 0 },
       uDim: { value: 0 },
       uIntensity: { value: 0 },
       uFlow: { value: flow },
       uPulse: { value: pulse },
+      uShot: { value: 0 },
+      uShotAmt: { value: 0 },
       uCool: { value: GRAPHITE_LINE.clone() },
-      uWarm: { value: WARM.clone() },
+      uWarm: { value: new THREE.Color() },
     },
     transparent: true,
     blending: THREE.AdditiveBlending,
@@ -101,7 +112,7 @@ function lineMaterial({ flow = 1, pulse = 0.25, growFrom = 0 } = {}): LineMat {
   }) as LineMat;
 }
 
-/** A tube that thins from r0 at its start to r1 at its end — branches, not cables. */
+/** A tube that thins from r0 at its start to r1 at its end — roots, not cables. */
 function taperedTube(curve: THREE.Curve<THREE.Vector3>, segments: number, r0: number, r1: number, radial = 6) {
   const g = new THREE.TubeGeometry(curve, segments, 1, radial, false);
   const pos = g.attributes.position as THREE.BufferAttribute;
@@ -120,11 +131,11 @@ function taperedTube(curve: THREE.Curve<THREE.Vector3>, segments: number, r0: nu
   return g;
 }
 
-function haloMesh(color: THREE.Color, falloff: number) {
+function haloMesh(falloff: number) {
   const mat = new THREE.ShaderMaterial({
     vertexShader: S.haloVert,
     fragmentShader: S.haloFrag,
-    uniforms: { uIntensity: { value: 0 }, uColor: { value: color.clone() }, uFalloff: { value: falloff } },
+    uniforms: { uIntensity: { value: 0 }, uColor: { value: new THREE.Color() }, uFalloff: { value: falloff } },
     transparent: true,
     blending: THREE.AdditiveBlending,
     depthWrite: false,
@@ -136,14 +147,16 @@ function haloMesh(color: THREE.Color, falloff: number) {
 
 /** Shortest signed difference between two angles. */
 const angleDelta = (a: number, b: number) => Math.atan2(Math.sin(b - a), Math.cos(b - a));
+/** How far a fragment has opened (matches the rock's vertex shader). */
+const petalOpen = (delay: number, open: number) => smoothstep(delay, delay + 0.72, open);
 
 /** Yield to the browser so input and painting are not blocked between setup steps. */
 const nextTask = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
 
 /**
  * Sculpt the Core: a lumpy, heart-like cluster with two glowing hollows, cut
- * into six petals around the axis that faces the viewer — seams that meet at
- * its heart, so it can open like a flower.
+ * into six irregular fragments around the axis that faces the viewer — seams
+ * that wander and meet at its heart, so it can open.
  */
 export function buildRockGeometry(detail: number) {
   const n1 = createNoise3D(11);
@@ -172,21 +185,19 @@ export function buildRockGeometry(detail: number) {
     { c: new THREE.Vector3(-0.7, 0.35, -0.6).normalize(), depth: 0.16, lo: 0.89, hi: 0.985, w: 0.65 },
   ];
 
-  // Petals: six seeds around the facing axis, between the branch directions
-  const rand = mulberry32(17);
-  const seeds = PETAL_ANGLES.map((d) => {
-    const a = THREE.MathUtils.degToRad(d);
+  // Fragments: one seed per module around the facing axis; each opens outwards, a little back, its own way
+  const seeds = PETALS.map((pt) => {
+    const a = THREE.MathUtils.degToRad(pt.angle);
     return new THREE.Vector3(Math.cos(a), Math.sin(a), 0);
   });
-  // each petal opens outwards and a little back, so the heart shows
-  const dirs = seeds.map((s) => new THREE.Vector3(s.x, s.y, -0.22).normalize());
-  const amounts = seeds.map(() => 0.14 + rand() * 0.04);
-  // the order in which the petals form during the opening sequence (alternating sides)
+  const dirs = seeds.map((s, i) => new THREE.Vector3(s.x, s.y, PETALS[i].z).normalize());
+  // the order in which the pieces form during the opening sequence (alternating sides)
   const order = [0, 3, 1, 4, 2, 5].map((k) => k / 6);
 
   const pos = geo.attributes.position as THREE.BufferAttribute;
   const cavity = new Float32Array(pos.count);
   const shard = new Float32Array(pos.count * 4);
+  const petal = new Float32Array(pos.count * 4);
   const shardId = new Float32Array(pos.count);
   const shardOrder = new Float32Array(pos.count);
   const seam = new Float32Array(pos.count);
@@ -207,8 +218,10 @@ export function buildRockGeometry(detail: number) {
     }
     cavity[i] = c;
 
-    // the petal: nearest seed around the axis, on a slightly noise-warped direction so the seams wander a little
-    w.set(p.x + 0.16 * n1(p.x * 1.8, p.y * 1.8, p.z * 1.8), p.y + 0.16 * n1(p.x * 1.8 + 5, p.y * 1.8, p.z * 1.8), 0);
+    // the fragment: nearest seed around the axis, on a noise-warped direction so the seams wander and break irregularly
+    const wx = 0.2 * n1(p.x * 1.8, p.y * 1.8, p.z * 1.8) + 0.07 * n2(p.x * 5.5, p.y * 5.5, p.z * 5.5);
+    const wy = 0.2 * n1(p.x * 1.8 + 5, p.y * 1.8, p.z * 1.8) + 0.07 * n2(p.x * 5.5 + 3, p.y * 5.5, p.z * 5.5);
+    w.set(p.x + wx, p.y + wy, 0);
     if (w.lengthSq() < 1e-6) w.set(1, 0, 0);
     w.normalize();
     let best = -2;
@@ -222,7 +235,9 @@ export function buildRockGeometry(detail: number) {
         idx = k;
       } else if (d > second) second = d;
     });
-    shard.set([dirs[idx].x, dirs[idx].y, dirs[idx].z, amounts[idx]], i * 4);
+    const pt = PETALS[idx];
+    shard.set([dirs[idx].x, dirs[idx].y, dirs[idx].z, pt.amount], i * 4);
+    petal.set([pt.delay, pt.fold, pt.twist, pt.lift], i * 4);
     shardId[i] = idx;
     shardOrder[i] = order[idx];
     // near the axis every direction is close: the seams narrow into the heart
@@ -241,6 +256,7 @@ export function buildRockGeometry(detail: number) {
   }
   geo.setAttribute("aCavity", new THREE.BufferAttribute(cavity, 1));
   geo.setAttribute("aShard", new THREE.BufferAttribute(shard, 4));
+  geo.setAttribute("aPetal", new THREE.BufferAttribute(petal, 4));
   geo.setAttribute("aSeam", new THREE.BufferAttribute(seam, 1));
   geo.setAttribute("aShardId", new THREE.BufferAttribute(shardId, 1));
   geo.setAttribute("aOrder", new THREE.BufferAttribute(shardOrder, 1));
@@ -278,21 +294,15 @@ function wordmarkTexture() {
   return tex;
 }
 
-type Branch = {
-  group: THREE.Group;
-  main: THREE.Mesh<THREE.BufferGeometry, LineMat>;
-  twig: THREE.Mesh<THREE.BufferGeometry, LineMat>;
-  dot: THREE.Mesh<THREE.SphereGeometry, THREE.MeshBasicMaterial>;
-  halo: THREE.Mesh<THREE.PlaneGeometry, THREE.ShaderMaterial>;
-  /** eased highlight, 0..1 */
-  hi: number;
-};
-
 type Node = {
   dot: THREE.Mesh<THREE.SphereGeometry, THREE.MeshBasicMaterial>;
   halo: THREE.Mesh<THREE.PlaneGeometry, THREE.ShaderMaterial>;
   link: THREE.Mesh<THREE.BufferGeometry, LineMat>;
+  /** eased "pointed at", 0..1 */
+  hi: number;
 };
+
+type Chip = { base: THREE.Vector3; drift: number; size: number; axis: THREE.Vector3; spin: number; delay: number };
 
 export class CoreScene {
   state: CoreState;
@@ -324,8 +334,28 @@ export class CoreScene {
   private sphere = new THREE.Sphere();
   private probe = new THREE.Vector4(0, 0, 1, 0);
   private zones = ZONE_DIRS.map((d) => new THREE.Vector4(d.x, d.y, d.z, 0));
-  private opts: Required<Omit<CoreSceneOptions, "state" | "onFrame" | "rockGeometry" | "screen">> & Pick<CoreSceneOptions, "onFrame">;
+  private petalHi = PETALS.map(() => 0);
+  private hoverPetal = -1;
+  private opts: Required<Omit<CoreSceneOptions, "state" | "onFrame" | "rockGeometry" | "screen" | "palette">> & Pick<CoreSceneOptions, "onFrame">;
   private rockGeometry?: THREE.BufferGeometry;
+
+  /** the Core's light, shared by reference by every material that uses it (see setPalette) */
+  private light = {
+    uHeat0: { value: new THREE.Color() },
+    uHeat1: { value: new THREE.Color() },
+    uHeat2: { value: new THREE.Color() },
+    uHeat3: { value: new THREE.Color() },
+    uRimColor: { value: new THREE.Color() },
+    uSpill: { value: new THREE.Color() },
+  };
+  private colors = {
+    edge: new THREE.Color(),
+    vitrine: new THREE.Color(),
+    node: new THREE.Color(),
+    nodeLit: new THREE.Color(),
+    nucleus: new THREE.Color(),
+    line: new THREE.Color(),
+  };
 
   private rock!: THREE.Mesh<THREE.BufferGeometry, THREE.ShaderMaterial>;
   private coreGroup = new THREE.Group();
@@ -334,6 +364,8 @@ export class CoreScene {
   private nucleus!: THREE.Mesh<THREE.SphereGeometry, THREE.MeshBasicMaterial>;
   private halos: THREE.Mesh<THREE.PlaneGeometry, THREE.ShaderMaterial>[] = [];
   private embers!: THREE.Points<THREE.BufferGeometry, THREE.ShaderMaterial>;
+  private chips!: THREE.InstancedMesh<THREE.BufferGeometry, THREE.ShaderMaterial>;
+  private chipData: Chip[] = [];
   private dust!: THREE.Points<THREE.BufferGeometry, THREE.ShaderMaterial>;
   private stars!: THREE.Points<THREE.BufferGeometry, THREE.ShaderMaterial>;
   private floor!: THREE.Mesh<THREE.PlaneGeometry, THREE.ShaderMaterial>;
@@ -345,24 +377,29 @@ export class CoreScene {
   private vitrineEdges: THREE.Mesh<THREE.BoxGeometry, THREE.MeshBasicMaterial>[] = [];
   private vitrineTop: THREE.Mesh<THREE.BoxGeometry, THREE.MeshBasicMaterial>[] = [];
   private panes: THREE.Mesh<THREE.PlaneGeometry, THREE.ShaderMaterial>[] = [];
-  private branchGroup = new THREE.Group();
-  private branches: Branch[] = [];
-  /** the signals of the zones: flowing in (connect) and out (act) */
-  private signals: { zone: number; mesh: THREE.Mesh<THREE.BufferGeometry, LineMat>; delay: number }[] = [];
   private zonePoints = ZONE_DIRS.map(() => new THREE.Object3D());
+  private modulePoints = PETALS.map(() => new THREE.Object3D());
   private nodeGroup = new THREE.Group();
   private nodes: Node[] = [];
+  /** the pulse sent down a tool's wire when it is pointed at */
+  private shot = { node: -1, t: 1, last: -1 };
+  /** a brief response of the Core when a pulse reaches it */
+  private flash = 0;
   private wordmark!: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>;
 
-  // the product screen (HTML in 3D)
+  // the product monitor (HTML in 3D)
   private css?: CSS3DRenderer;
   private cssScene?: THREE.Scene;
-  private screenObj?: CSS3DObject;
+  private monitor?: THREE.Group;
+  private monitorParts: HTMLElement[] = [];
   private screenShown = false;
+  private besideQ = new THREE.Quaternion();
+  private euler = new THREE.Euler();
 
   private tmp = new THREE.Vector3();
   private tmp2 = new THREE.Vector3();
   private tmp3 = new THREE.Vector3();
+  private tmp4 = new THREE.Vector3();
   private anchors: CoreAnchors;
 
   constructor(private canvas: HTMLCanvasElement, options: CoreSceneOptions = {}) {
@@ -388,7 +425,8 @@ export class CoreScene {
 
     this.scene.add(this.camera);
     this.build(low);
-    if (options.screen) this.buildScreen(options.screen);
+    this.setPalette(options.palette ?? "gold");
+    if (options.screen) this.buildMonitor(options.screen);
 
     this.composer = new EffectComposer(this.renderer);
     this.composer.addPass(new RenderPass(this.scene, this.camera));
@@ -400,7 +438,8 @@ export class CoreScene {
     this.composer.addPass(this.final);
 
     this.anchors = {
-      branches: this.branches.map(() => ({ x: 0, y: 0, alpha: 0 })),
+      modules: PETALS.map(() => ({ x: 0, y: 0, alpha: 0 })),
+      hoverModule: -1,
       nodes: this.nodes.map(() => ({ x: 0, y: 0, alpha: 0 })),
       zones: this.zonePoints.map(() => ({ x: 0, y: 0, alpha: 0 })),
       core: { x: 0, y: 0, alpha: 0, r: 0 },
@@ -409,6 +448,36 @@ export class CoreScene {
     const rect = canvas.getBoundingClientRect();
     this.setSize(rect.width || 1, rect.height || 1);
     this.ready = this.prepare(output);
+  }
+
+  /** Switch the colour of the Core's light (gold / emerald) — live, nothing is rebuilt. */
+  setPalette(name: CorePalette) {
+    const p = PALETTES[name];
+    p.heat.forEach((c, i) => this.light[`uHeat${i as 0 | 1 | 2 | 3}`].value.setRGB(c[0], c[1], c[2]));
+    this.light.uRimColor.value.setRGB(...p.rim);
+    this.light.uSpill.value.setRGB(...p.spill);
+    this.colors.edge.setRGB(...p.edge);
+    this.colors.vitrine.setRGB(...p.vitrine);
+    this.colors.node.setRGB(...p.node);
+    this.colors.nodeLit.setRGB(...p.nodeLit);
+    this.colors.nucleus.setRGB(...p.nucleus);
+    this.colors.line.setRGB(...p.line);
+    this.halos[0].material.uniforms.uColor.value.setRGB(...p.haloWide);
+    this.halos[1].material.uniforms.uColor.value.setRGB(...p.haloTight);
+    this.nodes.forEach((n) => {
+      n.link.material.uniforms.uWarm.value.copy(this.colors.line);
+      n.halo.material.uniforms.uColor.value.copy(color(p.node));
+    });
+    const em = this.embers.material.uniforms;
+    em.uEmber0.value.setRGB(...p.ember[0]);
+    em.uEmber1.value.setRGB(...p.ember[1]);
+    this.floor.material.uniforms.uPool.value.setRGB(...p.pool);
+    this.plinth.material.uniforms.uGlow.value.copy(color(p.edge));
+    this.panes.forEach((m) => m.material.uniforms.uTint.value.setRGB(...p.glass));
+    if (!this.running && this.compiled) {
+      this.update(0);
+      this.render();
+    }
   }
 
   /**
@@ -450,7 +519,7 @@ export class CoreScene {
       const mat = (o as THREE.Mesh).material as THREE.Material | undefined;
       if (!mat || Array.isArray(mat)) return;
       const sm = mat as THREE.ShaderMaterial;
-      const key = `${mat.type}|${sm.fragmentShader ?? ""}|${(o as THREE.Points).isPoints ? "p" : ""}${(o as THREE.Mesh).geometry?.type ?? ""}`;
+      const key = `${mat.type}|${sm.fragmentShader ?? ""}|${(o as THREE.Points).isPoints ? "p" : ""}${(o as THREE.InstancedMesh).isInstancedMesh ? "i" : ""}${(o as THREE.Mesh).geometry?.type ?? ""}`;
       if (seen.has(key)) return;
       seen.add(key);
       objects.push(o);
@@ -517,12 +586,14 @@ export class CoreScene {
 
   private build(low: boolean) {
     const rand = mulberry32(5);
+    const L = this.light;
 
     // The rock
     const rockMat = new THREE.ShaderMaterial({
       vertexShader: S.rockVert,
       fragmentShader: S.rockFrag,
       uniforms: {
+        ...L,
         uTime: { value: 0 },
         uAwaken: { value: 0 },
         uOpen: { value: 0 },
@@ -530,18 +601,18 @@ export class CoreScene {
         uTease: { value: 1 },
         uProbe: { value: this.probe },
         uZones: { value: this.zones },
+        uPetalHi: { value: this.petalHi },
         uBump: { value: 0.006 },
         uKeyDir: { value: KEY_DIR },
         uKeyColor: { value: new THREE.Color(1.0, 0.9, 0.78) },
         uFillDir: { value: new THREE.Vector3(0.85, 0.1, 0.3).normalize() },
         uFillColor: { value: new THREE.Color(0.22, 0.26, 0.34) },
-        uRimColor: { value: new THREE.Color(1.0, 0.55, 0.22) },
       },
-      // opened petals and scattered shards are open shells: their inner side must render too
+      // opened fragments and scattered shards are open shells: their inner side must render too
       side: THREE.DoubleSide,
     });
     this.rock = new THREE.Mesh(this.rockGeometry ?? buildRockGeometry(low ? ROCK_DETAIL.low : ROCK_DETAIL.high), rockMat);
-    // petals move outside the rest bounds when the Core opens
+    // fragments move outside the rest bounds when the Core opens
     this.rock.frustumCulled = false;
     this.body.add(this.rock);
 
@@ -549,10 +620,10 @@ export class CoreScene {
     this.nucleus = new THREE.Mesh(new THREE.SphereGeometry(0.3, 24, 16), new THREE.MeshBasicMaterial({ color: new THREE.Color(0, 0, 0) }));
     this.body.add(this.nucleus);
 
-    // Halos: wide warm atmosphere + tight hot breath (both follow how awake the Core is)
-    const wide = haloMesh(new THREE.Color(1.0, 0.5, 0.18), 2.4);
+    // Halos: wide atmosphere + tight breath (both follow how awake the Core is)
+    const wide = haloMesh(2.4);
     wide.scale.set(6.5, 6.5, 1);
-    const tight = haloMesh(new THREE.Color(1.0, 0.68, 0.36), 3.2);
+    const tight = haloMesh(3.2);
     tight.scale.set(3.1, 3.1, 1);
     this.halos = [wide, tight];
     this.halos.forEach((h) => this.coreGroup.add(h));
@@ -575,7 +646,15 @@ export class CoreScene {
         new THREE.ShaderMaterial({
           vertexShader: S.emberVert,
           fragmentShader: S.emberFrag,
-          uniforms: { uTime: { value: 0 }, uPixel: { value: 1 }, uHeight: { value: 4.6 }, uSpread: { value: 1 }, uIntensity: { value: 0 } },
+          uniforms: {
+            uTime: { value: 0 },
+            uPixel: { value: 1 },
+            uHeight: { value: 4.6 },
+            uSpread: { value: 1 },
+            uIntensity: { value: 0 },
+            uEmber0: { value: new THREE.Color() },
+            uEmber1: { value: new THREE.Color() },
+          },
           transparent: true,
           blending: THREE.AdditiveBlending,
           depthWrite: false,
@@ -585,84 +664,53 @@ export class CoreScene {
       this.coreGroup.add(this.embers);
     }
 
-    // The brain's zones: a point on the surface of each, and its signals
+    // The brain's zones and the modules' fragments: a point on the surface of each, for their words
     ZONE_DIRS.forEach((d, i) => {
       this.zonePoints[i].position.copy(d).multiplyScalar(1.08);
       this.body.add(this.zonePoints[i]);
     });
-    {
-      // connect: signals arrive from far away into the upper-left zone · act: the lower-right zone sends them out
-      const make = (zone: number, count: number, flow: number) => {
-        const d = ZONE_DIRS[zone];
-        const side = new THREE.Vector3().crossVectors(d, new THREE.Vector3(0, 1, 0)).normalize();
-        const up = new THREE.Vector3().crossVectors(side, d).normalize();
-        for (let j = 0; j < count; j++) {
-          // a fan around the zone's direction, like fine roots of light
-          const a = ((j + 0.5) / count - 0.5) * 2.4 + (rand() - 0.5) * 0.3;
-          const far = d
-            .clone()
-            .multiplyScalar(0.8)
-            .addScaledVector(side, Math.sin(a) * 0.9)
-            .addScaledVector(up, Math.cos(a) * 0.35 - 0.15 + (rand() - 0.5) * 0.5)
-            .normalize()
-            .multiplyScalar(2.2 + rand() * 0.9);
-          const start = d.clone().multiplyScalar(0.96);
-          const bend = side.clone().multiplyScalar((rand() - 0.5) * 0.6).addScaledVector(up, (rand() - 0.5) * 0.6);
-          const curve = new THREE.CatmullRomCurve3([
-            start,
-            d.clone().multiplyScalar(1.3).addScaledVector(far.clone().normalize(), 0.12),
-            start.clone().lerp(far, 0.5).add(bend),
-            far.clone().lerp(start, 0.18).addScaledVector(bend, -0.4),
-            far,
-          ]);
-          const mesh = new THREE.Mesh(taperedTube(curve, 72, 0.011, 0.002, 5), lineMaterial({ flow, pulse: 0.9, growFrom: flow < 0 ? 1 : 0 }));
-          mesh.frustumCulled = false;
-          this.body.add(mesh);
-          this.signals.push({ zone, mesh, delay: j / count });
-        }
-      };
-      make(0, low ? 4 : 6, -1);
-      make(2, low ? 4 : 6, 1);
-    }
+    this.modulePoints.forEach((m) => this.body.add(m));
 
-    // Six module branches, from the nucleus out through the six seams, each ending in a lit node
+    // Chips: small stone fragments that break off along the seams as the Core opens
     {
-      const depth = [0.3, -0.15, 0.2, -0.2, 0.3, -0.1];
-      BRANCH_ANGLES.forEach((deg, i) => {
-        const a = THREE.MathUtils.degToRad(deg);
-        const dir = new THREE.Vector3(Math.cos(a), Math.sin(a), 0);
-        const tip = new THREE.Vector3(dir.x * 2.0, dir.y * 1.42, 0.35 + depth[i]);
-        // it leaves the Core through its seam, towards the viewer, then reaches out and bends like a branch
-        const bend = new THREE.Vector3(-dir.y, dir.x, 0).multiplyScalar(i % 2 ? 0.12 : -0.12);
-        const curve = new THREE.CatmullRomCurve3([
-          new THREE.Vector3(0, 0, 0.02),
-          dir.clone().multiplyScalar(0.55).setZ(0.1),
-          dir.clone().multiplyScalar(1.12).setZ(0.24),
-          dir.clone().multiplyScalar(1.6).add(bend).setZ(0.3 + depth[i] * 0.5),
-          tip,
-        ]);
-        const group = new THREE.Group();
-        const main = new THREE.Mesh(taperedTube(curve, 110, 0.05, 0.008, low ? 5 : 7), lineMaterial({ flow: 1, pulse: 0.3 }));
-        main.frustumCulled = false;
-        // a twig forking from the branch — organic, not a wire
-        const fork = curve.getPointAt(0.62);
-        const tangent = curve.getTangentAt(0.62);
-        const twigEnd = fork
-          .clone()
-          .addScaledVector(tangent, 0.28)
-          .add(new THREE.Vector3(0, tip.y >= 0 ? 0.18 : -0.18, 0.08));
-        const twigCurve = new THREE.CatmullRomCurve3([fork, fork.clone().lerp(twigEnd, 0.5).addScaledVector(tangent, 0.06), twigEnd]);
-        const twig = new THREE.Mesh(taperedTube(twigCurve, 32, 0.013, 0.003, 5), lineMaterial({ flow: 1, pulse: 0.2 }));
-        twig.frustumCulled = false;
-        const dot = new THREE.Mesh(new THREE.SphereGeometry(0.05, 16, 12), new THREE.MeshBasicMaterial({ color: NODE_IDLE.clone(), transparent: true }));
-        dot.position.copy(tip);
-        const halo = haloMesh(new THREE.Color(1.0, 0.62, 0.3), 2.6);
-        halo.position.copy(tip);
-        group.add(main, twig, dot, halo);
-        this.branchGroup.add(group);
-        this.branches.push({ group, main, twig, dot, halo, hi: 0 });
-      });
-      this.body.add(this.branchGroup);
+      const n = low ? 10 : 18;
+      let g: THREE.BufferGeometry = new THREE.IcosahedronGeometry(1, 0);
+      g = mergeVertices(g);
+      const gp = g.attributes.position as THREE.BufferAttribute;
+      const v = new THREE.Vector3();
+      for (let i = 0; i < gp.count; i++) {
+        v.fromBufferAttribute(gp, i);
+        v.multiplyScalar(0.7 + rand() * 0.55);
+        gp.setXYZ(i, v.x, v.y * (0.6 + rand() * 0.5), v.z);
+      }
+      g = g.toNonIndexed();
+      this.chips = new THREE.InstancedMesh(
+        g,
+        new THREE.ShaderMaterial({
+          vertexShader: S.debrisVert,
+          fragmentShader: S.debrisFrag,
+          uniforms: { ...L, uKeyDir: { value: KEY_DIR }, uKeyColor: { value: new THREE.Color(1.0, 0.9, 0.78) }, uIntensity: { value: 1 } },
+        }),
+        n,
+      );
+      this.chips.frustumCulled = false;
+      for (let i = 0; i < n; i++) {
+        // between two fragments, where the stone breaks
+        const k = i % PETALS.length;
+        const a0 = PETALS[k].angle;
+        const a1 = PETALS[(k + 1) % PETALS.length].angle;
+        const mid = THREE.MathUtils.degToRad(a0 + angleDelta(THREE.MathUtils.degToRad(a0), THREE.MathUtils.degToRad(a1)) * (90 / Math.PI) + (rand() - 0.5) * 16);
+        const r = 0.7 + rand() * 0.35;
+        this.chipData.push({
+          base: new THREE.Vector3(Math.cos(mid) * r, Math.sin(mid) * r, 0.25 + rand() * 0.45),
+          drift: 0.35 + rand() * 0.75,
+          size: 0.025 + rand() * 0.05,
+          axis: new THREE.Vector3(rand() - 0.5, rand() - 0.5, rand() - 0.5).normalize(),
+          spin: (rand() - 0.5) * 1.4,
+          delay: rand() * 0.35,
+        });
+      }
+      this.body.add(this.chips);
     }
 
     this.coreGroup.add(this.body);
@@ -678,7 +726,7 @@ export class CoreScene {
         const p = new THREE.Vector3(Math.cos(a) * 3.1, Math.sin(a) * 1.72, depth[i % depth.length]);
         const dot = new THREE.Mesh(new THREE.SphereGeometry(0.04, 16, 12), new THREE.MeshBasicMaterial({ color: new THREE.Color(0.9, 0.86, 0.8), transparent: true }));
         dot.position.copy(p);
-        const halo = haloMesh(new THREE.Color(1.0, 0.8, 0.6), 2.8);
+        const halo = haloMesh(2.8);
         halo.position.copy(p);
         // the root leaves the Core's surface facing its tool, then travels only outwards, with one gentle sway
         const flat = new THREE.Vector3(p.x, p.y, 0).normalize();
@@ -692,10 +740,10 @@ export class CoreScene {
           exit.clone().lerp(end, 0.72).addScaledVector(sway, 0.55),
           end,
         ]);
-        const link = new THREE.Mesh(taperedTube(curve, 90, 0.03, 0.005, low ? 4 : 6), lineMaterial({ flow: -1, pulse: 0.8 }));
+        const link = new THREE.Mesh(taperedTube(curve, 90, 0.03, 0.005, low ? 4 : 6), lineMaterial());
         link.frustumCulled = false;
         this.nodeGroup.add(dot, halo, link);
-        this.nodes.push({ dot, halo, link });
+        this.nodes.push({ dot, halo, link, hi: 0 });
       }
       this.coreGroup.add(this.nodeGroup);
     }
@@ -760,13 +808,13 @@ export class CoreScene {
       this.scene.add(this.dust);
     }
 
-    // Floor: faint contour lines + a warm pool under the Core
+    // Floor: faint contour lines + a pool of the Core's light under it
     this.floor = new THREE.Mesh(
       new THREE.PlaneGeometry(60, 60).rotateX(-Math.PI / 2),
       new THREE.ShaderMaterial({
         vertexShader: S.floorVert,
         fragmentShader: S.floorFrag,
-        uniforms: { uOpacity: { value: 1 }, uAwaken: { value: 0 }, uTime: { value: 0 } },
+        uniforms: { uOpacity: { value: 1 }, uAwaken: { value: 0 }, uTime: { value: 0 }, uPool: { value: new THREE.Color() } },
         transparent: true,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
@@ -784,6 +832,7 @@ export class CoreScene {
         uniforms: {
           uKeyDir: { value: KEY_DIR },
           uKeyColor: { value: new THREE.Color(1.0, 0.92, 0.82) },
+          uGlow: { value: new THREE.Color() },
           uAwaken: { value: 0 },
           uTopY: { value: PLINTH_TOP },
           uOpacity: { value: 1 },
@@ -793,7 +842,7 @@ export class CoreScene {
     );
     this.plinth.position.y = FLOOR_Y + PLINTH_H / 2;
     this.plinthGroup.add(this.plinth);
-    const edgeMat = () => new THREE.MeshBasicMaterial({ color: WARM.clone(), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false });
+    const edgeMat = () => new THREE.MeshBasicMaterial({ color: new THREE.Color(), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false });
     const edge = (w: number, y: number, t = 0.012) => {
       const half = w / 2;
       for (const [x, z, sx, sz] of [
@@ -815,7 +864,7 @@ export class CoreScene {
     this.plinthGroup.add(this.plate);
     this.scene.add(this.plinthGroup);
 
-    // Vitrine: fine warm edges + faint glass, rising around the Core at the end of the story
+    // Vitrine: fine edges + faint glass, rising around the Core at the end of the story
     {
       const VW = 2.12;
       const VH = 3.3;
@@ -847,7 +896,7 @@ export class CoreScene {
         new THREE.ShaderMaterial({
           vertexShader: S.glassVert,
           fragmentShader: S.glassFrag,
-          uniforms: { uOpacity: { value: 0 } },
+          uniforms: { uOpacity: { value: 0 }, uTint: { value: new THREE.Color() } },
           transparent: true,
           blending: THREE.AdditiveBlending,
           depthWrite: false,
@@ -878,8 +927,12 @@ export class CoreScene {
     this.scene.add(this.wordmark);
   }
 
-  /** The product screen: an HTML element rendered in the same 3D space as the Core. */
-  private buildScreen(el: HTMLElement) {
+  /**
+   * The product monitor, built in CSS 3D around the HTML front it is given
+   * (the live dashboard + bezel): a back, four edges of depth, a neck and a
+   * foot — so it reads at once as a real computer screen, from any angle.
+   */
+  private buildMonitor(front: HTMLElement) {
     const css = new CSS3DRenderer();
     const dom = css.domElement;
     dom.style.position = "absolute";
@@ -888,9 +941,38 @@ export class CoreScene {
     this.canvas.parentElement?.appendChild(dom);
     this.css = css;
     this.cssScene = new THREE.Scene();
-    this.screenObj = new CSS3DObject(el);
-    el.style.visibility = "hidden";
-    this.cssScene.add(this.screenObj);
+    const group = new THREE.Group();
+    const { w, h, depth: d } = MONITOR;
+    const part = (el: HTMLElement, x: number, y: number, z: number, rx = 0, ry = 0) => {
+      el.style.backfaceVisibility = "hidden";
+      const o = new CSS3DObject(el);
+      o.position.set(x, y, z);
+      o.rotation.set(rx, ry, 0);
+      group.add(o);
+      if (el !== front) this.monitorParts.push(el);
+      return o;
+    };
+    const div = (cls: string, width: number, height: number) => {
+      const el = document.createElement("div");
+      el.className = cls;
+      el.style.width = `${width}px`;
+      el.style.height = `${height}px`;
+      el.setAttribute("aria-hidden", "true");
+      return el;
+    };
+    part(front, 0, 0, 0);
+    part(div("monitor-back", w, h), 0, 0, -d, 0, Math.PI);
+    part(div("monitor-edge", w, d), 0, h / 2, -d / 2, -Math.PI / 2);
+    part(div("monitor-edge", w, d), 0, -h / 2, -d / 2, Math.PI / 2);
+    part(div("monitor-edge", d, h), -w / 2, 0, -d / 2, 0, -Math.PI / 2);
+    part(div("monitor-edge", d, h), w / 2, 0, -d / 2, 0, Math.PI / 2);
+    // the stand: a neck from just under the screen (never behind it — CSS 3D would let it show through), a foot under it
+    part(div("monitor-neck", 170, 250), 0, -h / 2 - 125, -d - 40, -0.08);
+    part(div("monitor-foot", 380, 240), 0, -h / 2 - 248, -d - 60, -Math.PI / 2);
+    front.style.visibility = "hidden";
+    this.monitorParts.forEach((el) => (el.style.visibility = "hidden"));
+    this.cssScene.add(group);
+    this.monitor = group;
   }
 
   /* ------------------------------------------------------------ runtime */
@@ -970,6 +1052,7 @@ export class CoreScene {
     const aw = s.awaken * (1.15 - 0.35 * s.awaken) * k;
     // frame-rate independent easing towards a target
     const ease = (rate: number) => (rm ? 1 : 1 - Math.exp(-dt * rate));
+    const C = this.colors;
 
     // Camera
     this.pointerSmooth.lerp(this.pointerActive ? this.pointer : ORIGIN_2D, ease(2.5));
@@ -992,8 +1075,6 @@ export class CoreScene {
     const drift = s.spin + (rm ? 0 : Math.sin(t * 0.17) * 0.28 + t * 0.012);
     this.body.rotation.y = drift + angleDelta(drift, s.az + s.turn) * s.face;
     this.body.rotation.x = (rm ? 0 : Math.sin(t * 0.13) * 0.05) * (1 - s.face);
-    // in portrait the branches stand taller and narrower so every node stays on screen
-    this.branchGroup.scale.set(portrait ? 0.92 : 1, portrait ? 1.2 : 1, 1);
     this.rock.scale.setScalar(sc);
     this.coreGroup.updateMatrixWorld(true);
     this.updateProbe(dt, sc);
@@ -1007,16 +1088,48 @@ export class CoreScene {
     this.zones[1].w = s.understand * k;
     this.zones[2].w = s.act * k;
 
+    // Modules: the explored one's fragment lifts and lights; the words sit on each fragment
+    const focus = s.modules > 0.5 ? Math.round(s.focus) : -1;
+    PETALS.forEach((pt, i) => {
+      this.petalHi[i] += ((i === focus ? 1 : 0) - this.petalHi[i]) * ease(6);
+      const o = petalOpen(pt.delay, s.open);
+      const a = THREE.MathUtils.degToRad(pt.angle);
+      const lift = pt.amount * o + 0.07 * this.petalHi[i] * smoothstep(0.3, 1, s.open);
+      this.modulePoints[i].position.set(Math.cos(a) * (0.82 + lift), Math.sin(a) * (0.82 + lift) + pt.lift * o, 0.6 - pt.z * lift);
+    });
+
     // the nucleus: its light, seen through the openings (and the heart, as it is understood)
-    const nuc = (0.2 * aw + 1.3 * s.open + 0.3 * s.understand) * k * (0.9 + 0.1 * Math.sin(t * 1.25));
-    this.nucleus.material.color.setRGB(1.0 * nuc, 0.46 * nuc, 0.12 * nuc);
-    this.nucleus.scale.setScalar(0.6 + 0.4 * s.open);
+    const nuc = (0.2 * aw + 0.95 * s.open + 0.3 * s.understand + 0.3 * Math.max(...this.petalHi) * s.open) * k * (0.9 + 0.1 * Math.sin(t * 1.25));
+    this.nucleus.material.color.copy(C.nucleus).multiplyScalar(nuc);
+    this.nucleus.scale.setScalar(0.45 + 0.15 * s.open);
     // unlit it would be a black ball: only there once it glows, and never among the scattered shards
     this.nucleus.visible = nuc > 0.002 && s.scatter < 0.01;
 
+    // chips break off along the seams and drift as the Core opens
+    this.chips.visible = s.open > 0.02 && s.scatter < 0.01;
+    if (this.chips.visible) {
+      const m = new THREE.Matrix4();
+      const q = new THREE.Quaternion();
+      const v = this.tmp4;
+      const scl = new THREE.Vector3();
+      this.chipData.forEach((c, i) => {
+        const o = smoothstep(c.delay, c.delay + 0.65, s.open);
+        v.copy(c.base).multiplyScalar(1 + o * c.drift);
+        v.z += o * 0.25 * c.drift;
+        v.y += rm ? 0 : Math.sin(t * 0.6 + i) * 0.03 * o;
+        q.setFromAxisAngle(c.axis, c.spin * (o * 2 + t * 0.15));
+        scl.setScalar(c.size * smoothstep(0, 0.25, o));
+        m.compose(v, q, scl);
+        this.chips.setMatrixAt(i, m);
+      });
+      this.chips.instanceMatrix.needsUpdate = true;
+      this.chips.material.uniforms.uIntensity.value = k;
+    }
+
     // halos are screen-filling up close: fade them as the camera approaches
     const near = smoothstep(3.5, 10, this.camera.position.distanceTo(this.coreGroup.position));
-    const glow = aw + 0.2 * s.open + 0.08 * s.understand;
+    this.flash = Math.max(0, this.flash - dt * 1.6);
+    const glow = aw + 0.2 * s.open + 0.08 * s.understand + 0.35 * this.flash;
     this.halos[0].material.uniforms.uIntensity.value = (0.04 + 0.16 * glow) * k * (0.25 + 0.75 * near);
     this.halos[1].material.uniforms.uIntensity.value = (0.03 + 0.34 * glow) * k * (0.9 + 0.1 * Math.sin(t * 1.25)) * (0.45 + 0.55 * near);
     this.halos.forEach((h) => (h.visible = k > 0.001));
@@ -1053,8 +1166,8 @@ export class CoreScene {
     // opaque while solid so nothing shows through it; blended only while fading
     this.plinth.material.transparent = pv < 0.999;
     const lineK = pv * k * (0.05 + 0.16 * aw);
-    this.plinthLights.forEach((m) => m.material.color.copy(EDGE).multiplyScalar(lineK));
-    this.plate.material.color.copy(WARM).multiplyScalar(pv * k * aw * 0.02);
+    this.plinthLights.forEach((m) => m.material.color.copy(C.edge).multiplyScalar(lineK));
+    this.plate.material.color.copy(C.line).multiplyScalar(pv * k * aw * 0.02);
 
     // Vitrine: edges rise from the plinth, then the top closes, then the glass
     const v = s.vitrine;
@@ -1064,64 +1177,52 @@ export class CoreScene {
     const glass = smoothstep(0.7, 1, v);
     this.vitrineEdges.forEach((m) => {
       m.scale.y = Math.max(0.001, rise);
-      m.material.color.setRGB(1.0, 0.72, 0.45).multiplyScalar(0.34 * k);
+      m.material.color.copy(C.vitrine).multiplyScalar(0.34 * k);
     });
-    this.vitrineTop.forEach((m) => m.material.color.setRGB(1.0, 0.72, 0.45).multiplyScalar(0.34 * close * k));
+    this.vitrineTop.forEach((m) => m.material.color.copy(C.vitrine).multiplyScalar(0.34 * close * k));
     this.panes.forEach((m) => (m.material.uniforms.uOpacity.value = glass));
 
-    // The zones' signals: they flow in (connect) and out (act) while their zone is lit
-    this.signals.forEach((sg) => {
-      const z = sg.zone === 0 ? s.connect : s.act;
-      const grow = smoothstep(sg.delay * 0.35, sg.delay * 0.35 + 0.65, z);
-      const u = sg.mesh.material.uniforms;
-      u.uTime.value = t + sg.delay * 3.1;
-      u.uGrow.value = grow;
-      u.uIntensity.value = z * k * 0.7;
-      sg.mesh.visible = z > 0.001;
-    });
-
-    // Module branches: grow one after another; the explored one reaches out and warms
-    this.branchGroup.visible = s.branches > 0.001;
-    const focus = s.branches > 0.5 ? Math.round(s.focus) : -1;
-    this.branches.forEach((b, i) => (b.hi += ((i === focus ? 1 : 0) - b.hi) * ease(6)));
-    const anyHi = Math.max(...this.branches.map((b) => b.hi));
-    this.branches.forEach((b, i) => {
-      const appear = smoothstep(i * 0.08, i * 0.08 + 0.55, s.branches);
-      const others = Math.max(0, anyHi - b.hi);
-      const on = appear * k;
-      b.group.scale.setScalar(1 + 0.06 * b.hi);
-      for (const m of [b.main, b.twig]) {
-        const u = m.material.uniforms;
-        u.uTime.value = t + i * 0.7;
-        u.uHi.value = b.hi;
-        u.uDim.value = others;
-        u.uIntensity.value = on * (0.8 + 0.3 * aw);
-      }
-      b.main.material.uniforms.uGrow.value = appear;
-      b.twig.material.uniforms.uGrow.value = smoothstep(0.62, 1, appear);
-      const tipIn = smoothstep(0.85, 1, appear);
-      b.dot.material.color.copy(NODE_IDLE).lerp(NODE_LIT, b.hi).multiplyScalar(k * tipIn * (1.3 + 2.4 * b.hi) * (1 - 0.55 * others));
-      b.dot.scale.setScalar(Math.max(0.001, tipIn * (0.9 + 0.6 * b.hi)));
-      b.halo.scale.setScalar(0.7 + 0.35 * b.hi);
-      b.halo.material.uniforms.uIntensity.value = on * tipIn * (0.18 + 0.5 * b.hi) * (1 - 0.5 * others);
-    });
-
-    // Tool network: faces the viewer, its roots leave the Core
+    // Tool network: faces the viewer, its roots leave the Core; the tool pointed at sends a pulse down its wire
     this.nodeGroup.visible = s.network > 0.001;
     this.nodeGroup.rotation.y = s.az + (rm ? 0 : Math.sin(t * 0.1) * 0.06);
     // in portrait the constellation stands taller and narrower so every tool stays on screen
     this.nodeGroup.scale.set(portrait ? 0.56 : 1, portrait ? 1.15 : 1, 1);
+    const tool = s.network > 0.5 ? Math.round(s.tool) : -1;
+    const sh = this.shot;
+    if (tool !== sh.last) {
+      sh.last = tool;
+      if (tool >= 0) {
+        sh.node = tool;
+        sh.t = 0;
+      }
+    }
+    if (sh.node >= 0) {
+      const before = sh.t;
+      sh.t += dt / 1.15;
+      // the pulse reaches the Core: it answers with a brief breath of light
+      if (before < 0.92 && sh.t >= 0.92) this.flash = 1;
+      // still pointed at: send another, calmly
+      if (sh.t > 2.2 && tool === sh.node) sh.t = 0;
+    }
+    const anyHi = Math.max(...this.nodes.map((n) => n.hi));
     this.nodes.forEach((n, i) => {
+      n.hi += ((i === tool ? 1 : 0) - n.hi) * ease(7);
       const appear = smoothstep(i * 0.05, i * 0.05 + 0.5, s.network);
       const tipIn = smoothstep(0.8, 1, appear);
-      n.dot.material.color.setRGB(0.95, 0.9, 0.84).multiplyScalar(tipIn * 1.4 * k);
-      n.dot.scale.setScalar(Math.max(0.001, tipIn));
-      n.halo.scale.setScalar(0.55);
-      n.halo.material.uniforms.uIntensity.value = tipIn * k * 0.22;
+      n.dot.material.color.copy(C.node).multiplyScalar(tipIn * k * (1.2 + 1.6 * n.hi));
+      n.dot.scale.setScalar(Math.max(0.001, tipIn * (1 + 0.6 * n.hi)));
+      n.halo.scale.setScalar(0.55 + 0.35 * n.hi);
+      n.halo.material.uniforms.uIntensity.value = tipIn * k * (0.22 + 0.45 * n.hi);
       const u = n.link.material.uniforms;
       u.uTime.value = t + i * 0.9;
       u.uGrow.value = appear;
+      u.uHi.value = n.hi;
+      u.uDim.value = Math.max(0, anyHi - n.hi) * 0.6;
       u.uIntensity.value = appear * k * 0.9;
+      const shooting = i === sh.node && sh.t < 1;
+      // from the tool (vU 1) into the Core (vU 0)
+      u.uShot.value = shooting ? 1 - sh.t : -1;
+      u.uShotAmt.value = shooting ? smoothstep(0, 0.12, sh.t) * smoothstep(1, 0.8, sh.t) : 0;
     });
 
     // Wordmark stays centred on screen whatever the scene offset
@@ -1141,7 +1242,7 @@ export class CoreScene {
       wm.scale.setScalar(fitW);
     }
 
-    this.updateScreen(portrait);
+    this.updateMonitor(portrait);
 
     // Post: bloom is the payoff of an awake, open Core
     this.final.uniforms.uTime.value = t % 100;
@@ -1150,38 +1251,62 @@ export class CoreScene {
     this.emitAnchors();
   }
 
-  /** The product screen rises out of the Core and stands beside it, turned towards the viewer. */
-  private updateScreen(portrait: boolean) {
-    const obj = this.screenObj;
-    if (!obj) return;
-    const e = this.state.screen * this.state.intro;
+  /**
+   * The monitor rises out of the Core and stands beside it; then, as the
+   * visitor keeps scrolling, it glides to centre stage — large, facing them.
+   */
+  private updateMonitor(portrait: boolean) {
+    const g = this.monitor;
+    if (!g) return;
+    const s = this.state;
+    const e = s.screen * s.intro;
     const shown = e > 0.002;
     if (shown !== this.screenShown) {
       this.screenShown = shown;
-      obj.element.style.visibility = shown ? "visible" : "hidden";
+      const vis = shown ? "visible" : "hidden";
+      (g.children[0] as CSS3DObject).element.style.visibility = vis;
+      this.monitorParts.forEach((el) => (el.style.visibility = vis));
     }
     if (!shown) return;
     const a = smoothstep(0, 1, e);
-    // where it stands: in front of the Core and to its right, seen from SCREEN_AZ (centred in portrait)
+    const c = smoothstep(0, 1, s.center);
+    const unit = SCREEN_W / MONITOR.w;
+
+    // beside the Core and a step in front of it, seen from SCREEN_AZ (centred in portrait)
+    const fitW = portrait ? 0.78 : Math.min(1, Math.max(0.62, this.camera.aspect / 1.75));
     const right = this.tmp.set(Math.cos(SCREEN_AZ), 0, -Math.sin(SCREEN_AZ));
     const toCam = this.tmp2.set(Math.sin(SCREEN_AZ), 0, Math.cos(SCREEN_AZ));
-    // narrower screens get a smaller one, so it never runs off the edge
-    const fitW = portrait ? 0.78 : Math.min(1, Math.max(0.62, this.camera.aspect / 1.75));
-    // beside the Core and a step in front of it: the Core glows just behind its left edge
-    const target = this.tmp3
+    const beside = this.tmp3
       .set(0, CORE_Y + (portrait ? -0.05 : 0.08), 0)
       .addScaledVector(right, portrait ? 0 : 1.25 * fitW)
       .addScaledVector(toCam, portrait ? 1.9 : 1.0);
-    obj.position.set(0, CORE_Y, 0).lerp(target, a);
-    obj.rotation.set((1 - a) * 0.5, SCREEN_AZ - (portrait ? 0 : 0.26) + (1 - a) * 0.5, 0);
-    obj.scale.setScalar((SCREEN_W / SCREEN_PX) * (0.25 + 0.75 * a) * fitW);
-    obj.element.style.opacity = smoothstep(0.05, 0.45, e).toFixed(3);
+    const rise = this.tmp4.set(0, CORE_Y, 0).lerp(beside, a);
+    this.besideQ.setFromEuler(this.euler.set((1 - a) * 0.5, SCREEN_AZ - (portrait ? 0 : 0.26) + (1 - a) * 0.5, 0));
+    const besideScale = unit * (0.25 + 0.75 * a) * fitW;
+
+    if (c <= 0.0001) {
+      g.position.copy(rise);
+      g.quaternion.copy(this.besideQ);
+      g.scale.setScalar(besideScale);
+      return;
+    }
+    // centre stage: in front of the camera, at the distance where it fills most of the view
+    const tan = Math.tan(THREE.MathUtils.degToRad(this.camera.fov / 2));
+    const fill = portrait ? 0.92 : 0.62;
+    const dist = Math.max(SCREEN_W / (fill * 2 * tan * this.camera.aspect), SCREEN_W / (MONITOR.w / MONITOR.h) / (0.68 * 2 * tan));
+    const fwd = this.camera.getWorldDirection(this.tmp);
+    const up = this.tmp2.setFromMatrixColumn(this.camera.matrixWorld, 1);
+    const centre = this.tmp3.copy(this.camera.position).addScaledVector(fwd, dist).addScaledVector(up, 2 * tan * dist * 0.075);
+    g.position.copy(rise).lerp(centre, c);
+    g.quaternion.slerpQuaternions(this.besideQ, this.camera.quaternion, c);
+    g.scale.setScalar(THREE.MathUtils.lerp(besideScale, unit, c));
   }
 
-  /** Where the cursor meets the Core: the stone warms under it. */
+  /** Where the cursor meets the Core: the stone warms under it, and the module fragment under it is reported. */
   private updateProbe(dt: number, sc: number) {
     const rate = this.opts.reducedMotion ? 1 : 1 - Math.exp(-dt * 3);
     let target = 0;
+    this.hoverPetal = -1;
     if (this.opts.interactive && this.pointerActive) {
       this.raycaster.setFromCamera(this.pointer, this.camera);
       this.sphere.center.setFromMatrixPosition(this.rock.matrixWorld);
@@ -1193,6 +1318,18 @@ export class CoreScene {
         this.probe.y += (this.tmp.y - this.probe.y) * Math.min(1, rate * 3);
         this.probe.z += (this.tmp.z - this.probe.z) * Math.min(1, rate * 3);
         target = 1;
+        // which fragment: by its angle around the facing axis (not the nucleus at the centre)
+        if (this.state.modules > 0.5 && Math.hypot(this.tmp.x, this.tmp.y) > 0.24) {
+          const ang = Math.atan2(this.tmp.y, this.tmp.x);
+          let best = Infinity;
+          PETALS.forEach((pt, i) => {
+            const dd = Math.abs(angleDelta(ang, THREE.MathUtils.degToRad(pt.angle)));
+            if (dd < best) {
+              best = dd;
+              this.hoverPetal = i;
+            }
+          });
+        }
       }
     }
     this.probe.w += (target - this.probe.w) * rate;
@@ -1212,10 +1349,8 @@ export class CoreScene {
       a.y = (-this.tmp.y * 0.5 + 0.5) * this.h;
       a.alpha = this.tmp.z < 1 ? alpha * behind : 0;
     };
-    this.branches.forEach((b, i) => {
-      const appear = smoothstep(i * 0.08, i * 0.08 + 0.55, s.branches);
-      project(b.dot, this.anchors.branches[i], smoothstep(0.8, 1, appear) * s.intro);
-    });
+    this.modulePoints.forEach((m, i) => project(m, this.anchors.modules[i], smoothstep(i * 0.06, i * 0.06 + 0.5, s.modules) * s.intro));
+    this.anchors.hoverModule = this.hoverPetal;
     this.nodes.forEach((n, i) => project(n.dot, this.anchors.nodes[i], smoothstep(i * 0.05 + 0.3, i * 0.05 + 0.5, s.network) * s.intro));
     const lit = [s.connect, s.understand, s.act];
     this.zonePoints.forEach((z, i) => project(z, this.anchors.zones[i], smoothstep(0.15, 0.6, lit[i]) * s.intro));
@@ -1242,10 +1377,11 @@ export class CoreScene {
         mat.dispose();
       });
     });
-    if (this.screenObj) {
-      // hand the element back untouched: its owner (React) removes it
-      this.screenObj.element.remove();
-      this.cssScene?.remove(this.screenObj);
+    if (this.monitor) {
+      // hand the front back untouched (its owner, React, removes it); the rest was ours
+      (this.monitor.children[0] as CSS3DObject).element.remove();
+      this.monitorParts.forEach((el) => el.remove());
+      this.cssScene?.remove(this.monitor);
     }
     this.css?.domElement.remove();
     this.composer.dispose();

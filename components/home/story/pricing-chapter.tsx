@@ -1,11 +1,11 @@
 "use client";
 
-import Link from "next/link";
-import { ArrowRight, Check } from "lucide-react";
+import { Check } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
 import { pricingIntro } from "@/content/home";
 import { pricing } from "@/content/marketing";
 import { cn } from "@/lib/cn";
+import { CoreButton } from "../core-button";
 import { COL, Eyebrow, LEFT, Layer, Title } from "./primitives";
 
 type Billing = "monthly" | "yearly";
@@ -93,13 +93,11 @@ export function PricingChapter() {
             </p>
 
             <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-3 short:mt-3">
-              <Link
-                href={plan.cta.href}
-                className="group inline-flex h-11 items-center gap-2.5 rounded-full bg-fg pl-5 pr-4 text-sm font-medium text-canvas transition-[background-color,gap] duration-300 ease-out-soft hover:gap-3.5 hover:bg-white"
-              >
-                {plan.cta.label}
-                <ArrowRight className="size-4" aria-hidden="true" />
-              </Link>
+              <CoreButton href={plan.cta.href}>
+                <span key={plan.id} className="inline-block animate-fade-in">
+                  {plan.cta.label}
+                </span>
+              </CoreButton>
               <span className="text-[12px] text-fg-3">{pricingIntro.notes[1]}</span>
             </div>
 

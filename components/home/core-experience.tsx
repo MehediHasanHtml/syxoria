@@ -11,10 +11,11 @@ import { cn } from "@/lib/cn";
 import { createCoreState, type CoreAnchors } from "@/lib/core/state";
 import { motion } from "@/lib/motion";
 import { productModules } from "@/lib/mock-data/modules";
-import { MODULES_CHAPTER, MODULE_WALK, STORY_CHAPTERS, STORY_VH, storyOffset } from "./chapters";
+import { INTEGRATIONS_CHAPTER, MODULES_CHAPTER, MODULE_WALK, STORY_CHAPTERS, STORY_VH, storyOffset } from "./chapters";
 import { CoreOverlay, type CoreOverlayHandle } from "./core-overlay";
 import { IntegrationsSheet } from "./integrations-sheet";
 import { LiveScreen } from "./live-screen";
+import { LookSwitcher, useCoreLook } from "./look-switcher";
 import { ModuleSheet } from "./module-sheet";
 import { Preloader } from "./preloader";
 import { useSmoothScroll } from "./smooth-scroll";
@@ -72,13 +73,34 @@ export function CoreExperience() {
   const [sheet, setSheet] = useState<number | null>(null);
   const [moreOpen, setMoreOpen] = useState(false);
 
+  // the tool being pointed at (a pulse runs down its wire)
+  const [tool, setTool] = useState<number | null>(null);
+  const look = useCoreLook();
+  const ground = look.ground;
+
   const exploring = chapter === MODULES_CHAPTER ? (focus ?? walk) : null;
   const explore = useExplore(exploring, setFocus, setSheet);
-  // the explored (or opened) branch reaches out in the scene; it eases there by itself
+  // the explored (or opened) module's fragment lifts and lights in the scene; it eases there by itself
   useEffect(() => void gsap.set(state, { focus: sheet ?? exploring ?? -1 }), [state, sheet, exploring]);
+  const pointing = chapter === INTEGRATIONS_CHAPTER ? tool : null;
+  useEffect(() => void gsap.set(state, { tool: pointing ?? -1 }), [state, pointing]);
 
+  // the Core's own fragments can be explored too: pointing at one explores its module, clicking opens it
+  const hoverModule = useRef(-1);
+  const stage = useRef<HTMLDivElement>(null);
   const onFrame = useCallback((a: CoreAnchors) => {
     overlay.current?.update(a, activeWords(root.current), live.current && chapterRef.current === 0);
+    const h = chapterRef.current === MODULES_CHAPTER ? a.hoverModule : -1;
+    if (h !== hoverModule.current) {
+      const was = hoverModule.current;
+      hoverModule.current = h;
+      if (h >= 0) setFocus(h);
+      else if (was >= 0) setFocus(null);
+      if (stage.current) stage.current.style.cursor = h >= 0 ? "pointer" : "";
+    }
+  }, []);
+  const onStageClick = useCallback(() => {
+    if (hoverModule.current >= 0) setSheet(hoverModule.current);
   }, []);
 
   // The scroll-scrubbed story. Built once the fonts are in (its titles are split into lines),
@@ -129,7 +151,7 @@ export function CoreExperience() {
               },
             },
           });
-          buildStory({ tl, q, state, desktop, wide, short: !!ctx.conditions?.short });
+          buildStory({ tl, q, state, desktop, wide, short: !!ctx.conditions?.short, ground });
         },
       );
     };
@@ -147,15 +169,22 @@ export function CoreExperience() {
       window.removeEventListener("resize", onResize);
       mm?.revert();
     };
-  }, [state]);
+  }, [state, ground]);
 
   // The opening sequence, driven by the Preloader:
-  // 20 → 90% the shards appear one by one; 100% they fly together — the Core, whole for the first time
-  const onProgress = useCallback((p: number) => void gsap.set(state, { tease: Math.min(1, Math.max(0, (p - 0.18) / 0.72)) }), [state]);
+  // 20 → 90% the pieces appear one by one, drifting closer together as more arrive;
+  // 100% they come together — slowly — the Core, whole for the first time
+  const onProgress = useCallback(
+    (p: number) => {
+      const s = (v: number) => v * v * (3 - 2 * v);
+      gsap.set(state, { tease: Math.min(1, Math.max(0, (p - 0.18) / 0.72)), scatter: 1 - 0.4 * s(Math.min(1, Math.max(0, (p - 0.3) / 0.7))) });
+    },
+    [state],
+  );
   const onLaunch = useCallback(() => {
     setOpening("revealing");
     gsap.set(state, { tease: 1 });
-    gsap.to(state, { scatter: 0, duration: 1.4, ease: "power3.inOut" });
+    gsap.to(state, { scatter: 0, duration: 2.1, ease: "power2.inOut" });
     // the room (glow, air, stars) arrives as the pieces lock together
     gsap.to(state, { intro: 1, duration: motion.core.duration, delay: 0.55, ease: motion.core.ease });
   }, [state]);
@@ -201,7 +230,7 @@ export function CoreExperience() {
           </span>
         ))}
 
-        <div className="sticky top-0 h-svh overflow-hidden">
+        <div ref={stage} onClick={onStageClick} className="sticky top-0 h-svh overflow-hidden">
           {/* During the opening the Core draws above a curtain that hides the page; then it drops behind the words */}
           {forming && <div aria-hidden="true" className="absolute inset-0 z-10 bg-canvas" />}
           <CoreCanvas
@@ -210,10 +239,11 @@ export function CoreExperience() {
             onFrame={onFrame}
             onReady={() => setSceneReady(true)}
             nodeCount={integrations.tools.length}
+            palette={look.palette}
             screen={screenEl}
           />
           {sceneReady && screenEl && createPortal(<LiveScreen state={state} />, screenEl)}
-          <CoreOverlay ref={overlay} focus={exploring} explore={explore} onOpenCore={() => scrollTo("#modules")} />
+          <CoreOverlay ref={overlay} focus={exploring} explore={explore} tool={pointing} onTool={setTool} onOpenCore={() => scrollTo("#modules")} />
 
           {/* Readability on small screens: the words sit on a soft floor of shadow */}
           <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-[52%] bg-gradient-to-t from-canvas via-canvas/85 to-transparent side:hidden" />
@@ -221,7 +251,7 @@ export function CoreExperience() {
           <HeroChapter />
           <OneCoreChapter />
           <ModulesChapter focus={exploring} explore={explore} onOpen={setSheet} />
-          <WorkspaceChapter />
+          <WorkspaceChapter state={state} />
           <IntegrationsChapter onMore={() => setMoreOpen(true)} />
           <PricingChapter />
 
@@ -237,6 +267,7 @@ export function CoreExperience() {
 
       <ModuleSheet index={sheet} onClose={() => setSheet(null)} onNavigate={setSheet} />
       <IntegrationsSheet open={moreOpen} onClose={() => setMoreOpen(false)} />
+      <LookSwitcher />
     </>
   );
 }

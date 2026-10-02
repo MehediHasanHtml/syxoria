@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
+import type { CorePalette } from "@/lib/core/look";
 import type { CoreAnchors, CoreState } from "@/lib/core/state";
 
 type Props = {
@@ -12,9 +13,11 @@ type Props = {
   /** Pointer parallax */
   interactive?: boolean;
   nodeCount?: number;
-  /** An HTML element (the product screen) the scene places in 3D beside the Core. */
+  /** The colour of the Core's light — switched live, without rebuilding the scene. */
+  palette?: CorePalette;
+  /** An HTML element (the front of the product monitor) the scene places in 3D beside the Core. */
   screen?: HTMLElement | null;
-  /** Screen positions of the module branches, tool nodes and zones, every frame. */
+  /** Screen positions of the modules, tool nodes and zones, every frame. */
   onFrame?: (anchors: CoreAnchors) => void;
   /** Called once the scene has compiled and drawn its first frame (or failed to). */
   onReady?: () => void;
@@ -25,14 +28,18 @@ type Props = {
  * text paints first; the canvas only renders while it is on screen and the
  * tab is visible. Without WebGL, a quiet CSS glow stands in.
  */
-export function CoreCanvas({ state, className, label, interactive = true, nodeCount, screen, onFrame, onReady }: Props) {
+export function CoreCanvas({ state, className, label, interactive = true, nodeCount, palette = "gold", screen, onFrame, onReady }: Props) {
   const wrap = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "failed">("loading");
   const callbacks = useRef({ onFrame, onReady });
+  const sceneRef = useRef<{ setPalette: (p: CorePalette) => void } | null>(null);
+  const paletteRef = useRef(palette);
   useEffect(() => {
     callbacks.current = { onFrame, onReady };
+    paletteRef.current = palette;
   });
+  useEffect(() => sceneRef.current?.setPalette(palette), [palette]);
 
   useEffect(() => {
     let disposed = false;
@@ -71,12 +78,17 @@ export function CoreCanvas({ state, className, label, interactive = true, nodeCo
           nodeCount,
           rockGeometry,
           screen: screen ?? undefined,
+          palette: paletteRef.current,
           onFrame: (a) => callbacks.current.onFrame?.(a),
         });
       } catch {
         return fail();
       }
-      cleanup.push(() => scene.dispose());
+      sceneRef.current = scene;
+      cleanup.push(() => {
+        sceneRef.current = null;
+        scene.dispose();
+      });
       await scene.ready;
       if (disposed) return;
       setStatus("ready");

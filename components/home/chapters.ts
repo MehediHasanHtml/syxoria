@@ -9,15 +9,15 @@
 export type Chapter = { id: string; label: string; start: number; land: number };
 
 /** Story height in viewports; the pinned range is one viewport less. */
-export const STORY_VH = 9;
+export const STORY_VH = 10;
 
 export const STORY_CHAPTERS: Chapter[] = [
   { id: "core", label: "Core", start: 0, land: 0 },
-  { id: "one-core", label: "One core", start: 7, land: 15 },
-  { id: "modules", label: "Modules", start: 34, land: 45 },
-  { id: "workspace", label: "Workspace", start: 63, land: 71 },
-  { id: "integrations", label: "Integrations", start: 77, land: 84 },
-  { id: "pricing", label: "Pricing", start: 90, land: 99 },
+  { id: "one-core", label: "One core", start: 6, land: 12 },
+  { id: "modules", label: "Modules", start: 30, land: 41 },
+  { id: "workspace", label: "Workspace", start: 56, land: 71 },
+  { id: "integrations", label: "Integrations", start: 80, land: 86 },
+  { id: "pricing", label: "Pricing", start: 91, land: 99 },
 ];
 
 export const NAV_SECTIONS = STORY_CHAPTERS.map(({ id, label }) => ({ id, label }));
@@ -28,10 +28,11 @@ export const ONE_CORE_CHAPTER = index("one-core");
 /** The modules chapter — the one where the Core can be explored. */
 export const MODULES_CHAPTER = index("modules");
 export const WORKSPACE_CHAPTER = index("workspace");
+export const INTEGRATIONS_CHAPTER = index("integrations");
 export const PRICING_CHAPTER = index("pricing");
 
 /** Where, in the modules chapter, the scroll walks through the six modules one by one. */
-export const MODULE_WALK = { from: 46, to: 60 };
+export const MODULE_WALK = { from: 42, to: 54 };
 
 /** A timeline position as a CSS offset from the top of the story. */
 export const storyOffset = (at: number) => `${(at / 100) * (STORY_VH - 1) * 100}svh`;

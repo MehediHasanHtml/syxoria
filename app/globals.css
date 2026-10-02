@@ -124,7 +124,21 @@
   --container: 76rem;
   --gutter: clamp(1rem, 0.6rem + 2vw, 2.5rem);
 
+  /* The Core's light, as the page uses it (buttons, marks): follows the Core's palette */
+  --core-light: #f2b46e;
+  --core-glow: rgb(255 150 70 / 0.55);
+
   color-scheme: dark;
+}
+
+/* The emerald test: only the light changes — the Core's, and the page's single accent with it */
+:root[data-core="emerald"] {
+  --core-light: #3ec98e;
+  --core-glow: rgb(30 190 120 / 0.5);
+  --color-accent: #4dbb8c;
+  --color-accent-strong: #7fd6ae;
+  --color-accent-soft: rgb(77 187 140 / 0.12);
+  --color-accent-line: rgb(77 187 140 / 0.35);
 }
 
 @keyframes shimmer {
@@ -312,8 +326,8 @@ html:has(dialog[open]) { overflow: hidden; }
 /* The opening sequence (homepage): only the forming Core and the loader are on screen */
 body:has([data-opening]) :is(header, [data-rail]) { opacity: 0; visibility: hidden; }
 .preloader-flare {
-  background: linear-gradient(90deg, transparent, rgb(255 205 150 / 0.15) 25%, rgb(255 236 214 / 0.95) 50%, rgb(255 205 150 / 0.15) 75%, transparent);
-  box-shadow: 0 0 14px 1px rgb(255 190 120 / 0.45);
+  background: linear-gradient(90deg, transparent, color-mix(in oklab, var(--core-light) 15%, transparent) 25%, color-mix(in oklab, var(--core-light) 35%, white) 50%, color-mix(in oklab, var(--core-light) 15%, transparent) 75%, transparent);
+  box-shadow: 0 0 14px 1px var(--core-glow);
   opacity: 0;
   transform: translate(-50%, -50%) scaleX(0);
 }
@@ -332,6 +346,127 @@ body:has([data-opening]) :is(header, [data-rail]) { opacity: 0; visibility: hidd
 
 /* Titles split into lines: each line rises out of its own mask */
 .split-line { will-change: transform; }
+
+/* Modules: the explored fragment's point of light breathes */
+.module-ring { animation: module-ring 2.4s var(--ease-out-soft) infinite; }
+@keyframes module-ring {
+  0% { opacity: 0.8; transform: translate(-50%, -50%) scale(0.4); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(1.6); }
+}
+
+/* Tools: pointing at one makes it answer (the pulse runs down its wire in the scene) */
+.tool-chip { transition: scale 450ms var(--ease-out-soft), border-color 450ms var(--ease-out-soft), background-color 450ms var(--ease-out-soft), color 300ms; }
+.tool-chip[data-active] { scale: 1.08; border-color: color-mix(in oklab, var(--core-light) 55%, transparent); background: rgb(0 0 0 / 0.6); color: var(--color-fg); }
+.tool-chip .tool-logo { transition: scale 450ms var(--ease-spring); }
+.tool-chip[data-active] .tool-logo { scale: 1.2; }
+.tool-ping { animation: tool-ping 1.15s var(--ease-out-soft) forwards; }
+@keyframes tool-ping {
+  0% { opacity: 0.9; scale: 0.6; }
+  100% { opacity: 0; scale: 1.9; }
+}
+
+/* The product monitor's body (built in CSS 3D by the scene): dark anodised aluminium */
+.monitor-back { border-radius: 26px; background: linear-gradient(160deg, #2a2c2f, #17181a 55%, #101112); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.05); }
+.monitor-edge { background: linear-gradient(90deg, #1c1d1f, #3a3c3f 50%, #1c1d1f); }
+.monitor-neck { border-radius: 10px; background: linear-gradient(180deg, #2c2e31, #1a1b1d 70%, #141516); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.05); }
+.monitor-foot { border-radius: 22px; background: radial-gradient(ellipse at 50% 30%, #333538, #18191b 70%); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.06); }
+
+/* ==========================================================================
+   CORE BUTTONS (components/home/core-button.tsx) — the page's calls to action,
+   made of the Core's materials: dark stone, a line of light running around
+   it, a small core that opens on hover. Magnetic, eased in JS (--tx, --ty).
+   ========================================================================== */
+@property --ring-a { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+.core-btn {
+  position: relative;
+  isolation: isolate;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.8rem;
+  height: 3rem;
+  padding: 0 1.15rem 0 0.45rem;
+  border-radius: 999px;
+  background: radial-gradient(120% 140% at 30% 0%, #1b1c1e, #0b0c0d 70%);
+  color: var(--color-fg);
+  font-size: 0.875rem;
+  font-weight: 500;
+  white-space: nowrap;
+  translate: var(--tx, 0px) var(--ty, 0px);
+  transition: box-shadow 500ms var(--ease-out-soft), scale 200ms var(--ease-out-soft);
+  box-shadow: 0 10px 30px -12px rgb(0 0 0 / 0.8);
+}
+.core-btn:active { scale: 0.97; }
+.core-btn:hover { box-shadow: 0 10px 40px -10px var(--core-glow); }
+/* a thin line of the Core's light running around the edge — it turns slowly, and follows the cursor on hover */
+.core-btn__ring {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: conic-gradient(from var(--ring-a), rgb(255 255 255 / 0.1) 0deg, var(--core-light) 26deg, rgb(255 255 255 / 0.12) 70deg, rgb(255 255 255 / 0.1) 360deg);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: ring-turn 9s linear infinite;
+  pointer-events: none;
+}
+.core-btn[data-hover] .core-btn__ring { animation: none; }
+@keyframes ring-turn { to { --ring-a: 360deg; } }
+/* the light the cursor carries inside the button */
+.core-btn__glow {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: radial-gradient(90px circle at var(--mx, 50%) var(--my, 50%), color-mix(in oklab, var(--core-light) 20%, transparent), transparent 70%);
+  opacity: 0;
+  transition: opacity 500ms var(--ease-out-soft);
+  pointer-events: none;
+}
+.core-btn[data-hover] .core-btn__glow { opacity: 1; }
+/* a small core: two halves of dark stone over a point of light — they part on hover */
+.core-btn__seed { position: relative; width: 2.1rem; height: 2.1rem; flex: none; border-radius: 999px; }
+.core-btn__seed::before {
+  content: "";
+  position: absolute;
+  inset: 22%;
+  border-radius: inherit;
+  background: radial-gradient(circle, #fff 0%, var(--core-light) 35%, transparent 72%);
+  opacity: 0.55;
+  transition: opacity 500ms var(--ease-out-soft), inset 500ms var(--ease-out-soft);
+}
+.core-btn__half {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 50%;
+  background: radial-gradient(circle at 70% 30%, #3a3836, #141312 60%);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.06);
+  transition: translate 550ms var(--ease-out-soft), rotate 550ms var(--ease-out-soft);
+}
+.core-btn__half:first-child { left: 0; border-radius: 999px 0 0 999px; transform-origin: 100% 50%; }
+.core-btn__half:last-child { right: 0; border-radius: 0 999px 999px 0; transform-origin: 0 50%; }
+.core-btn__seam { position: absolute; left: 50%; top: 18%; bottom: 18%; width: 1px; translate: -50% 0; background: var(--core-light); box-shadow: 0 0 6px 1px var(--core-glow); opacity: 0.8; }
+.core-btn[data-hover] .core-btn__seed::before { opacity: 1; inset: 8%; }
+.core-btn[data-hover] .core-btn__half:first-child { translate: -3px 0; rotate: -14deg; }
+.core-btn[data-hover] .core-btn__half:last-child { translate: 3px 0; rotate: 14deg; }
+.core-btn__arrow { display: grid; place-items: center; width: 1rem; transition: translate 450ms var(--ease-out-soft); }
+.core-btn[data-hover] .core-btn__arrow { translate: 3px 0; }
+
+/* the quiet one ("watch the film"): a lens whose ring of light draws itself on hover */
+.lens-btn { display: inline-flex; align-items: center; gap: 0.85rem; font-size: 0.875rem; color: var(--color-fg-2); translate: var(--tx, 0px) var(--ty, 0px); transition: color 300ms; }
+.lens-btn[data-hover] { color: var(--color-fg); }
+.lens-btn__lens { position: relative; display: grid; place-items: center; width: 2.9rem; height: 2.9rem; border-radius: 999px; background: rgb(255 255 255 / 0.03); box-shadow: inset 0 0 0 1px var(--color-line-strong); transition: scale 500ms var(--ease-out-soft), background-color 500ms; }
+.lens-btn[data-hover] .lens-btn__lens { scale: 1.06; background: rgb(255 255 255 / 0.06); }
+.lens-btn__ring { position: absolute; inset: -1px; rotate: -90deg; }
+.lens-btn__ring circle { fill: none; stroke: var(--core-light); stroke-width: 1.2; stroke-dasharray: 1 1; stroke-dashoffset: 1; transition: stroke-dashoffset 900ms var(--ease-out-soft); filter: drop-shadow(0 0 3px var(--core-glow)); }
+.lens-btn[data-hover] .lens-btn__ring circle { stroke-dashoffset: 0; }
+.lens-btn__label { position: relative; }
+.lens-btn__label::after { content: ""; position: absolute; left: 0; right: 0; bottom: -3px; height: 1px; background: currentColor; scale: 0 1; transform-origin: left; transition: scale 500ms var(--ease-out-soft); opacity: 0.5; }
+.lens-btn[data-hover] .lens-btn__label::after { scale: 1 1; }
+@media (prefers-reduced-motion: reduce) {
+  .core-btn__ring { animation: none; }
+}
 
 /* Pricing glass: a soft light that follows the cursor (position eased in JS: --gx, --gy, --go) */
 .glass-panel::before {

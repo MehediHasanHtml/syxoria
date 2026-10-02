@@ -17,7 +17,7 @@ export type CoreState = {
   shiftY: number;
   /** 0 dormant → 1 fully awake (fissure width + heat) */
   awaken: number;
-  /** 0 closed → 1 the Core parts along its six seams, like a flower, around its lit nucleus */
+  /** 0 closed → 1 the Core parts into six fragments around its lit nucleus — each its own way */
   open: number;
   /** preloader intro, multiplies everything but the rock (0 → 1) */
   intro: number;
@@ -43,16 +43,20 @@ export type CoreState = {
   connect: number;
   understand: number;
   act: number;
-  /** how far the six module branches have grown out of the Core (0..1, staggered per branch) */
-  branches: number;
-  /** branch the visitor is exploring (hover / focus / tap / scroll), -1 none — the scene eases towards it */
+  /** the six modules, one per fragment of the opened Core: 0 hidden → 1 named and explorable */
+  modules: number;
+  /** module the visitor is exploring (hover / focus / tap / scroll), -1 none — its fragment lifts and lights */
   focus: number;
   /** the product screen: 0 inside the Core → 1 standing beside it */
   screen: number;
+  /** the product screen moving to centre stage: 0 beside the Core → 1 large, centred, facing the viewer */
+  center: number;
   /** what the product screen shows (0..1: cards, numbers and chart build up) */
   live: number;
   /** the tools wired to the Core */
   network: number;
+  /** tool the visitor points at, -1 none — a pulse runs down its wire */
+  tool: number;
   wordmark: number;
   /** extra rotation of the Core (radians) */
   spin: number;
@@ -84,11 +88,13 @@ export const DEFAULT_STATE: CoreState = {
   connect: 0,
   understand: 0,
   act: 0,
-  branches: 0,
+  modules: 0,
   focus: -1,
   screen: 0,
+  center: 0,
   live: 0,
   network: 0,
+  tool: -1,
   wordmark: 0,
   spin: 0,
   scale: 1,
@@ -98,8 +104,10 @@ export const createCoreState = (overrides: Partial<CoreState> = {}): CoreState =
 
 export type Anchor = { x: number; y: number; alpha: number };
 export type CoreAnchors = {
-  /** tip of each module branch */
-  branches: Anchor[];
+  /** each module, on its fragment of the Core */
+  modules: Anchor[];
+  /** the module whose fragment is under the cursor, -1 none */
+  hoverModule: number;
   /** tool nodes of the integration network */
   nodes: Anchor[];
   /** the three zones (connect · understand · act), on the Core's surface */

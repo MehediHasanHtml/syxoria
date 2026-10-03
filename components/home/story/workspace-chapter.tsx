@@ -11,12 +11,12 @@ import { useCanHover } from "../use-explore";
 import { Eyebrow, LEFT, Layer, Title } from "./primitives";
 
 /**
- * 04 — The workspace. Its monitor is not here: it rises out of the Core and
- * stands beside it in the 3D scene, then glides with the scroll to centre
- * stage (see LiveScreen). Two layers of words go with it:
+ * 04 — The workspace. Its laptop is not here: it rises out of the Core and
+ * stands beside it in the 3D scene, then glides with the scroll towards the
+ * centre (see LiveScreen). Two layers of words go with it:
  *
- *   workspace  beside the monitor, while it stands next to the Core
- *   demo       once it is centred: the session it runs, told underneath, and how to open it fullscreen
+ *   workspace  beside the laptop, while it stands next to the Core
+ *   demo       once it is centred: the session it plays, told underneath, and how to open it fullscreen
  */
 export function WorkspaceChapter({ state }: { state: CoreState }) {
   const film = useFilm();
@@ -55,7 +55,7 @@ export function WorkspaceChapter({ state }: { state: CoreState }) {
             </p>
             <div className="flex items-center gap-6">
               <p className="text-[12px] text-fg-3 max-md:hidden">{canHover ? workspace.demo.hint.pointer : workspace.demo.hint.touch}</p>
-              <LensButton onClick={() => film.open()} aria-haspopup="dialog">
+              <LensButton onClick={() => film.open({ at: state.live < 1 ? state.live : 0 })} aria-haspopup="dialog">
                 {workspace.demo.openFull}
               </LensButton>
               <Link href={workspace.enter.href} className="group hidden items-center gap-2 text-sm text-fg-2 transition-colors hover:text-fg sm:inline-flex">

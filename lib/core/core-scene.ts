@@ -21,7 +21,7 @@ import { DEFAULT_STATE, type Anchor, type CoreAnchors, type CoreState } from "./
  * with it, so every function always lives in the same place:
  *
  *   · three zones on its surface — signals run in, the heart understands, action runs out
- *   · six fragments around a lit nucleus, one per module — they part, each its own way
+ *   · six fragments, one per module — real pieces of its stone that separate from it, each its own way
  *   · the tools, wired to it by roots that leave its surface
  *   · the product screen: a real monitor (live HTML) standing in the same 3D space
  *
@@ -57,23 +57,50 @@ const CORE_SIZE = 0.8;
 export const ROCK_DETAIL = { high: 34, low: 18 };
 
 /**
- * The six fragments, one per module, in module order (clockwise from the top).
- * Deliberately uneven — spacing, how far, when, fold, twist, lift — so the
- * Core opens like something alive, not a mechanism.
+ * The shards of the opening sequence (the loader): the whole Core cut into six
+ * pieces around the axis that faces the viewer, each drifting in from its own side.
  */
-const PETALS = [
-  { angle: 94, amount: 0.2, delay: 0.0, fold: 0.3, twist: 0.07, lift: 0.04, z: -0.18 },
-  { angle: 33, amount: 0.12, delay: 0.15, fold: 0.15, twist: -0.11, lift: 0.025, z: -0.3 },
-  { angle: -31, amount: 0.17, delay: 0.06, fold: 0.25, twist: 0.09, lift: -0.03, z: -0.12 },
-  { angle: -86, amount: 0.09, delay: 0.25, fold: 0.11, twist: -0.05, lift: -0.05, z: -0.26 },
-  { angle: -152, amount: 0.16, delay: 0.1, fold: 0.22, twist: 0.13, lift: -0.02, z: -0.2 },
-  { angle: 148, amount: 0.19, delay: 0.03, fold: 0.28, twist: -0.08, lift: 0.035, z: -0.15 },
+const SHARDS = [
+  { angle: 94, z: -0.18 },
+  { angle: 33, z: -0.3 },
+  { angle: -31, z: -0.12 },
+  { angle: -86, z: -0.26 },
+  { angle: -152, z: -0.2 },
+  { angle: 148, z: -0.15 },
 ];
+
+/**
+ * The six fragments, one per module, in module order (clockwise from the top,
+ * seen from the front): real pieces of the Core's stone, each cut from its own
+ * precise area — the rest of the Core, its body, stays whole and still.
+ * Deliberately uneven, so the Core reads as a complex, irregular nucleus and
+ * never as something designed to come apart:
+ *
+ *   angle, tilt  where it sits: around the facing axis, and how far from it (deg)
+ *   size         how large an area it takes (deg) · depth: how thick a piece of stone
+ *   out          how far it travels · drift: off its own axis (deg) · when: its moment
+ *   turn         how much it tilts away as it leaves (rad)
+ */
+const FRAGMENTS = [
+  { angle: 98, tilt: 50, size: 29, depth: 0.36, out: 0.55, drift: 14, when: 0.0, turn: 0.42 },
+  { angle: 36, tilt: 62, size: 22, depth: 0.27, out: 0.42, drift: -18, when: 0.16, turn: -0.55 },
+  { angle: -22, tilt: 47, size: 33, depth: 0.4, out: 0.47, drift: 8, when: 0.06, turn: 0.3 },
+  { angle: -94, tilt: 64, size: 24, depth: 0.3, out: 0.38, drift: -10, when: 0.24, turn: -0.4 },
+  { angle: -150, tilt: 53, size: 31, depth: 0.37, out: 0.58, drift: 20, when: 0.1, turn: 0.48 },
+  { angle: 152, tilt: 66, size: 20, depth: 0.25, out: 0.46, drift: -14, when: 0.03, turn: -0.36 },
+];
+/** How far a fragment has parted (each its own moment). */
+const fragmentOpen = (when: number, open: number) => smoothstep(when, when + 0.64, open);
 /** The brain's three zones (object space): where signals come in, the heart, where action leaves. */
 export const ZONE_DIRS = [new THREE.Vector3(-0.8, 0.5, 0.42), new THREE.Vector3(0.12, -0.1, 1), new THREE.Vector3(0.78, -0.42, 0.5)].map((v) => v.normalize());
 
-/** The product monitor: its front in CSS px (screen + bezel), its width and depth in the scene. */
-export const MONITOR = { w: 1248, h: 798, depth: 30 };
+/**
+ * The product laptop, in CSS px: its lid (front = display + bezel, see LiveScreen),
+ * the lid's thickness, the base's depth and thickness, how far the lid leans back
+ * when open, and how much the whole laptop tips towards the viewer so its keyboard reads.
+ */
+export const LAPTOP = { w: 1244, h: 808, lid: 16, deck: 680, base: 22, lean: 0.2, tip: 0.26 };
+/** The lid's width in the scene (world units) at scale 1. */
 const SCREEN_W = 2.9;
 export const SCREEN_AZ = 1.75;
 
@@ -147,16 +174,15 @@ function haloMesh(falloff: number) {
 
 /** Shortest signed difference between two angles. */
 const angleDelta = (a: number, b: number) => Math.atan2(Math.sin(b - a), Math.cos(b - a));
-/** How far a fragment has opened (matches the rock's vertex shader). */
-const petalOpen = (delay: number, open: number) => smoothstep(delay, delay + 0.72, open);
 
 /** Yield to the browser so input and painting are not blocked between setup steps. */
 const nextTask = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
 
 /**
  * Sculpt the Core: a lumpy, heart-like cluster with two glowing hollows, cut
- * into six irregular fragments around the axis that faces the viewer — seams
- * that wander and meet at its heart, so it can open.
+ * into the six shards of the opening sequence around the axis that faces the
+ * viewer — seams that wander and meet at its heart. (When it opens later, it
+ * parts differently: see buildPieces.)
  */
 export function buildRockGeometry(detail: number) {
   const n1 = createNoise3D(11);
@@ -185,19 +211,20 @@ export function buildRockGeometry(detail: number) {
     { c: new THREE.Vector3(-0.7, 0.35, -0.6).normalize(), depth: 0.16, lo: 0.89, hi: 0.985, w: 0.65 },
   ];
 
-  // Fragments: one seed per module around the facing axis; each opens outwards, a little back, its own way
-  const seeds = PETALS.map((pt) => {
-    const a = THREE.MathUtils.degToRad(pt.angle);
+  // Shards: one seed each around the facing axis; each drifts in from its own side
+  const seeds = SHARDS.map((sh) => {
+    const a = THREE.MathUtils.degToRad(sh.angle);
     return new THREE.Vector3(Math.cos(a), Math.sin(a), 0);
   });
-  const dirs = seeds.map((s, i) => new THREE.Vector3(s.x, s.y, PETALS[i].z).normalize());
+  const dirs = seeds.map((s, i) => new THREE.Vector3(s.x, s.y, SHARDS[i].z).normalize());
   // the order in which the pieces form during the opening sequence (alternating sides)
   const order = [0, 3, 1, 4, 2, 5].map((k) => k / 6);
 
   const pos = geo.attributes.position as THREE.BufferAttribute;
   const cavity = new Float32Array(pos.count);
-  const shard = new Float32Array(pos.count * 4);
-  const petal = new Float32Array(pos.count * 4);
+  const shard = new Float32Array(pos.count * 3);
+  // each vertex's direction on the sphere it was sculpted from (for cutting the fragments, see buildPieces)
+  const sphere = new Float32Array(pos.count * 3);
   const shardId = new Float32Array(pos.count);
   const shardOrder = new Float32Array(pos.count);
   const seam = new Float32Array(pos.count);
@@ -205,6 +232,7 @@ export function buildRockGeometry(detail: number) {
   const w = new THREE.Vector3();
   for (let i = 0; i < pos.count; i++) {
     p.fromBufferAttribute(pos, i).normalize();
+    p.toArray(sphere, i * 3);
     let r = 1 + 0.15 * fbm(n1, p.x * 1.1, p.y * 1.1, p.z * 1.1, 3);
     for (const l of lumps) r += l.a * smoothstep(l.cos, 1, p.dot(l.c));
     const ridge = 1 - Math.abs(n2(p.x * 2.7, p.y * 2.7, p.z * 2.7));
@@ -218,7 +246,7 @@ export function buildRockGeometry(detail: number) {
     }
     cavity[i] = c;
 
-    // the fragment: nearest seed around the axis, on a noise-warped direction so the seams wander and break irregularly
+    // the shard: nearest seed around the axis, on a noise-warped direction so the seams wander and break irregularly
     const wx = 0.2 * n1(p.x * 1.8, p.y * 1.8, p.z * 1.8) + 0.07 * n2(p.x * 5.5, p.y * 5.5, p.z * 5.5);
     const wy = 0.2 * n1(p.x * 1.8 + 5, p.y * 1.8, p.z * 1.8) + 0.07 * n2(p.x * 5.5 + 3, p.y * 5.5, p.z * 5.5);
     w.set(p.x + wx, p.y + wy, 0);
@@ -235,9 +263,7 @@ export function buildRockGeometry(detail: number) {
         idx = k;
       } else if (d > second) second = d;
     });
-    const pt = PETALS[idx];
-    shard.set([dirs[idx].x, dirs[idx].y, dirs[idx].z, pt.amount], i * 4);
-    petal.set([pt.delay, pt.fold, pt.twist, pt.lift], i * 4);
+    dirs[idx].toArray(shard, i * 3);
     shardId[i] = idx;
     shardOrder[i] = order[idx];
     // near the axis every direction is close: the seams narrow into the heart
@@ -255,13 +281,269 @@ export function buildRockGeometry(detail: number) {
     pos.setXYZ(i, x * 0.95, y * 0.95, z * 0.95);
   }
   geo.setAttribute("aCavity", new THREE.BufferAttribute(cavity, 1));
-  geo.setAttribute("aShard", new THREE.BufferAttribute(shard, 4));
-  geo.setAttribute("aPetal", new THREE.BufferAttribute(petal, 4));
+  geo.setAttribute("aShard", new THREE.BufferAttribute(shard, 3));
   geo.setAttribute("aSeam", new THREE.BufferAttribute(seam, 1));
   geo.setAttribute("aShardId", new THREE.BufferAttribute(shardId, 1));
   geo.setAttribute("aOrder", new THREE.BufferAttribute(shardOrder, 1));
   geo.computeVertexNormals();
+  geo.userData.sphere = sphere;
   return geo;
+}
+
+/** One fragment of the opened Core: its solid piece of stone, and how it leaves. */
+type Piece = {
+  geometry: THREE.BufferGeometry;
+  /** its centre (it turns about it), the way it travels, the axis it tilts on */
+  centre: THREE.Vector3;
+  dir: THREE.Vector3;
+  axis: THREE.Vector3;
+  /** the highest point of its outer face, where its module is named */
+  top: THREE.Vector3;
+  /** a few points of its broken edge, where small chips come loose */
+  rim: THREE.Vector3[];
+};
+
+/**
+ * Cut the opened Core out of the closed one (same stone, vertex for vertex, so
+ * the switch from one to the other never shows): six solid fragments — each a
+ * piece of the Core's skin with a broken underside and walls, as thick as
+ * FRAGMENTS says — and the body they come out of, left with a socket where
+ * each one was. Outlines wander with noise; every fragment stays one piece
+ * and the body always keeps a strip of stone between two of them.
+ */
+function buildPieces(base: THREE.BufferGeometry) {
+  const pos = base.attributes.position as THREE.BufferAttribute;
+  const nrm = base.attributes.normal as THREE.BufferAttribute;
+  const cav = base.attributes.aCavity as THREE.BufferAttribute;
+  const sphere = base.userData.sphere as Float32Array;
+  const index = base.index!.array;
+  const n = pos.count;
+  const tris = index.length / 3;
+  const nA = createNoise3D(53);
+  const nB = createNoise3D(71);
+  const seeds = FRAGMENTS.map((f) => {
+    const a = THREE.MathUtils.degToRad(f.angle);
+    const t = THREE.MathUtils.degToRad(f.tilt);
+    return new THREE.Vector3(Math.sin(t) * Math.cos(a), Math.sin(t) * Math.sin(a), Math.cos(t));
+  });
+  const reach = FRAGMENTS.map((f) => Math.cos(THREE.MathUtils.degToRad(f.size)));
+
+  // Each vertex: which fragment's area it falls in (on a noise-warped direction, so outlines break irregularly) — or the body's
+  const label = new Int8Array(n).fill(-1);
+  const d = new THREE.Vector3();
+  const w = new THREE.Vector3();
+  for (let i = 0; i < n; i++) {
+    d.fromArray(sphere, i * 3);
+    w.set(
+      d.x + 0.15 * nA(d.x * 2.3, d.y * 2.3, d.z * 2.3) + 0.03 * nB(d.x * 6, d.y * 6, d.z * 6),
+      d.y + 0.15 * nA(d.x * 2.3 + 4.1, d.y * 2.3, d.z * 2.3) + 0.03 * nB(d.x * 6 + 2.3, d.y * 6, d.z * 6),
+      d.z + 0.15 * nA(d.x * 2.3, d.y * 2.3 + 7.7, d.z * 2.3) + 0.03 * nB(d.x * 6, d.y * 6 + 5.1, d.z * 6),
+    ).normalize();
+    let best = -Infinity;
+    let second = -Infinity;
+    let k = -1;
+    seeds.forEach((sd, j) => {
+      const s = w.dot(sd) - reach[j];
+      if (s > best) {
+        second = best;
+        best = s;
+        k = j;
+      } else if (s > second) second = s;
+    });
+    // inside an area, and clearly closer to it than to its neighbour: two fragments never touch
+    if (best > 0 && best - second > 0.07) label[i] = k;
+  }
+
+  // Each triangle: the area most of its corners are in
+  const tri = new Int8Array(tris);
+  for (let t = 0; t < tris; t++) {
+    const [a, b, c] = [label[index[t * 3]], label[index[t * 3 + 1]], label[index[t * 3 + 2]]];
+    tri[t] = a === b || a === c ? a : b === c ? b : -1;
+  }
+
+  // Triangles sharing an edge
+  const edges = new Map<number, number[]>();
+  const edgeKey = (a: number, b: number) => (a < b ? a * n + b : b * n + a);
+  for (let t = 0; t < tris; t++)
+    for (let e = 0; e < 3; e++) {
+      const key = edgeKey(index[t * 3 + e], index[t * 3 + ((e + 1) % 3)]);
+      const list = edges.get(key);
+      if (list) list.push(t);
+      else edges.set(key, [t]);
+    }
+  const neighbours = (t: number) => {
+    const out: number[] = [];
+    for (let e = 0; e < 3; e++) for (const o of edges.get(edgeKey(index[t * 3 + e], index[t * 3 + ((e + 1) % 3)]))!) if (o !== t) out.push(o);
+    return out;
+  };
+  // Connected patches of one label
+  const patches = (lab: number) => {
+    const seen = new Uint8Array(tris);
+    const out: number[][] = [];
+    for (let t = 0; t < tris; t++) {
+      if (tri[t] !== lab || seen[t]) continue;
+      const patch = [t];
+      seen[t] = 1;
+      for (let q = 0; q < patch.length; q++)
+        for (const o of neighbours(patch[q]))
+          if (tri[o] === lab && !seen[o]) {
+            seen[o] = 1;
+            patch.push(o);
+          }
+      out.push(patch);
+    }
+    return out.sort((p, q) => q.length - p.length);
+  };
+  // every fragment is one piece (stray islands go back to the body)…
+  FRAGMENTS.forEach((_, k) => patches(k).slice(1).forEach((p) => p.forEach((t) => (tri[t] = -1))));
+  // …and has no holes (small islands of body inside it become part of it)
+  for (const p of patches(-1).slice(1)) {
+    const k = p.flatMap(neighbours).map((o) => tri[o]).find((l) => l >= 0);
+    if (k !== undefined) p.forEach((t) => (tri[t] = k));
+  }
+
+  // The broken edges: between a fragment and the body
+  const rimEdges: [number, number][][] = FRAGMENTS.map(() => []);
+  const onRim = new Uint8Array(n);
+  for (let t = 0; t < tris; t++) {
+    const k = tri[t];
+    if (k < 0) continue;
+    for (let e = 0; e < 3; e++) {
+      const a = index[t * 3 + e];
+      const b = index[t * 3 + ((e + 1) % 3)];
+      if (edges.get(edgeKey(a, b))!.some((o) => tri[o] !== k)) {
+        rimEdges[k].push([a, b]);
+        onRim[a] = onRim[b] = 1;
+      }
+    }
+  }
+  // How far each vertex of the skin is from a broken edge (its outline glows)
+  const rimPts: number[] = [];
+  for (let i = 0; i < n; i++) if (onRim[i]) rimPts.push(pos.getX(i), pos.getY(i), pos.getZ(i));
+  const seam = new Float32Array(n).fill(1);
+  const near = Math.cos(THREE.MathUtils.degToRad(Math.max(...FRAGMENTS.map((f) => f.size)) + 18));
+  for (let i = 0; i < n; i++) {
+    d.fromArray(sphere, i * 3);
+    if (!seeds.some((sd) => d.dot(sd) > near)) continue;
+    const x = pos.getX(i);
+    const y = pos.getY(i);
+    const z = pos.getZ(i);
+    let m = 0.04;
+    for (let j = 0; j < rimPts.length; j += 3) {
+      const dx = rimPts[j] - x;
+      const dy = rimPts[j + 1] - y;
+      const dz = rimPts[j + 2] - z;
+      const dd = dx * dx + dy * dy + dz * dz;
+      if (dd < m) m = dd;
+    }
+    seam[i] = Math.sqrt(m);
+  }
+
+  // How deep each fragment's stone goes under a vertex: its own thickness, broken unevenly
+  const inner = (i: number, k: number, out: THREE.Vector3) => {
+    d.fromArray(sphere, i * 3);
+    const f = 0.72 + 0.56 * (0.5 + 0.5 * nB(d.x * 3.2 + k, d.y * 3.2, d.z * 3.2));
+    return out.fromBufferAttribute(pos, i).multiplyScalar(1 - FRAGMENTS[k].depth * f);
+  };
+
+  // Writing triangles: position, normal and what the shader needs to know about each corner
+  const writer = () => {
+    const v = { pos: [] as number[], nrm: [] as number[], cav: [] as number[], seam: [] as number[], id: [] as number[], broken: [] as number[], depth: [] as number[], socket: [] as number[] };
+    const corner = (p: THREE.Vector3, nr: THREE.Vector3, c: number, s: number, id: number, broken: number, depth: number, socket: number) => {
+      v.pos.push(p.x, p.y, p.z);
+      v.nrm.push(nr.x, nr.y, nr.z);
+      v.cav.push(c);
+      v.seam.push(s);
+      v.id.push(id);
+      v.broken.push(broken);
+      v.depth.push(depth);
+      v.socket.push(socket);
+    };
+    const build = () => {
+      const g = new THREE.BufferGeometry();
+      g.setAttribute("position", new THREE.Float32BufferAttribute(v.pos, 3));
+      g.setAttribute("normal", new THREE.Float32BufferAttribute(v.nrm, 3));
+      g.setAttribute("aCavity", new THREE.Float32BufferAttribute(v.cav, 1));
+      g.setAttribute("aSeam", new THREE.Float32BufferAttribute(v.seam, 1));
+      g.setAttribute("aShardId", new THREE.Float32BufferAttribute(v.id, 1));
+      g.setAttribute("aBroken", new THREE.Float32BufferAttribute(v.broken, 1));
+      g.setAttribute("aDepth", new THREE.Float32BufferAttribute(v.depth, 1));
+      g.setAttribute("aSocket", new THREE.Float32BufferAttribute(v.socket, 1));
+      return g;
+    };
+    return { corner, build };
+  };
+  const P = [new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()];
+  const N = new THREE.Vector3();
+  const e1 = new THREE.Vector3();
+  const e2 = new THREE.Vector3();
+  const flat = (a: THREE.Vector3, b: THREE.Vector3, c: THREE.Vector3) => N.crossVectors(e1.subVectors(b, a), e2.subVectors(c, a)).normalize();
+  /** the skin: the Core's own surface, as it is */
+  const skin = (wr: ReturnType<typeof writer>, t: number, id: number) => {
+    for (let e = 0; e < 3; e++) {
+      const i = index[t * 3 + e];
+      wr.corner(P[0].fromBufferAttribute(pos, i), N.fromBufferAttribute(nrm, i), cav.getX(i), seam[i], id, 0, 0, 0);
+    }
+  };
+  /** the broken stone under a fragment's area: its underside / the socket's floor, and its walls */
+  const broken = (wr: ReturnType<typeof writer>, k: number, socket: number) => {
+    for (let t = 0; t < tris; t++) {
+      if (tri[t] !== k) continue;
+      const [a, b, c] = [index[t * 3], index[t * 3 + 1], index[t * 3 + 2]];
+      inner(a, k, P[0]);
+      inner(b, k, P[1]);
+      inner(c, k, P[2]);
+      flat(P[0], P[1], P[2]);
+      for (const p of [P[0], P[1], P[2]]) wr.corner(p, N, 0, 1, k, 1, 1, socket);
+    }
+    for (const [a, b] of rimEdges[k]) {
+      P[0].fromBufferAttribute(pos, a);
+      P[1].fromBufferAttribute(pos, b);
+      inner(b, k, P[2]);
+      inner(a, k, P[3]);
+      flat(P[0], P[1], P[2]);
+      const quad: [THREE.Vector3, number][] = [[P[0], 0], [P[1], 0], [P[2], 1], [P[0], 0], [P[2], 1], [P[3], 1]];
+      for (const [p, depth] of quad) wr.corner(p, N, 0, 1, k, 1, depth, socket);
+    }
+  };
+
+  // The body: its skin, and a socket where each fragment was
+  const bw = writer();
+  for (let t = 0; t < tris; t++) if (tri[t] < 0) skin(bw, t, -1);
+  FRAGMENTS.forEach((_, k) => broken(bw, k, 1));
+
+  // The fragments
+  const z = new THREE.Vector3(0, 0, 1);
+  const pieces: Piece[] = FRAGMENTS.map((f, k) => {
+    const fw = writer();
+    const centre = new THREE.Vector3();
+    const top = new THREE.Vector3();
+    let count = 0;
+    let high = -Infinity;
+    for (let t = 0; t < tris; t++) {
+      if (tri[t] !== k) continue;
+      skin(fw, t, k);
+      for (let e = 0; e < 3; e++) {
+        P[0].fromBufferAttribute(pos, index[t * 3 + e]);
+        centre.add(P[0]);
+        count++;
+        const h = P[0].dot(seeds[k]);
+        if (h > high) {
+          high = h;
+          top.copy(P[0]);
+        }
+      }
+    }
+    broken(fw, k, 0);
+    centre.divideScalar(Math.max(1, count));
+    // it travels outwards, a little off its own axis; it tilts away as if pried loose
+    const around = new THREE.Vector3().crossVectors(z, seeds[k]).normalize();
+    const dir = seeds[k].clone().addScaledVector(around, Math.tan(THREE.MathUtils.degToRad(f.drift))).normalize();
+    const axis = new THREE.Vector3().crossVectors(dir, z).normalize().addScaledVector(around, 0.5 * Math.sign(f.turn)).normalize();
+    const rim = rimEdges[k].filter((_, j) => j % Math.max(1, Math.floor(rimEdges[k].length / 5)) === 0).map(([a]) => new THREE.Vector3().fromBufferAttribute(pos, a));
+    return { geometry: fw.build(), centre, dir, axis, top: top.multiplyScalar(1.03), rim };
+  });
+  return { body: bw.build(), pieces };
 }
 
 /** Word "SYXORIA" as a texture, drawn in the page's display face. */
@@ -334,8 +616,10 @@ export class CoreScene {
   private sphere = new THREE.Sphere();
   private probe = new THREE.Vector4(0, 0, 1, 0);
   private zones = ZONE_DIRS.map((d) => new THREE.Vector4(d.x, d.y, d.z, 0));
-  private petalHi = PETALS.map(() => 0);
+  /** how lit each fragment is (eased "explored", 0..1) — read by the shaders */
+  private petalHi = FRAGMENTS.map(() => 0);
   private hoverPetal = -1;
+  private hits: THREE.Intersection[] = [];
   private opts: Required<Omit<CoreSceneOptions, "state" | "onFrame" | "rockGeometry" | "screen" | "palette">> & Pick<CoreSceneOptions, "onFrame">;
   private rockGeometry?: THREE.BufferGeometry;
 
@@ -353,15 +637,18 @@ export class CoreScene {
     vitrine: new THREE.Color(),
     node: new THREE.Color(),
     nodeLit: new THREE.Color(),
-    nucleus: new THREE.Color(),
     line: new THREE.Color(),
   };
 
+  /** the whole Core: closed, and the shards of the opening sequence */
   private rock!: THREE.Mesh<THREE.BufferGeometry, THREE.ShaderMaterial>;
+  /** the opened Core: its body and six fragments (built in prepare, see buildPieces) */
+  private parts = new THREE.Group();
+  private pieceMat!: THREE.ShaderMaterial;
+  private pieces: (Piece & { mesh: THREE.Mesh<THREE.BufferGeometry, THREE.ShaderMaterial> })[] = [];
   private coreGroup = new THREE.Group();
   /** everything that turns with the Core */
   private body = new THREE.Group();
-  private nucleus!: THREE.Mesh<THREE.SphereGeometry, THREE.MeshBasicMaterial>;
   private halos: THREE.Mesh<THREE.PlaneGeometry, THREE.ShaderMaterial>[] = [];
   private embers!: THREE.Points<THREE.BufferGeometry, THREE.ShaderMaterial>;
   private chips!: THREE.InstancedMesh<THREE.BufferGeometry, THREE.ShaderMaterial>;
@@ -378,7 +665,7 @@ export class CoreScene {
   private vitrineTop: THREE.Mesh<THREE.BoxGeometry, THREE.MeshBasicMaterial>[] = [];
   private panes: THREE.Mesh<THREE.PlaneGeometry, THREE.ShaderMaterial>[] = [];
   private zonePoints = ZONE_DIRS.map(() => new THREE.Object3D());
-  private modulePoints = PETALS.map(() => new THREE.Object3D());
+  private modulePoints = FRAGMENTS.map(() => new THREE.Object3D());
   private nodeGroup = new THREE.Group();
   private nodes: Node[] = [];
   /** the pulse sent down a tool's wire when it is pointed at */
@@ -391,6 +678,13 @@ export class CoreScene {
   private css?: CSS3DRenderer;
   private cssScene?: THREE.Scene;
   private monitor?: THREE.Group;
+  private monitorFront?: HTMLElement;
+  /** the lid, hinged on the base: closed (π/2) → open (-LAPTOP.lean) */
+  private lid?: THREE.Group;
+  /** the laptop's visual centre (lid top ↔ base front), in its own scaled-1 frame, when open */
+  private laptopMid = new THREE.Vector3();
+  /** its size on screen, in CSS px at scale 1: width and height */
+  private laptopExtent = new THREE.Vector2();
   private monitorParts: HTMLElement[] = [];
   private screenShown = false;
   private besideQ = new THREE.Quaternion();
@@ -438,7 +732,7 @@ export class CoreScene {
     this.composer.addPass(this.final);
 
     this.anchors = {
-      modules: PETALS.map(() => ({ x: 0, y: 0, alpha: 0 })),
+      modules: FRAGMENTS.map(() => ({ x: 0, y: 0, alpha: 0 })),
       hoverModule: -1,
       nodes: this.nodes.map(() => ({ x: 0, y: 0, alpha: 0 })),
       zones: this.zonePoints.map(() => ({ x: 0, y: 0, alpha: 0 })),
@@ -460,7 +754,6 @@ export class CoreScene {
     this.colors.vitrine.setRGB(...p.vitrine);
     this.colors.node.setRGB(...p.node);
     this.colors.nodeLit.setRGB(...p.nodeLit);
-    this.colors.nucleus.setRGB(...p.nucleus);
     this.colors.line.setRGB(...p.line);
     this.halos[0].material.uniforms.uColor.value.setRGB(...p.haloWide);
     this.halos[1].material.uniforms.uColor.value.setRGB(...p.haloTight);
@@ -489,6 +782,8 @@ export class CoreScene {
    */
   private async prepare(output: OutputPass) {
     try {
+      await nextTask();
+      this.buildParts();
       await nextTask();
       // compile against the composer buffer the scene really renders into (variants depend on the target)
       this.renderer.setRenderTarget(this.composer.readBuffer);
@@ -519,7 +814,7 @@ export class CoreScene {
       const mat = (o as THREE.Mesh).material as THREE.Material | undefined;
       if (!mat || Array.isArray(mat)) return;
       const sm = mat as THREE.ShaderMaterial;
-      const key = `${mat.type}|${sm.fragmentShader ?? ""}|${(o as THREE.Points).isPoints ? "p" : ""}${(o as THREE.InstancedMesh).isInstancedMesh ? "i" : ""}${(o as THREE.Mesh).geometry?.type ?? ""}`;
+      const key = `${mat.type}|${sm.vertexShader ?? ""}|${sm.fragmentShader ?? ""}|${Object.keys(sm.defines ?? {}).join()}|${(o as THREE.Points).isPoints ? "p" : ""}${(o as THREE.InstancedMesh).isInstancedMesh ? "i" : ""}${(o as THREE.Mesh).geometry?.type ?? ""}`;
       if (seen.has(key)) return;
       seen.add(key);
       objects.push(o);
@@ -602,23 +897,30 @@ export class CoreScene {
         uProbe: { value: this.probe },
         uZones: { value: this.zones },
         uPetalHi: { value: this.petalHi },
+        uFocus: { value: 0 },
         uBump: { value: 0.006 },
         uKeyDir: { value: KEY_DIR },
         uKeyColor: { value: new THREE.Color(1.0, 0.9, 0.78) },
         uFillDir: { value: new THREE.Vector3(0.85, 0.1, 0.3).normalize() },
         uFillColor: { value: new THREE.Color(0.22, 0.26, 0.34) },
       },
-      // opened fragments and scattered shards are open shells: their inner side must render too
+      // scattered shards are open shells: their inner side must render too
       side: THREE.DoubleSide,
     });
     this.rock = new THREE.Mesh(this.rockGeometry ?? buildRockGeometry(low ? ROCK_DETAIL.low : ROCK_DETAIL.high), rockMat);
-    // fragments move outside the rest bounds when the Core opens
+    // shards move outside the rest bounds during the opening sequence
     this.rock.frustumCulled = false;
     this.body.add(this.rock);
-
-    // The nucleus: the Core's light itself, only seen through its openings
-    this.nucleus = new THREE.Mesh(new THREE.SphereGeometry(0.3, 24, 16), new THREE.MeshBasicMaterial({ color: new THREE.Color(0, 0, 0) }));
-    this.body.add(this.nucleus);
+    // the opened Core: the same light and stone, its own shaders for the parts (and its own opening)
+    this.pieceMat = new THREE.ShaderMaterial({
+      vertexShader: S.pieceVert,
+      fragmentShader: S.rockFrag,
+      defines: { PIECES: "" },
+      uniforms: { ...rockMat.uniforms, uOpen: { value: 0 } },
+      side: THREE.DoubleSide,
+    });
+    this.parts.visible = false;
+    this.body.add(this.parts);
 
     // Halos: wide atmosphere + tight breath (both follow how awake the Core is)
     const wide = haloMesh(2.4);
@@ -671,7 +973,7 @@ export class CoreScene {
     });
     this.modulePoints.forEach((m) => this.body.add(m));
 
-    // Chips: small stone fragments that break off along the seams as the Core opens
+    // Chips: small bits of stone that come loose from the fragments' broken edges as the Core opens (placed in buildParts)
     {
       const n = low ? 10 : 18;
       let g: THREE.BufferGeometry = new THREE.IcosahedronGeometry(1, 0);
@@ -694,22 +996,7 @@ export class CoreScene {
         n,
       );
       this.chips.frustumCulled = false;
-      for (let i = 0; i < n; i++) {
-        // between two fragments, where the stone breaks
-        const k = i % PETALS.length;
-        const a0 = PETALS[k].angle;
-        const a1 = PETALS[(k + 1) % PETALS.length].angle;
-        const mid = THREE.MathUtils.degToRad(a0 + angleDelta(THREE.MathUtils.degToRad(a0), THREE.MathUtils.degToRad(a1)) * (90 / Math.PI) + (rand() - 0.5) * 16);
-        const r = 0.7 + rand() * 0.35;
-        this.chipData.push({
-          base: new THREE.Vector3(Math.cos(mid) * r, Math.sin(mid) * r, 0.25 + rand() * 0.45),
-          drift: 0.35 + rand() * 0.75,
-          size: 0.025 + rand() * 0.05,
-          axis: new THREE.Vector3(rand() - 0.5, rand() - 0.5, rand() - 0.5).normalize(),
-          spin: (rand() - 0.5) * 1.4,
-          delay: rand() * 0.35,
-        });
-      }
+      this.chips.count = 0;
       this.body.add(this.chips);
     }
 
@@ -928,9 +1215,50 @@ export class CoreScene {
   }
 
   /**
-   * The product monitor, built in CSS 3D around the HTML front it is given
-   * (the live dashboard + bezel): a back, four edges of depth, a neck and a
-   * foot — so it reads at once as a real computer screen, from any angle.
+   * The opened Core (see buildPieces): its body, and each fragment as a mesh of
+   * its own — moved as one piece, its module named at its top — plus the chips
+   * that come loose from their broken edges.
+   */
+  private buildParts() {
+    const { body, pieces } = buildPieces(this.rock.geometry);
+    const main = new THREE.Mesh(body, this.pieceMat);
+    main.frustumCulled = false;
+    this.parts.add(main);
+    this.pieces = pieces.map((pc, k) => {
+      const mesh = new THREE.Mesh(pc.geometry, this.pieceMat);
+      mesh.frustumCulled = false;
+      this.modulePoints[k].position.copy(pc.top);
+      mesh.add(this.modulePoints[k]);
+      this.parts.add(mesh);
+      return { ...pc, mesh };
+    });
+    const rand = mulberry32(17);
+    const n = this.chips.instanceMatrix.count;
+    for (let i = 0; i < n; i++) {
+      const k = i % pieces.length;
+      const rim = pieces[k].rim;
+      if (!rim.length) continue;
+      this.chipData.push({
+        base: rim[Math.floor(rand() * rim.length)].clone(),
+        drift: 0.25 + rand() * 0.55,
+        size: 0.022 + rand() * 0.045,
+        axis: new THREE.Vector3(rand() - 0.5, rand() - 0.5, rand() - 0.5).normalize(),
+        spin: (rand() - 0.5) * 1.4,
+        delay: FRAGMENTS[k].when + rand() * 0.2,
+      });
+    }
+    this.chips.count = this.chipData.length;
+  }
+
+  /**
+   * The product laptop, built in CSS 3D around the HTML front it is given (the
+   * live dashboard + bezel): a lid with its back and edges, hinged on a base
+   * with a keyboard and trackpad — so it reads at once as the real product, on
+   * a real computer. It arrives closed and opens as it rises out of the Core.
+   *
+   *   group  placed by the scene (beside the Core → centre stage), scaled to CSS px
+   *   pose   tips the laptop towards the viewer so its keyboard reads
+   *   lid    hinged at the back of the base
    */
   private buildMonitor(front: HTMLElement) {
     const css = new CSS3DRenderer();
@@ -942,13 +1270,15 @@ export class CoreScene {
     this.css = css;
     this.cssScene = new THREE.Scene();
     const group = new THREE.Group();
-    const { w, h, depth: d } = MONITOR;
-    const part = (el: HTMLElement, x: number, y: number, z: number, rx = 0, ry = 0) => {
+    const pose = new THREE.Group();
+    const lid = new THREE.Group();
+    const { w, h, lid: d, deck: D, base: T } = LAPTOP;
+    const part = (parent: THREE.Object3D, el: HTMLElement, x: number, y: number, z: number, rx = 0, ry = 0) => {
       el.style.backfaceVisibility = "hidden";
       const o = new CSS3DObject(el);
       o.position.set(x, y, z);
       o.rotation.set(rx, ry, 0);
-      group.add(o);
+      parent.add(o);
       if (el !== front) this.monitorParts.push(el);
       return o;
     };
@@ -960,19 +1290,59 @@ export class CoreScene {
       el.setAttribute("aria-hidden", "true");
       return el;
     };
-    part(front, 0, 0, 0);
-    part(div("monitor-back", w, h), 0, 0, -d, 0, Math.PI);
-    part(div("monitor-edge", w, d), 0, h / 2, -d / 2, -Math.PI / 2);
-    part(div("monitor-edge", w, d), 0, -h / 2, -d / 2, Math.PI / 2);
-    part(div("monitor-edge", d, h), -w / 2, 0, -d / 2, 0, -Math.PI / 2);
-    part(div("monitor-edge", d, h), w / 2, 0, -d / 2, 0, Math.PI / 2);
-    // the stand: a neck from just under the screen (never behind it — CSS 3D would let it show through), a foot under it
-    part(div("monitor-neck", 170, 250), 0, -h / 2 - 125, -d - 40, -0.08);
-    part(div("monitor-foot", 380, 240), 0, -h / 2 - 248, -d - 60, -Math.PI / 2);
+
+    // The base: its top (keyboard, trackpad, speakers), front lip and sides; the lid's hinge at its back
+    const top = div("laptop-deck", w, D);
+    const keys = document.createElement("div");
+    keys.className = "laptop-keys";
+    [14, 14, 13, 12, 12, 9].forEach((n, r) => {
+      const row = document.createElement("div");
+      row.className = "laptop-row";
+      for (let i = 0; i < n; i++) {
+        const k = document.createElement("span");
+        // the long keys: tab, caps, shifts, return… and the space bar
+        if (r === 5 && i === 4) k.style.flex = "5.6";
+        else if ((r === 2 || r === 3) && (i === 0 || i === n - 1)) k.style.flex = "1.7";
+        else if (r === 4 && (i === 0 || i === n - 1)) k.style.flex = "2.3";
+        else if (r === 1 && i === n - 1) k.style.flex = "1.4";
+        row.appendChild(k);
+      }
+      keys.appendChild(row);
+    });
+    top.appendChild(keys);
+    const pad = document.createElement("div");
+    pad.className = "laptop-trackpad";
+    top.appendChild(pad);
+    part(pose, top, 0, 0, D / 2, -Math.PI / 2);
+    part(pose, div("laptop-lip", w, T), 0, -T / 2, D);
+    part(pose, div("laptop-side", D, T), -w / 2, -T / 2, D / 2, 0, -Math.PI / 2);
+    part(pose, div("laptop-side", D, T), w / 2, -T / 2, D / 2, 0, Math.PI / 2);
+
+    // The lid: hinged at the back of the base, its screen at z = 0, its back behind
+    lid.position.set(0, 1, d + 6);
+    part(lid, front, 0, h / 2, 0);
+    part(lid, div("laptop-lid-back", w, h), 0, h / 2, -d, 0, Math.PI);
+    part(lid, div("laptop-lid-edge", w, d), 0, h, -d / 2, -Math.PI / 2);
+    part(lid, div("laptop-lid-edge", d, h), -w / 2, h / 2, -d / 2, 0, -Math.PI / 2);
+    part(lid, div("laptop-lid-edge", d, h), w / 2, h / 2, -d / 2, 0, Math.PI / 2);
+    pose.add(lid);
+    pose.rotation.x = LAPTOP.tip;
+    group.add(pose);
+
+    // Its visual centre and extent once open, so the scene can frame it (lid top ↔ base's front lip)
+    lid.rotation.x = -LAPTOP.lean;
+    group.updateMatrixWorld(true);
+    const lidTop = new THREE.Vector3(0, h, 0).applyMatrix4(lid.matrixWorld);
+    const lip = new THREE.Vector3(0, -T, D).applyMatrix4(pose.matrixWorld);
+    this.laptopMid.addVectors(lidTop, lip).multiplyScalar(0.5);
+    this.laptopExtent.set(w, lidTop.y - lip.y);
+
     front.style.visibility = "hidden";
     this.monitorParts.forEach((el) => (el.style.visibility = "hidden"));
     this.cssScene.add(group);
     this.monitor = group;
+    this.monitorFront = front;
+    this.lid = lid;
   }
 
   /* ------------------------------------------------------------ runtime */
@@ -1075,38 +1445,48 @@ export class CoreScene {
     const drift = s.spin + (rm ? 0 : Math.sin(t * 0.17) * 0.28 + t * 0.012);
     this.body.rotation.y = drift + angleDelta(drift, s.az + s.turn) * s.face;
     this.body.rotation.x = (rm ? 0 : Math.sin(t * 0.13) * 0.05) * (1 - s.face);
+    // Closed (and the opening sequence's shards): the whole rock. Opened: its body and six fragments, the same stone
+    const opened = s.open * k > 0.001 && s.scatter < 0.01 && this.pieces.length > 0;
+    this.rock.visible = !opened;
+    this.parts.visible = opened;
     this.rock.scale.setScalar(sc);
+    this.parts.scale.setScalar(sc);
+
+    // Modules: each fragment leaves the body its own way; the one explored comes further out and lights
+    const focus = s.modules > 0.5 ? Math.round(s.focus) : -1;
+    const settled = smoothstep(0.3, 1, s.open);
+    this.pieces.forEach((pc, i) => {
+      const f = FRAGMENTS[i];
+      this.petalHi[i] += ((i === focus ? 1 : 0) - this.petalHi[i]) * ease(6);
+      const hi = this.petalHi[i] * settled;
+      const o = fragmentOpen(f.when, s.open);
+      // once out, each one breathes on its own rhythm
+      const idle = rm ? 0 : Math.sin(t * (0.5 + 0.07 * i) + i * 1.7) * o;
+      const q = pc.mesh.quaternion.setFromAxisAngle(pc.axis, f.turn * o * (1 + 0.3 * hi) + 0.03 * idle);
+      // it turns about its own centre, and travels
+      pc.mesh.position
+        .copy(pc.centre)
+        .applyQuaternion(q)
+        .negate()
+        .add(pc.centre)
+        .addScaledVector(pc.dir, f.out * o + 0.17 * hi + 0.014 * idle);
+    });
+    this.rock.material.uniforms.uFocus.value = Math.max(0, ...this.petalHi) * settled;
+    this.pieceMat.uniforms.uOpen.value = s.open * k;
+
     this.coreGroup.updateMatrixWorld(true);
     this.updateProbe(dt, sc);
     const ru = this.rock.material.uniforms;
     ru.uTime.value = t;
     ru.uAwaken.value = aw;
-    ru.uOpen.value = s.open * k;
     ru.uScatter.value = s.scatter;
     ru.uTease.value = s.tease;
     this.zones[0].w = s.connect * k;
     this.zones[1].w = s.understand * k;
     this.zones[2].w = s.act * k;
 
-    // Modules: the explored one's fragment lifts and lights; the words sit on each fragment
-    const focus = s.modules > 0.5 ? Math.round(s.focus) : -1;
-    PETALS.forEach((pt, i) => {
-      this.petalHi[i] += ((i === focus ? 1 : 0) - this.petalHi[i]) * ease(6);
-      const o = petalOpen(pt.delay, s.open);
-      const a = THREE.MathUtils.degToRad(pt.angle);
-      const lift = pt.amount * o + 0.07 * this.petalHi[i] * smoothstep(0.3, 1, s.open);
-      this.modulePoints[i].position.set(Math.cos(a) * (0.82 + lift), Math.sin(a) * (0.82 + lift) + pt.lift * o, 0.6 - pt.z * lift);
-    });
-
-    // the nucleus: its light, seen through the openings (and the heart, as it is understood)
-    const nuc = (0.2 * aw + 0.95 * s.open + 0.3 * s.understand + 0.3 * Math.max(...this.petalHi) * s.open) * k * (0.9 + 0.1 * Math.sin(t * 1.25));
-    this.nucleus.material.color.copy(C.nucleus).multiplyScalar(nuc);
-    this.nucleus.scale.setScalar(0.45 + 0.15 * s.open);
-    // unlit it would be a black ball: only there once it glows, and never among the scattered shards
-    this.nucleus.visible = nuc > 0.002 && s.scatter < 0.01;
-
-    // chips break off along the seams and drift as the Core opens
-    this.chips.visible = s.open > 0.02 && s.scatter < 0.01;
+    // chips come loose from the fragments' broken edges and drift as the Core opens
+    this.chips.visible = s.open > 0.02 && s.scatter < 0.01 && this.chipData.length > 0;
     if (this.chips.visible) {
       const m = new THREE.Matrix4();
       const q = new THREE.Quaternion();
@@ -1252,37 +1632,45 @@ export class CoreScene {
   }
 
   /**
-   * The monitor rises out of the Core and stands beside it; then, as the
-   * visitor keeps scrolling, it glides to centre stage — large, facing them.
+   * The laptop rises out of the Core, closed, and opens as it comes to stand
+   * beside it; then, as the visitor keeps scrolling, it glides towards the
+   * centre — staying a reasonable size within the scene, the Core still there
+   * behind it. Only a click takes it fullscreen (see LiveScreen).
    */
   private updateMonitor(portrait: boolean) {
     const g = this.monitor;
-    if (!g) return;
+    const lid = this.lid;
+    if (!g || !lid) return;
     const s = this.state;
     const e = s.screen * s.intro;
     const shown = e > 0.002;
     if (shown !== this.screenShown) {
       this.screenShown = shown;
       const vis = shown ? "visible" : "hidden";
-      (g.children[0] as CSS3DObject).element.style.visibility = vis;
+      if (this.monitorFront) this.monitorFront.style.visibility = vis;
       this.monitorParts.forEach((el) => (el.style.visibility = vis));
     }
     if (!shown) return;
     const a = smoothstep(0, 1, e);
     const c = smoothstep(0, 1, s.center);
-    const unit = SCREEN_W / MONITOR.w;
+    const unit = SCREEN_W / LAPTOP.w;
+    // the lid opens once it is out of the Core
+    lid.rotation.x = THREE.MathUtils.lerp(Math.PI / 2, -LAPTOP.lean, smoothstep(0.3, 1, a));
+    const mid = this.laptopMid;
 
     // beside the Core and a step in front of it, seen from SCREEN_AZ (centred in portrait)
-    const fitW = portrait ? 0.78 : Math.min(1, Math.max(0.62, this.camera.aspect / 1.75));
+    const fitW = portrait ? 0.7 : Math.min(0.9, Math.max(0.56, this.camera.aspect / 1.9));
     const right = this.tmp.set(Math.cos(SCREEN_AZ), 0, -Math.sin(SCREEN_AZ));
     const toCam = this.tmp2.set(Math.sin(SCREEN_AZ), 0, Math.cos(SCREEN_AZ));
     const beside = this.tmp3
-      .set(0, CORE_Y + (portrait ? -0.05 : 0.08), 0)
-      .addScaledVector(right, portrait ? 0 : 1.25 * fitW)
-      .addScaledVector(toCam, portrait ? 1.9 : 1.0);
+      .set(0, CORE_Y + (portrait ? -0.1 : 0.02), 0)
+      .addScaledVector(right, portrait ? 0 : 1.3 * fitW)
+      .addScaledVector(toCam, portrait ? 1.9 : 1.1);
     const rise = this.tmp4.set(0, CORE_Y, 0).lerp(beside, a);
-    this.besideQ.setFromEuler(this.euler.set((1 - a) * 0.5, SCREEN_AZ - (portrait ? 0 : 0.26) + (1 - a) * 0.5, 0));
-    const besideScale = unit * (0.25 + 0.75 * a) * fitW;
+    this.besideQ.setFromEuler(this.euler.set((1 - a) * 0.5, SCREEN_AZ - (portrait ? 0 : 0.3) + (1 - a) * 0.5, 0));
+    const besideScale = unit * (0.2 + 0.8 * a) * fitW;
+    // placed by its visual centre, not its hinge
+    rise.sub(this.tmp.copy(mid).applyQuaternion(this.besideQ).multiplyScalar(besideScale));
 
     if (c <= 0.0001) {
       g.position.copy(rise);
@@ -1290,13 +1678,23 @@ export class CoreScene {
       g.scale.setScalar(besideScale);
       return;
     }
-    // centre stage: in front of the camera, at the distance where it fills most of the view
+    // centre stage, facing the visitor — a part of the scene, never all of it:
+    // at the distance where it takes `fill` of the width (or `fillH` of the height), its centre at `at`
     const tan = Math.tan(THREE.MathUtils.degToRad(this.camera.fov / 2));
-    const fill = portrait ? 0.92 : 0.62;
-    const dist = Math.max(SCREEN_W / (fill * 2 * tan * this.camera.aspect), SCREEN_W / (MONITOR.w / MONITOR.h) / (0.68 * 2 * tan));
+    const aspect = this.camera.aspect;
+    const fill = portrait ? 0.84 : 0.36;
+    const fillH = portrait ? 0.4 : 0.5;
+    const ext = this.laptopExtent;
+    const dist = Math.max(SCREEN_W / (fill * 2 * tan * aspect), (ext.y * unit) / (fillH * 2 * tan));
+    const at = { x: portrait ? 0.5 : 0.55, y: portrait ? 0.46 : 0.45 };
+    // where the camera's axis lands on screen (the scene's offset moves it), and how far `at` is from it
+    const offX = (at.x - (0.5 + s.shiftX)) * 2 * tan * dist * aspect;
+    const offY = (0.5 - s.shiftY - at.y) * 2 * tan * dist;
     const fwd = this.camera.getWorldDirection(this.tmp);
-    const up = this.tmp2.setFromMatrixColumn(this.camera.matrixWorld, 1);
-    const centre = this.tmp3.copy(this.camera.position).addScaledVector(fwd, dist).addScaledVector(up, 2 * tan * dist * 0.075);
+    const centre = this.tmp3.copy(this.camera.position).addScaledVector(fwd, dist);
+    centre.addScaledVector(this.tmp2.setFromMatrixColumn(this.camera.matrixWorld, 0), offX);
+    centre.addScaledVector(this.tmp2.setFromMatrixColumn(this.camera.matrixWorld, 1), offY);
+    centre.sub(this.tmp.copy(mid).applyQuaternion(this.camera.quaternion).multiplyScalar(unit));
     g.position.copy(rise).lerp(centre, c);
     g.quaternion.slerpQuaternions(this.besideQ, this.camera.quaternion, c);
     g.scale.setScalar(THREE.MathUtils.lerp(besideScale, unit, c));
@@ -1318,18 +1716,17 @@ export class CoreScene {
         this.probe.y += (this.tmp.y - this.probe.y) * Math.min(1, rate * 3);
         this.probe.z += (this.tmp.z - this.probe.z) * Math.min(1, rate * 3);
         target = 1;
-        // which fragment: by its angle around the facing axis (not the nucleus at the centre)
-        if (this.state.modules > 0.5 && Math.hypot(this.tmp.x, this.tmp.y) > 0.24) {
-          const ang = Math.atan2(this.tmp.y, this.tmp.x);
-          let best = Infinity;
-          PETALS.forEach((pt, i) => {
-            const dd = Math.abs(angleDelta(ang, THREE.MathUtils.degToRad(pt.angle)));
-            if (dd < best) {
-              best = dd;
-              this.hoverPetal = i;
-            }
-          });
-        }
+      }
+      // which fragment: the piece of stone itself under the cursor (they reach beyond the Core once out)
+      if (this.state.modules > 0.5 && this.parts.visible) {
+        this.hits.length = 0;
+        for (const pc of this.pieces) pc.mesh.raycast(this.raycaster, this.hits);
+        let nearest = Infinity;
+        for (const h of this.hits)
+          if (h.distance < nearest) {
+            nearest = h.distance;
+            this.hoverPetal = this.pieces.findIndex((pc) => pc.mesh === h.object);
+          }
       }
     }
     this.probe.w += (target - this.probe.w) * rate;
@@ -1379,7 +1776,7 @@ export class CoreScene {
     });
     if (this.monitor) {
       // hand the front back untouched (its owner, React, removes it); the rest was ours
-      (this.monitor.children[0] as CSS3DObject).element.remove();
+      this.monitorFront?.remove();
       this.monitorParts.forEach((el) => el.remove());
       this.cssScene?.remove(this.monitor);
     }

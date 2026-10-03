@@ -72,26 +72,23 @@ vec3 heat(float h){
 /* ---------------------------------------------------------------- the rock */
 
 /**
- * The rock is cut into six fragments around its heart, one per module. Each
- * opens its own way (aShard: direction + distance · aPetal: delay, fold,
- * twist, lift), so the Core parts irregularly, like something alive; the one
- * being explored lifts a little further (uPetalHi).
+ * The rock: one shader for the stone, its fissures and its light, shared by
+ * the whole Core (rockVert: closed, or scattered into the shards of the opening
+ * sequence) and by its opened parts (pieceVert, with PIECES defined: a body and
+ * six fragments, the one being explored lit further — uPetalHi).
  */
+/** The whole Core — closed, and the scattered shards of the opening sequence. */
 export const rockVert = /* glsl */ `
 attribute float aCavity;
-attribute vec4 aShard;
-attribute vec4 aPetal;
+attribute vec3 aShard;
 attribute float aSeam;
 attribute float aShardId;
 attribute float aOrder;
-uniform float uOpen;
 uniform float uScatter;    // opening sequence: 1 = shards float apart, 0 = the assembled Core
 uniform float uTease;      // how many shards have appeared (0..1)
 uniform float uTime;
-uniform float uPetalHi[6];
 varying vec3 vObj;
 varying vec3 vWorld;
-varying vec3 vRest;
 varying vec3 vNormalW;
 varying float vCavity;
 varying float vSeam;
@@ -103,16 +100,9 @@ vec3 rotateAxis(vec3 v, vec3 a, float ang){ float c = cos(ang), s = sin(ang); re
 void main(){
   vObj = position;
   vId = aShardId;
-  vec3 dir = aShard.xyz;
-  float hi = uPetalHi[int(aShardId + 0.5)];
-  vHi = hi;
-  // each fragment starts parting at its own moment, and moves its own way
-  float o = smoothstep(aPetal.x, aPetal.x + 0.72, uOpen);
-  vec3 axis = normalize(cross(vec3(0.0, 0.0, 1.0), dir) + 1e-4);
-  vec3 pivot = dir*0.55;
-  vec3 p = rotateAxis(position - pivot, axis, aPetal.y*o) + pivot;
-  p = rotateAxis(p, normalize(dir), aPetal.z*o);
-  p += dir * (aShard.w*o + 0.07*hi*smoothstep(0.3, 1.0, uOpen)) + vec3(0.0, aPetal.w*o, 0.0);
+  vHi = 0.0;
+  vec3 dir = aShard;
+  vec3 p = position;
   // shards appear one after another during the opening sequence
   vShow = smoothstep(aOrder*0.8, aOrder*0.8 + 0.2, uTease);
   if (uScatter > 0.0) {
@@ -127,10 +117,54 @@ void main(){
   }
   vec4 w = modelMatrix * vec4(p, 1.0);
   vWorld = w.xyz;
-  vRest = (modelMatrix * vec4(position, 1.0)).xyz;
   vNormalW = normalize(mat3(modelMatrix) * normal);
   vCavity = aCavity;
   vSeam = aSeam;
+  gl_Position = projectionMatrix * viewMatrix * w;
+}
+`;
+
+/**
+ * The opened Core's parts: its body (with a socket where each fragment was) and
+ * the six fragments themselves — solid pieces of stone, each moved as one by its
+ * own transform, so a piece never bends: it separates.
+ *   aBroken  0 the Core's skin · 1 broken stone (a fragment's underside and walls, or a socket)
+ *   aDepth   how deep into the stone (0 the skin's edge → 1 the bottom of the piece / socket)
+ *   aSocket  1 on the body's sockets, 0 on the fragments
+ *   aShardId the fragment it belongs to (or left when it left), -1 the body's own skin
+ */
+export const pieceVert = /* glsl */ `
+attribute float aCavity;
+attribute float aSeam;
+attribute float aShardId;
+attribute float aBroken;
+attribute float aDepth;
+attribute float aSocket;
+uniform float uPetalHi[6];
+varying vec3 vObj;
+varying vec3 vWorld;
+varying vec3 vNormalW;
+varying float vCavity;
+varying float vSeam;
+varying float vShow;
+varying float vId;
+varying float vHi;
+varying float vBroken;
+varying float vDepth;
+varying float vSocket;
+void main(){
+  vObj = position;
+  vId = aShardId;
+  vHi = aShardId > -0.5 ? uPetalHi[int(aShardId + 0.5)] : 0.0;
+  vShow = 1.0;
+  vec4 w = modelMatrix * vec4(position, 1.0);
+  vWorld = w.xyz;
+  vNormalW = normalize(mat3(modelMatrix) * normal);
+  vCavity = aCavity;
+  vSeam = aSeam;
+  vBroken = aBroken;
+  vDepth = aDepth;
+  vSocket = aSocket;
   gl_Position = projectionMatrix * viewMatrix * w;
 }
 `;
@@ -149,15 +183,20 @@ uniform vec3 uFillDir;
 uniform vec3 uFillColor;
 uniform vec3 uRimColor;
 uniform vec3 uSpill;
+uniform float uFocus;      // how much one fragment is being explored (the others step back)
 varying vec3 vObj;
 varying vec3 vWorld;
-varying vec3 vRest;
 varying vec3 vNormalW;
 varying float vCavity;
 varying float vSeam;
 varying float vShow;
 varying float vId;
 varying float vHi;
+#ifdef PIECES
+varying float vBroken;
+varying float vDepth;
+varying float vSocket;
+#endif
 ${NOISE}
 ${HEAT}
 vec3 hash33(vec3 p){
@@ -202,17 +241,11 @@ void main(){
     N = normalize(abs(det)*N - uBump*grad);
   }
 
-  // triangles bridging two fragments (their corners carry different ids) are the gap;
-  // how far they have stretched says how wide it has opened
-  float bridge = step(1e-4, fwidth(vId));
-  float sw = length(dpx) + length(dpy);
-  float sr = length(dFdx(vRest)) + length(dFdy(vRest));
-  float gap = bridge * smoothstep(1.3, 2.4, sw / (sr + 1e-6));
-
   // the opening sequence: shards materialise through a lit dissolve, and float as separate pieces
+  // (triangles bridging two shards — their corners carry different ids — are the gap between them)
   float front = 0.0;
   if (uScatter > 0.001) {
-    if (bridge > 0.5) discard;
+    if (fwidth(vId) > 1e-4) discard;
     float grow = snoise(vObj*5.0)*0.5 + 0.5;
     if (grow > vShow*1.08) discard;
     front = (1.0 - smoothstep(0.0, 0.05, vShow*1.08 - grow)) * step(vShow, 0.999);
@@ -241,7 +274,7 @@ void main(){
   float waveIn = pow(0.5 + 0.5*sin(dIn*30.0 + t*3.2), 6.0) * smoothstep(0.8, 0.05, dIn) * uZones[0].w;
   float waveOut = pow(0.5 + 0.5*sin(dOut*30.0 - t*3.2), 6.0) * smoothstep(0.8, 0.05, dOut) * uZones[2].w;
   float waves = waveIn + waveOut;
-  float aw = clamp(uAwaken + probe*0.5 + zone*0.55 + vHi*0.3, 0.0, 1.4);
+  float aw = clamp(uAwaken + probe*0.5 + zone*0.55 + vHi*0.12, 0.0, 1.4);
 
   float diff = max(dot(N, uKeyDir), 0.0);
   float fill = max(dot(N, uFillDir), 0.0);
@@ -257,7 +290,7 @@ void main(){
   vec2 v = voronoi(q);
   float edge = v.y - v.x;
   float zoneMask = smoothstep(-0.3, 0.55, snoise(vObj*1.2 + 2.0));
-  float reach = clamp(zoneMask*0.85 + vCavity*1.6 + probe*0.6 + zone*0.7 + waves*0.6 + vHi*0.5, 0.0, 1.0);
+  float reach = clamp(zoneMask*0.85 + vCavity*1.6 + probe*0.6 + zone*0.7 + waves*0.6 + vHi*0.2, 0.0, 1.0);
   float width = mix(0.02, 0.085, clamp(aw, 0.0, 1.0)) * reach + 1e-4;
   float crack = 1.0 - smoothstep(0.0, width, edge);
   crack *= crack;
@@ -266,26 +299,33 @@ void main(){
   float pulse = 0.88 + 0.12*sin(t*1.25) + 0.05*sin(t*3.1);
   float cav = vCavity*vCavity;
   float core = cav * (0.45 + 0.9*flow + 1.2*crack);
-  // the seams the Core opens along glow first, as it gets ready to part
-  float seam = 1.0 - smoothstep(0.0, 0.004 + 0.012*uOpen, vSeam);
-  seam *= seam * smoothstep(0.0, 0.25, uOpen);
-  float h = (crack*reach*(0.4+flow)*3.2 + core*1.9 + spill*0.3 + seam*(0.6+flow)*2.0) * aw * pulse;
+  // while one fragment is explored, the rest of the Core steps back a little
+  float back = 1.0 - 0.35*max(uFocus - vHi, 0.0);
+#ifdef PIECES
+  // the body quiets a little as its fragments leave, so each piece reads on its own
+  if (vId < -0.5) back *= 1.0 - 0.4*smoothstep(0.0, 0.3, uOpen);
+#endif
+  float h = (crack*reach*(0.4+flow)*3.2 + core*1.9 + spill*0.3) * aw * pulse * back;
   // the zones' travelling light, carried by the fissures
   h += waves * (crack*4.2 + spill*0.6) * pulse;
   col += heat(h);
   // surfaces near the heat catch its light
   col += uSpill * spill * aw * 0.08 * diff;
 
-  // opened: the stone really parts — no skin across the gap, you see into it: a dark inner
-  // shell warmed by the nucleus, and every broken rim lit (brighter on the module explored)
-  if (uOpen > 0.002) {
-    if (gap > 0.35) discard;
-    // only the real broken edges: thin, and not at the heart where every seam meets
-    float rim = (1.0 - smoothstep(0.0, 0.022, vSeam)) * smoothstep(0.12, 0.42, length(vObj.xy));
-    col += heat((0.65 + 0.5*flow) * (1.0 + 0.5*vHi)) * rim * smoothstep(0.0, 0.3, uOpen);
-    // inside: dark stone, lit only along its own fissures by the nucleus
-    if (!gl_FrontFacing) col = albedo*0.45 + heat((crack*1.5 + spill*0.15 + 0.05 + 0.06*flow) * uOpen * (1.0 + 0.6*vHi)) + heat(0.9) * rim * uOpen;
+#ifdef PIECES
+  // opened: each fragment's outline is a thin line of light where it breaks from the Core (it glows
+  // first, as the Core gets ready to part), brighter on the module explored
+  float op = smoothstep(0.0, 0.3, uOpen);
+  float outline = 1.0 - smoothstep(0.0, 0.012 + 0.008*uOpen, vSeam);
+  col += heat((0.5 + 0.4*flow) * (1.0 + 0.9*vHi) * back) * outline * outline * (1.0 - vBroken) * (0.2 + 0.5*op) * (vId < -0.5 ? 0.45 : 1.0);
+  // broken stone — a fragment's underside and walls, the socket it leaves: dark and rough, lit from
+  // within along its own fissures; a socket glows the deeper it goes (the Core's heart is there)
+  if (vBroken > 0.5) {
+    float lit = vSocket > 0.5 ? mix(0.15, 0.95, vDepth*vDepth) : mix(0.2, 0.6, vDepth);
+    col = albedo*0.7 + uRimColor*fres*0.08 + uKeyColor*spec*0.06
+        + heat((crack*1.3 + spill*0.15 + 0.06 + 0.1*flow) * lit * op * (1.0 + (vSocket > 0.5 ? 0.25 : 0.6)*vHi) * back);
   }
+#endif
 
   // scattered (the opening sequence): deep, polished pieces whose broken edges hold a low light
   if (uScatter > 0.001) {

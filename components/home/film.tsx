@@ -9,12 +9,14 @@ import { DemoSteps } from "./demo-steps";
 import { DISPLAY, LiveDashboard } from "./live-dashboard";
 
 /** One run of the demo, playing on its own; then a breath, and it starts over. */
-const RUN_MS = 22000;
-const HOLD_MS = 2600;
+export const RUN_MS = 22000;
+export const HOLD_MS = 2600;
 
 type OpenOptions = {
   /** screen rect the demo grows out of (e.g. the product screen that was clicked) */
   from?: DOMRect;
+  /** where the session should pick up (0..1) — e.g. where the laptop on the page had got to */
+  at?: number;
 };
 
 const FilmContext = createContext<{ open: (options?: OpenOptions) => void } | null>(null);
@@ -92,7 +94,7 @@ function FilmDialog({ options, onClose }: { options: OpenOptions; onClose: () =>
           {siteConfig.productFilm ? (
             <video data-film-frame src={siteConfig.productFilm} controls autoPlay playsInline className="aspect-video w-full max-w-6xl bg-black" />
           ) : (
-            <AutoDemo />
+            <AutoDemo at={options.at ?? 0} />
           )}
         </div>
       </div>
@@ -101,12 +103,12 @@ function FilmDialog({ options, onClose }: { options: OpenOptions; onClose: () =>
 }
 
 /** The live workspace, playing on its own (a clock instead of the scroll), with play / pause and a timeline. */
-function AutoDemo() {
+function AutoDemo({ at }: { at: number }) {
   const [playing, setPlaying] = useState(true);
   const frame = useRef<HTMLDivElement>(null);
   const bar = useRef<HTMLSpanElement>(null);
   // the clock: elapsed time of the current run, advanced only while playing
-  const clock = useRef({ t: 0, last: 0, playing: true });
+  const clock = useRef({ t: at * RUN_MS, last: 0, playing: true });
   useEffect(() => {
     clock.current.playing = playing;
   }, [playing]);

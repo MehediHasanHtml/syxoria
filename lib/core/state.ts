@@ -17,7 +17,7 @@ export type CoreState = {
   shiftY: number;
   /** 0 dormant → 1 fully awake (fissure width + heat) */
   awaken: number;
-  /** 0 closed → 1 the Core parts into six fragments around its lit nucleus — each its own way */
+  /** 0 closed → 1 six fragments of the Core's stone have separated from its body — each its own way */
   open: number;
   /** preloader intro, multiplies everything but the rock (0 → 1) */
   intro: number;
@@ -47,11 +47,11 @@ export type CoreState = {
   modules: number;
   /** module the visitor is exploring (hover / focus / tap / scroll), -1 none — its fragment lifts and lights */
   focus: number;
-  /** the product screen: 0 inside the Core → 1 standing beside it */
+  /** the product laptop: 0 closed, inside the Core → 1 open, standing beside it */
   screen: number;
-  /** the product screen moving to centre stage: 0 beside the Core → 1 large, centred, facing the viewer */
+  /** the laptop gliding towards the centre: 0 beside the Core → 1 centred, facing the viewer (still a part of the scene) */
   center: number;
-  /** what the product screen shows (0..1: cards, numbers and chart build up) */
+  /** where the demo playing on the laptop is (0..1), written by its own clock (see LiveScreen) */
   live: number;
   /** the tools wired to the Core */
   network: number;

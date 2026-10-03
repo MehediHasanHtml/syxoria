@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useSyncExternalStore } from "react";
-import { lookStore, type CoreLook } from "@/lib/core/look";
+import { lookStore, type CoreLook, type CorePalette } from "@/lib/core/look";
 import { cn } from "@/lib/cn";
 
 /** The Core's current look (palette, ground), from the URL / browser; server: the default. */
@@ -11,15 +11,19 @@ export function useCoreLook(): CoreLook {
 
 /**
  * A small panel to compare the Core's looks side by side, live — shown with
- * ?compare in the URL (and remembered once opened). Also keeps the page's
- * accent colour in step with the Core's light (html[data-core]).
+ * ?compare in the URL. Also keeps the page's accent colour in step with the
+ * Core's light (html[data-core]). `palette`: the light this page shows (the
+ * /emerald test page) — then only the ground can be compared.
  */
-export function LookSwitcher() {
+export function LookSwitcher({ palette: fixed }: { palette?: CorePalette }) {
   const look = useCoreLook();
+  const palette = fixed ?? look.palette;
 
   useEffect(() => {
-    document.documentElement.dataset.core = look.palette;
-  }, [look.palette]);
+    const root = document.documentElement;
+    root.dataset.core = palette;
+    return () => void delete root.dataset.core;
+  }, [palette]);
 
   if (!look.compare) return null;
   return (
@@ -34,15 +38,17 @@ export function LookSwitcher() {
           ✕
         </button>
       </p>
-      <Segment
-        label="Light"
-        value={look.palette}
-        options={[
-          { id: "gold", label: "Gold", swatch: "#f2b46e" },
-          { id: "emerald", label: "Emerald", swatch: "#2fae78" },
-        ]}
-        onChange={(palette) => lookStore.set({ palette })}
-      />
+      {!fixed && (
+        <Segment
+          label="Light"
+          value={look.palette}
+          options={[
+            { id: "gold", label: "Gold", swatch: "#f2b46e" },
+            { id: "emerald", label: "Emerald", swatch: "#14684a" },
+          ]}
+          onChange={(palette) => lookStore.set({ palette })}
+        />
+      )}
       <Segment
         label="Ground"
         value={look.ground}

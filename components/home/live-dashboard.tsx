@@ -5,7 +5,7 @@ import { BarChart3, CalendarClock, Check, FileText, Home, Inbox, Loader2, Search
 import { workspace } from "@/content/home";
 import { cn } from "@/lib/cn";
 
-/** The display inside the monitor, in CSS px (the bezel adds MONITOR's margin around it). */
+/** The display inside the laptop's lid, in CSS px (the bezel adds its margin around it, see LiveScreen). */
 export const DISPLAY = { w: 1200, h: 750 };
 
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
@@ -17,8 +17,8 @@ const eur = new Intl.NumberFormat("en-IE", { style: "currency", currency: "EUR",
  * The demo's script — one short, real session, as a function of progress
  * (0..1): the workspace comes alive, a payment arrives, Nexo proposes a
  * follow-up, the cursor reviews and approves it, Volt sends it, the numbers
- * move. The same script plays with the scroll (in the scene) and on its own
- * (fullscreen), so the product always looks like it is operating.
+ * move. The same script plays on the laptop in the scene and fullscreen,
+ * each on its own clock, so the product always looks like it is operating.
  */
 const T = {
   build: [0.0, 0.1],
@@ -64,7 +64,7 @@ const invoices = [
 
 /**
  * The Syxoria workspace, operating. `progress` is read every frame: the
- * scroll (in the scene) or a clock (fullscreen). Discrete moments re-render;
+ * laptop's clock (in the scene) or the fullscreen player's. Discrete moments re-render;
  * everything continuous (numbers, chart, cursor, progress) is written
  * straight to the DOM.
  */

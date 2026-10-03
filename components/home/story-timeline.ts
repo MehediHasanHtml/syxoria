@@ -17,7 +17,7 @@ type Options = {
   ground: CoreGround;
 };
 
-/** Orbit angle the product monitor is set up to be seen from (matches SCREEN_AZ in core-scene.ts). */
+/** Orbit angle the product laptop is set up to be seen from (matches SCREEN_AZ in core-scene.ts). */
 const SCREEN_AZ = 1.75;
 
 /**
@@ -27,8 +27,9 @@ const SCREEN_AZ = 1.75;
  *
  *    0  core          the Core floats in the dark, awake; the promise beside it
  *    6  one core      it turns to show three areas of the brain at work: signals run in · the heart understands · action runs out
- *   30  modules       it opens, irregularly, around its lit nucleus — each fragment is a module to explore
- *   56  workspace     the monitor rises out of it, then glides with the scroll to centre stage; the product runs
+ *   30  modules       six pieces of its stone separate from it, irregularly — each fragment is a module to explore
+ *   56  workspace     a laptop rises out of it and opens, then glides with the scroll towards the centre —
+ *                     a reasonable size, the product running on it; a click takes it fullscreen
  *   80  integrations  the camera draws back into space; roots wire the tools to it — then they let go,
  *                     and the Core alone is set on its base, the vitrine closing around it
  *   91  pricing       the Core at rest in its vitrine, one calm offer in front of it
@@ -122,18 +123,17 @@ export function buildStory({ tl, q, state, desktop, wide, short, ground }: Optio
   tl.to(state, { modules: 0, duration: 2.5, ease: "power1.in" }, 54.5);
   tl.to(state, { open: 0.08, duration: 4, ease: "power1.inOut" }, 55.5);
 
-  // 56 — Workspace: the monitor rises out of the Core and stands beside it…
+  // 56 — Workspace: the laptop rises out of the Core, opens, and stands beside it — the product already running on it…
   cam(56.5, 5, { az: SCREEN_AZ, el: 0.1, dist: 10.2, ty: 0.12, shiftX: X(0.1), shiftY: X(0, 0.3), face: 0, spin: 1.6, awaken: 0.6 });
   tl.to(state, { screen: 1, duration: 4.5, ease: "power2.out" }, 58);
   show("workspace", 59);
-  tl.to(state, { live: 0.1, duration: 3.5, ease: "none" }, 59.5);
-  // …then glides with the scroll to centre stage, large and facing the visitor, while the words step aside
+  // …then, following the scroll, glides towards the centre while the words step aside. It stays a part of the
+  // scene — the Core still glowing behind it — and goes fullscreen only when clicked (see LiveScreen)
   hide("workspace", 64.5);
-  tl.to(state, { center: 1, duration: 7.5, ease: "power1.inOut" }, 62.5);
-  cam(62.5, 7.5, { shiftX: 0, shiftY: 0, az: SCREEN_AZ + 0.1, spin: 2, awaken: 0.45, ease: "power1.inOut" });
-  // centred: the product runs as the visitor scrolls (see LiveDashboard), its story told underneath
-  show("demo", 68.5);
-  tl.to(state, { live: 1, duration: 10, ease: "none" }, 69);
+  tl.to(state, { center: 1, duration: 8, ease: "power1.inOut" }, 62.5);
+  cam(62.5, 8, { shiftX: X(-0.29), shiftY: X(0.05, 0.27), dist: 12, az: SCREEN_AZ + 0.1, spin: 2, awaken: 0.5, ease: "power1.inOut" });
+  // centred: the session it plays is told underneath
+  show("demo", 69);
   hide("demo", 79);
   tl.to(state, { center: 0, screen: 0, duration: 3, ease: "power2.in" }, 79.2);
 

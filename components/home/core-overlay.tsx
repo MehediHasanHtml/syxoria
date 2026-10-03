@@ -86,7 +86,8 @@ export function CoreOverlay({ ref, focus, explore, tool, onTool, onOpenCore }: P
           const len = Math.hypot(dx, dy) || 1;
           const ux = dx / len;
           const uy = dy / len;
-          const R = a.core.r * 1.22 + 12;
+          // outside the Core's edge — and outside its fragment, which may have travelled beyond it
+          const R = Math.max(a.core.r * 1.22 + 12, len + 18);
           const ax = a.core.x + ux * R;
           const ay = a.core.y + uy * R;
           const lw = label.offsetWidth;

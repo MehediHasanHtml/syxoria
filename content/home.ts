@@ -61,7 +61,7 @@ export const workspace = {
     label: "Watch it run",
     live: "Live",
     openFull: "Open fullscreen",
-    hint: { pointer: "Keep scrolling — it runs. Click the screen to open it fullscreen.", touch: "Keep scrolling — it runs. Tap the screen to open it fullscreen." },
+    hint: { pointer: "It’s running live. Click the laptop to open it fullscreen.", touch: "It’s running live. Tap the laptop to open it fullscreen." },
     summary: "A short session in the Syxoria workspace: a payment arrives and is linked to its client, Nexo proposes following up four invoices, you review and approve, Volt sends the reminders, and the numbers update.",
     // the session the screen plays — `at` is where each moment starts (0..1, see LiveDashboard)
     steps: [

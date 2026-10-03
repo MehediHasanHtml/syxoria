@@ -6,8 +6,10 @@
  *   ground   "float": no lines under the Core during the journey (they return with the vitrine)
  *            "lines": the contour lines under it all along (the previous version)
  *
- * Read from the URL (?core=emerald&ground=lines), remembered in the browser,
- * and shown in a small compare panel with ?compare. Kept free of three.js.
+ * The emerald test has its own page (/emerald, see CoreExperience's `palette`); on any page the
+ * URL can also ask for a look (?core=emerald&ground=lines) and a small compare panel (?compare).
+ * Nothing is remembered between visits, so the original — gold — is always what the homepage
+ * shows. Kept free of three.js.
  */
 export type CorePalette = "gold" | "emerald";
 export type CoreGround = "float" | "lines";
@@ -33,7 +35,6 @@ export type PaletteColors = {
   ember: [RGB, RGB];
   pool: RGB;
   vitrine: RGB;
-  nucleus: RGB;
 };
 
 export const PALETTES: Record<CorePalette, PaletteColors> = {
@@ -59,38 +60,37 @@ export const PALETTES: Record<CorePalette, PaletteColors> = {
     ],
     pool: [1.0, 0.5, 0.16],
     vitrine: [1.0, 0.72, 0.45],
-    nucleus: [1.0, 0.46, 0.12],
   },
-  // a dark, deep emerald: never neon — the bright end stays a pale, cool jade
+  // a dark, deep emerald green — the gold's exact role, set much lower (the light is multiplied by its
+  // intensity, so a brighter green turns neon in the hot fissures) and a touch towards blue: never
+  // lime or mint; even its hottest point stays a dark jade
   emerald: {
     heat: [
-      [0.0, 0.12, 0.05],
-      [0.01, 0.42, 0.2],
-      [0.08, 0.62, 0.36],
-      [0.5, 0.9, 0.7],
+      [0.0, 0.045, 0.025],
+      [0.0, 0.21, 0.105],
+      [0.015, 0.36, 0.185],
+      [0.14, 0.57, 0.35],
     ],
-    rim: [0.1, 0.62, 0.36],
-    spill: [0.04, 0.55, 0.26],
-    haloWide: [0.03, 0.4, 0.19],
-    haloTight: [0.08, 0.52, 0.3],
-    line: [0.06, 0.55, 0.28],
-    edge: [0.55, 0.92, 0.74],
-    glass: [0.6, 0.86, 0.74],
-    node: [0.7, 0.98, 0.84],
-    nodeLit: [0.3, 0.9, 0.58],
+    rim: [0.03, 0.32, 0.17],
+    spill: [0.0, 0.28, 0.14],
+    haloWide: [0.0, 0.21, 0.105],
+    haloTight: [0.015, 0.29, 0.145],
+    line: [0.01, 0.31, 0.16],
+    edge: [0.26, 0.56, 0.42],
+    glass: [0.38, 0.6, 0.5],
+    node: [0.4, 0.7, 0.56],
+    nodeLit: [0.08, 0.46, 0.3],
     ember: [
-      [0.06, 0.6, 0.3],
-      [0.5, 0.96, 0.74],
+      [0.0, 0.26, 0.14],
+      [0.2, 0.56, 0.4],
     ],
-    pool: [0.04, 0.5, 0.24],
-    vitrine: [0.42, 0.9, 0.66],
-    nucleus: [0.06, 0.78, 0.38],
+    pool: [0.0, 0.2, 0.1],
+    vitrine: [0.2, 0.52, 0.38],
   },
 };
 
 /* ------------------------------------------------------------ the store */
 
-const KEY = "syxoria-core-look";
 let current: CoreLook = DEFAULT_LOOK;
 let loaded = false;
 const listeners = new Set<() => void>();
@@ -98,17 +98,11 @@ const listeners = new Set<() => void>();
 function load() {
   if (loaded || typeof window === "undefined") return;
   loaded = true;
-  let saved: Partial<CoreLook> = {};
-  try {
-    saved = JSON.parse(localStorage.getItem(KEY) ?? "{}");
-  } catch {}
   const url = new URLSearchParams(window.location.search);
-  const palette = url.get("core") ?? saved.palette;
-  const ground = url.get("ground") ?? saved.ground;
   current = {
-    palette: palette === "emerald" ? "emerald" : "gold",
-    ground: ground === "lines" ? "lines" : "float",
-    compare: url.has("compare") || url.has("core") || url.has("ground") || !!saved.compare,
+    palette: url.get("core") === "emerald" ? "emerald" : "gold",
+    ground: url.get("ground") === "lines" ? "lines" : "float",
+    compare: url.has("compare") || url.has("core") || url.has("ground"),
   };
 }
 
@@ -125,9 +119,6 @@ export const lookStore = {
   set(next: Partial<CoreLook>) {
     load();
     current = { ...current, ...next };
-    try {
-      localStorage.setItem(KEY, JSON.stringify(current));
-    } catch {}
     listeners.forEach((fn) => fn());
   },
 };

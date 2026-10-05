@@ -51,7 +51,7 @@ function walkAt(p: number) {
  * journey around the same Core (see story-timeline.ts) — which the visitor
  * can also explore directly: the cursor warms the Core, its branches open the
  * modules, the product screen plays the demo. Chapters are anchored so the
- * numbered navigation and the header can jump straight to them.
+ * section navigation and the header can jump straight to them.
  */
 export function CoreExperience() {
   const { scrollTo, start } = useSmoothScroll();
@@ -256,7 +256,7 @@ export function CoreExperience() {
 
           {/* Scroll hint */}
           <div aria-hidden="true" data-layer="hint" className="pointer-events-none absolute bottom-7 left-1/2 hidden -translate-x-1/2 flex-col items-center gap-3 lg:flex">
-            <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-fg-3">{hero.scrollHint}</span>
+            <span className="font-label text-label uppercase text-fg-3">{hero.scrollHint}</span>
             <span className="relative h-10 w-px overflow-hidden bg-line">
               <span className="scroll-hint absolute inset-x-0 top-0 h-1/2 bg-fg-2" />
             </span>

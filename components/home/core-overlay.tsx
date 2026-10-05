@@ -47,7 +47,7 @@ export function CoreOverlay({ ref, focus, explore, tool, onTool, onOpenCore }: P
   const coreEl = useRef<HTMLButtonElement>(null);
   const zoneEls = useRef<(HTMLDivElement | null)[]>([]);
   const toolSizes = useRef(new Map<HTMLElement, { w: number; h: number }>());
-  // room kept free on the right for the numbered navigation (--rail-w, in rem)
+  // room kept free on the right for the section navigation (--rail-w, in rem)
   const railW = useRef(0);
 
   useEffect(() => {
@@ -218,7 +218,7 @@ export function CoreOverlay({ ref, focus, explore, tool, onTool, onOpenCore }: P
         aria-label={`${hero.coreHint} — explore the six modules`}
         className="group pointer-events-auto invisible absolute left-0 top-0 rounded-full"
       >
-        <span className="absolute left-1/2 top-full mt-4 -translate-x-1/2 whitespace-nowrap text-[11px] uppercase tracking-[0.3em] text-fg-2 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100">
+        <span className="absolute left-1/2 top-full mt-4 -translate-x-1/2 whitespace-nowrap font-label text-label uppercase text-fg-2 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100">
           {hero.coreHint}
         </span>
       </button>
@@ -234,9 +234,8 @@ export function CoreOverlay({ ref, focus, explore, tool, onTool, onOpenCore }: P
               {...explore(i)}
               // pointer-only target (the module list is the focusable control): clicking must not move focus here
               onMouseDown={(e) => e.preventDefault()}
-              className="group pointer-events-auto absolute left-0 top-0 flex items-baseline gap-2 whitespace-nowrap rounded-full px-2.5 py-1.5 font-mono text-[10.5px] uppercase tracking-[0.22em] transition-[color,background-color,opacity] duration-300 ease-out-soft will-change-transform [text-shadow:0_1px_12px_rgb(0_0_0/0.9)] data-[side=left]:flex-row-reverse"
+              className="group pointer-events-auto absolute left-0 top-0 flex items-baseline gap-2 whitespace-nowrap rounded-full px-2.5 py-1.5 font-label text-label uppercase transition-[color,background-color,opacity] duration-300 ease-out-soft will-change-transform [text-shadow:0_1px_12px_var(--text-halo)] data-[side=left]:flex-row-reverse"
             >
-              <span className={cn("tabular", on ? "text-accent" : "text-fg-3")}>{String(i + 1).padStart(2, "0")}</span>
               <span className={cn("transition-colors", on ? "text-fg" : focus !== null ? "text-fg-3" : "text-fg-2 group-hover:text-fg")}>{m.name}</span>
               <span className={cn("text-fg-3 transition-opacity duration-300 max-sm:hidden", on ? "opacity-100" : "w-0 overflow-hidden opacity-0")}>{m.role}</span>
             </button>
@@ -251,11 +250,9 @@ export function CoreOverlay({ ref, focus, explore, tool, onTool, onOpenCore }: P
             <span className="absolute -left-1 -top-1 size-2 rounded-full bg-accent-strong shadow-[0_0_12px_3px_var(--core-glow)]" />
           </span>
           <div className="group absolute left-0 top-0 w-max max-w-[15rem] will-change-transform data-[side=below]:text-center data-[side=left]:text-right sm:max-w-[17rem]">
-            <p className="font-mono text-[10.5px] uppercase tracking-[0.26em] text-fg-2 [text-shadow:0_1px_14px_rgb(0_0_0/0.9)]">
-              <span className="text-accent">{String(i + 1).padStart(2, "0")}</span> — {s.zone}
-            </p>
-            <p className="mt-1.5 font-display text-[19px] font-extralight leading-tight tracking-[-0.02em] text-fg [text-shadow:0_1px_14px_rgb(0_0_0/0.9)] sm:text-[22px]">{s.title}</p>
-            <p className="mt-1 text-[13px] leading-snug text-fg-2 [text-shadow:0_1px_14px_rgb(0_0_0/0.9)] max-sm:hidden">{s.body}</p>
+            <p className="font-label text-label uppercase text-accent-strong [text-shadow:0_1px_14px_var(--text-halo)]">{s.zone}</p>
+            <p className="mt-1.5 font-display text-[19px] font-extralight leading-tight tracking-[-0.02em] text-fg [text-shadow:0_1px_14px_var(--text-halo)] sm:text-[22px]">{s.title}</p>
+            <p className="mt-1 text-[13px] leading-snug text-fg-2 [text-shadow:0_1px_14px_var(--text-halo)] max-sm:hidden">{s.body}</p>
           </div>
         </div>
       ))}

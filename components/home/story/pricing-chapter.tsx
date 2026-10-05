@@ -30,12 +30,12 @@ export function PricingChapter() {
   return (
     <Layer name="pricing" className={LEFT} labelledBy="pricing-title">
       <div className={COL}>
-        <Eyebrow data-r index={6}>
+        <Eyebrow data-r>
           {pricingIntro.eyebrow}
         </Eyebrow>
         <Title data-r data-split id="pricing-title" lead={pricingIntro.titleLead} accent={pricingIntro.titleAccent} className="mt-5 side:text-headline short:mt-2 short:text-[1.6rem]" />
 
-        <div data-r ref={panel} className="glass-panel pointer-events-auto relative mt-7 overflow-hidden rounded-[22px] border border-white/10 bg-[rgb(14_15_16/0.62)] p-2 backdrop-blur-xl short:mt-3">
+        <div data-r ref={panel} className="glass-panel pointer-events-auto relative mt-7 overflow-hidden rounded-[22px] border border-white/10 bg-canvas-2/60 p-2 backdrop-blur-xl short:mt-3">
           {/* the plans: a sliding thumb under the chosen one */}
           <div role="radiogroup" aria-label="Plan" className="relative grid grid-cols-3 rounded-[16px] bg-white/[0.035] p-1">
             <span
@@ -112,7 +112,7 @@ export function PricingChapter() {
           </div>
         </div>
 
-        <p data-r className="mt-4 font-mono text-[10.5px] uppercase tracking-[0.22em] text-fg-3 max-sm:hidden short:hidden">
+        <p data-r className="mt-4 font-label text-label uppercase text-fg-3 max-sm:hidden short:hidden">
           {pricingIntro.notes[0]} · {pricingIntro.notes[2]}
         </p>
       </div>

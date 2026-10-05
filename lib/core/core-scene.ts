@@ -108,6 +108,21 @@ const GRAPHITE_LINE = new THREE.Color(0.2, 0.2, 0.21);
 const ORIGIN_2D = new THREE.Vector2();
 const KEY_DIR = new THREE.Vector3(-0.55, 0.8, 0.45).normalize();
 const color = (rgb: readonly number[]) => new THREE.Color(rgb[0], rgb[1], rgb[2]);
+/** The light theme's canvas (#f2f1ed in globals.css), in display space — the paper the scene is laid on. */
+const PAPER = [242 / 255, 241 / 255, 237 / 255] as const;
+/** A tool's point (the tip of its root) in the light theme. */
+const NODE_INK = new THREE.Color(0.02, 0.2, 0.12);
+
+/** An additive glow that leaves the alpha alone: it adds light to the picture, never coverage. */
+function lightOnly(m: THREE.Material) {
+  if (m.blending !== THREE.AdditiveBlending) return;
+  m.blending = THREE.CustomBlending;
+  m.blendEquation = THREE.AddEquation;
+  m.blendSrc = m.premultipliedAlpha ? THREE.OneFactor : THREE.SrcAlphaFactor;
+  m.blendDst = THREE.OneFactor;
+  m.blendSrcAlpha = THREE.ZeroFactor;
+  m.blendDstAlpha = THREE.OneFactor;
+}
 
 type LineMat = THREE.ShaderMaterial & {
   uniforms: Record<"uTime" | "uGrow" | "uHi" | "uDim" | "uIntensity" | "uFlow" | "uPulse" | "uShot" | "uShotAmt", THREE.IUniform<number>> & {
@@ -594,7 +609,8 @@ function wordmarkTexture() {
   canvas.width = 2048;
   canvas.height = 360;
   const ctx = canvas.getContext("2d")!;
-  const family = getComputedStyle(document.documentElement).getPropertyValue("--font-sora").trim() || "sans-serif";
+  // in the headlines' typeface (globals.css, --font-display)
+  const family = getComputedStyle(document.documentElement).getPropertyValue("--font-display").trim() || "serif";
   const text = "SYXORIA";
   const draw = () => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -614,7 +630,8 @@ function wordmarkTexture() {
   const tex = new THREE.CanvasTexture(canvas);
   tex.colorSpace = THREE.SRGBColorSpace;
   draw();
-  document.fonts?.ready.then(draw).catch(() => {});
+  // drawn again once the face is loaded (a canvas does not ask for it by itself)
+  document.fonts?.load(`200 280px ${family}`).then(draw).catch(() => {});
   return tex;
 }
 
@@ -734,6 +751,9 @@ export class CoreScene {
   private euler = new THREE.Euler();
 
   private tmp = new THREE.Vector3();
+  private buffer = new THREE.Vector2();
+  /** the light theme (0 dark, 1 light) */
+  private day = 0;
   private tmp2 = new THREE.Vector3();
   private tmp3 = new THREE.Vector3();
   private tmp4 = new THREE.Vector3();
@@ -750,12 +770,17 @@ export class CoreScene {
     this.state = options.state ?? { ...DEFAULT_STATE };
     this.rockGeometry = options.rockGeometry;
     const low = this.opts.quality === "low";
-    this.maxDpr = Math.min(window.devicePixelRatio || 1, low ? 1.5 : 2);
+    // Desktop draws the scene finer than the screen (×1.5, up to 2 device pixels per CSS pixel) and
+    // lets the browser scale it down: supersampled, the stone's grain and fissures stay sharp and clean
+    // in close-up even on a standard screen. It steps down by itself if the device can't keep up (adapt).
+    const screenDpr = Math.max(1, window.devicePixelRatio || 1);
+    this.maxDpr = low ? Math.min(screenDpr, 1.5) : Math.min(screenDpr * 1.5, 2);
     this.dpr = this.maxDpr;
 
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: false, alpha: false, powerPreference: "high-performance" });
-    // Clear to true black: the page colour is laid back in, in display space, by the final pass.
-    this.renderer.setClearColor(0x000000, 1);
+    // Clear to true black, alpha 0: the page colour is laid back in, in display space, by the final
+    // pass — and in the light theme, the alpha (what the scene's surfaces cover) lays them on paper.
+    this.renderer.setClearColor(0x000000, 0);
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.05;
     this.renderer.setPixelRatio(this.dpr);
@@ -775,7 +800,15 @@ export class CoreScene {
     const output = new OutputPass();
     this.composer.addPass(output);
     this.final = new ShaderPass(S.finalPass);
+    this.final.uniforms.uTexel.value = new THREE.Vector2(1, 1);
+    this.final.uniforms.uPaper.value = new THREE.Vector3(...PAPER);
     this.composer.addPass(this.final);
+    // glows add light but never coverage, so the alpha stays the surfaces' coverage (the light theme)
+    this.scene.traverse((o) => {
+      const m = (o as THREE.Mesh).material;
+      if (m) (Array.isArray(m) ? m : [m]).forEach(lightOnly);
+    });
+    lightOnly(this.bloom.blendMaterial);
 
     this.anchors = {
       modules: FRAGMENTS.map(() => ({ x: 0, y: 0, alpha: 0 })),
@@ -941,6 +974,7 @@ export class CoreScene {
         uZones: { value: this.zones },
         uPetalHi: { value: this.petalHi },
         uFocus: { value: 0 },
+        uDay: { value: 0 },
         uBump: { value: 0.006 },
         uKeyDir: { value: KEY_DIR },
         uKeyColor: { value: new THREE.Color(1.0, 0.9, 0.78) },
@@ -1400,10 +1434,26 @@ export class CoreScene {
     this.renderer.setSize(this.w, this.h, false);
     this.composer.setPixelRatio(this.dpr);
     this.composer.setSize(this.w, this.h);
+    const buffer = this.renderer.getDrawingBufferSize(this.buffer);
+    (this.final.uniforms.uTexel.value as THREE.Vector2).set(1 / buffer.x, 1 / buffer.y);
     this.css?.setSize(this.w, this.h);
     // bloom at reduced resolution is softer and much cheaper
     this.bloom.resolution.set(this.w * 0.5, this.h * 0.5);
     this.camera.aspect = this.w / this.h;
+    if (!this.running && this.compiled) {
+      this.update(0);
+      this.render();
+    }
+  }
+
+  /**
+   * The website's theme. Light: the same scene, laid on paper — the dark stone in a bright room, its
+   * glow turned to a deep emerald tint (see the final pass).
+   */
+  setTheme(light: boolean) {
+    const v = (this.day = light ? 1 : 0);
+    this.final.uniforms.uLight.value = v;
+    (this.rock.material as THREE.ShaderMaterial).uniforms.uDay.value = v;
     if (!this.running && this.compiled) {
       this.update(0);
       this.render();
@@ -1580,7 +1630,8 @@ export class CoreScene {
     const st = this.stars.material.uniforms;
     st.uTime.value = t;
     st.uPixel.value = this.dpr * Math.max(0.8, this.h / 900);
-    st.uIntensity.value = s.stars * k * 1.7;
+    // on paper, stars would read as specks of dust: only the brightest stay, faintly
+    st.uIntensity.value = s.stars * k * 1.7 * (1 - 0.7 * this.day);
     this.stars.visible = s.stars * k > 0.001;
     this.stars.rotation.y = rm ? 0 : t * 0.004;
 
@@ -1612,7 +1663,8 @@ export class CoreScene {
       m.material.color.copy(C.vitrine).multiplyScalar(0.34 * k);
     });
     this.vitrineTop.forEach((m) => m.material.color.copy(C.vitrine).multiplyScalar(0.34 * close * k));
-    this.panes.forEach((m) => (m.material.uniforms.uOpacity.value = glass));
+    // (on paper the glass reads as a tint, so it is laid on more lightly)
+    this.panes.forEach((m) => (m.material.uniforms.uOpacity.value = glass * (1 - 0.6 * this.day)));
 
     // Tool network: faces the viewer, its roots leave the Core; the tool pointed at sends a pulse down its wire
     this.nodeGroup.visible = s.network > 0.001;
@@ -1641,7 +1693,10 @@ export class CoreScene {
       n.hi += ((i === tool ? 1 : 0) - n.hi) * ease(7);
       const appear = smoothstep(i * 0.05, i * 0.05 + 0.5, s.network);
       const tipIn = smoothstep(0.8, 1, appear);
-      n.dot.material.color.copy(C.node).multiplyScalar(tipIn * k * (1.2 + 1.6 * n.hi));
+      // fades by its opacity (on black that is the same as by its brightness; on paper it must not turn
+      // into a dark speck) — and on paper the tip of the root is a point of deep emerald ink, not of light
+      n.dot.material.opacity = Math.min(1, tipIn * k);
+      n.dot.material.color.copy(C.node).lerp(NODE_INK, this.day).multiplyScalar(1.2 + 1.6 * n.hi);
       n.dot.scale.setScalar(Math.max(0.001, tipIn * (1 + 0.6 * n.hi)));
       n.halo.scale.setScalar(0.55 + 0.35 * n.hi);
       n.halo.material.uniforms.uIntensity.value = tipIn * k * (0.22 + 0.45 * n.hi);
@@ -1661,7 +1716,7 @@ export class CoreScene {
     const wm = this.wordmark;
     // the wordmark belongs to wide screens; in portrait it would cut across the Core
     wm.visible = s.wordmark > 0.001 && !portrait;
-    wm.material.opacity = s.wordmark * k * 0.075;
+    wm.material.opacity = s.wordmark * k * 0.075 * (1 - 0.6 * this.day);
     if (wm.visible) {
       const depth = this.camera.position.distanceTo(this.tmp.set(0, 0.55, -3.4));
       const visH = 2 * Math.tan(THREE.MathUtils.degToRad(this.camera.fov / 2)) * depth;

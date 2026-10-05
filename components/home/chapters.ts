@@ -3,7 +3,7 @@
  * Core story's scroll timeline (0 → 100), from the first look at the Core to
  * pricing in front of its vitrine.
  *
- *   start  where the section begins (the numbered navigation turns active)
+ *   start  where the section begins (the section navigation turns active)
  *   land   where a jump to it lands — the moment its content is fully shown
  */
 export type Chapter = { id: string; label: string; start: number; land: number };

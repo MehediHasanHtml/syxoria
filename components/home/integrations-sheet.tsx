@@ -26,7 +26,7 @@ export function IntegrationsSheet({ open, onClose }: { open: boolean; onClose: (
       <div className="mt-10 grid gap-9">
         {more.groups.map((g) => (
           <section key={g.name} aria-labelledby={`int-${g.name}`}>
-            <h3 id={`int-${g.name}`} className="flex items-center gap-2.5 text-[11px] uppercase tracking-[0.28em] text-fg-3">
+            <h3 id={`int-${g.name}`} className="flex items-center gap-2.5 font-label text-label uppercase text-fg-3">
               <span aria-hidden="true" className="size-1 rounded-full bg-accent" />
               {g.name}
             </h3>

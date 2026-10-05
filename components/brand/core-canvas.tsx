@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
 import type { CoreAnchors, CoreState } from "@/lib/core/state";
+import { themeStore } from "@/lib/theme";
 
 type Props = {
   /** Mutable scene state, read every frame — mutate it (e.g. with GSAP) to drive the Core. */
@@ -92,6 +93,10 @@ export function CoreCanvas({ state, className, label, interactive = true, nodeCo
       const ro = new ResizeObserver(([e]) => scene.setSize(e.contentRect.width, e.contentRect.height));
       ro.observe(el);
       document.addEventListener("visibilitychange", sync);
+      // the website's theme (a dark-only part of the site, like the sign-in page, declares its own)
+      const theme = () => scene.setTheme(cv.closest("[data-theme]")?.getAttribute("data-theme") === "light");
+      theme();
+      const unsubscribe = themeStore.subscribe(theme);
       // the cursor (mouse only) warms the stone under it and gently turns the camera
       const onMove = (e: PointerEvent) => {
         if (e.pointerType !== "mouse") return;
@@ -115,6 +120,7 @@ export function CoreCanvas({ state, className, label, interactive = true, nodeCo
         io.disconnect();
         ro.disconnect();
         document.removeEventListener("visibilitychange", sync);
+        unsubscribe();
         window.removeEventListener("pointermove", onMove);
         document.removeEventListener("mouseout", onLeave);
         cv.removeEventListener("webglcontextlost", onLost);

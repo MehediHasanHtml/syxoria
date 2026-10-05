@@ -115,7 +115,7 @@ export function LiveScreen({ state }: { state: CoreState }) {
           ref={cursor}
           aria-hidden="true"
           data-shown={hover || undefined}
-          className="pointer-events-none fixed left-0 top-0 z-(--z-toast) flex -translate-x-1/2 -translate-y-1/2 items-center gap-1.5 rounded-full border border-accent-line bg-[rgb(8_9_10/0.72)] py-1 pl-1 pr-3 text-[12px] font-medium text-fg opacity-0 shadow-[0_12px_36px_rgb(0_0_0/0.55)] backdrop-blur-md transition-opacity duration-300 data-[shown]:opacity-100"
+          className="pointer-events-none fixed left-0 top-0 z-(--z-toast) flex -translate-x-1/2 -translate-y-1/2 items-center gap-1.5 rounded-full border border-accent-line bg-canvas/75 py-1 pl-1 pr-3 text-[12px] font-medium text-fg opacity-0 shadow-float backdrop-blur-md transition-opacity duration-300 data-[shown]:opacity-100"
         >
           <span className="grid size-5 place-items-center rounded-full bg-accent-soft text-accent-strong">
             <Maximize2 className="size-2.5" />

@@ -45,7 +45,7 @@ function JsonLd() {
 /**
  * The homepage: one pinned scene around the Core that the visitor scrolls
  * through and explores — core → one core → modules → workspace →
- * integrations → pricing (see CoreExperience). The numbered navigation jumps
+ * integrations → pricing (see CoreExperience). The section navigation jumps
  * to any of them.
  */
 export default function HomePage() {

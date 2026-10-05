@@ -4,12 +4,11 @@ import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { useState } from "react";
 import { ModuleIcon } from "@/components/shared/module-icon";
 import { hero, moduleExamples } from "@/content/home";
+import { cn } from "@/lib/cn";
 import { productModules } from "@/lib/mock-data/modules";
 import { CoreButton, LensButton } from "./core-button";
 import { useFilm } from "./film";
 import { Sheet } from "./sheet";
-
-const pad = (i: number) => String(i + 1).padStart(2, "0");
 
 /**
  * "Explore deeper": everything about one module — what it does, what it looks
@@ -30,20 +29,26 @@ export function ModuleSheet({ index, onClose, onNavigate }: { index: number | nu
       onClose={onClose}
       label={`${m.name} — ${m.role}`}
       header={
-        <span>
-          Module <span className="tabular text-fg-2">{pad(shown)}</span> / {pad(count - 1)}
+        <span className="flex items-center gap-4">
+          Modules
+          {/* where this module sits among the six: points, not numbers */}
+          <span aria-hidden="true" className="flex items-center gap-1.5">
+            {productModules.map((p, i) => (
+              <span key={p.key} className={cn("size-1 rounded-full transition-colors duration-300", i === shown ? "bg-accent-strong" : "bg-line-strong")} />
+            ))}
+          </span>
         </span>
       }
     >
       <div key={m.key} className="animate-fade-in">
         <div className="flex items-center gap-4">
           <ModuleIcon module={m.key} framed tone="accent" />
-          <p className="text-[11px] uppercase tracking-[0.28em] text-accent">{m.role}</p>
+          <p className="font-label text-label uppercase text-accent">{m.role}</p>
         </div>
         <h2 className="mt-5 font-display text-headline font-light text-fg">{m.name}</h2>
         <p className="mt-4 text-lead text-fg-2">{m.summary}</p>
 
-        <h3 className="mt-10 text-[11px] uppercase tracking-[0.28em] text-fg-3">What it does</h3>
+        <h3 className="mt-10 font-label text-label uppercase text-fg-3">What it does</h3>
         <ul className="mt-4 grid gap-3">
           {m.capabilities.map((c) => (
             <li key={c} className="flex items-start gap-3 text-[15px] text-fg">
@@ -53,9 +58,9 @@ export function ModuleSheet({ index, onClose, onNavigate }: { index: number | nu
           ))}
         </ul>
 
-        <h3 className="mt-10 text-[11px] uppercase tracking-[0.28em] text-fg-3">In your workspace</h3>
+        <h3 className="mt-10 font-label text-label uppercase text-fg-3">In your workspace</h3>
         <div className="mt-4 rounded-xl border border-line bg-surface/60 p-5">
-          <p className="flex items-center justify-between gap-4 text-[10.5px] uppercase tracking-[0.22em] text-fg-3">
+          <p className="flex items-center justify-between gap-4 font-label text-label uppercase text-fg-3">
             <span>{m.name}</span>
             <span className="tabular normal-case tracking-normal text-accent">{example.impact}</span>
           </p>

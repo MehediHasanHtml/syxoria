@@ -5,7 +5,8 @@ import { Logo } from "@/components/shared/logo";
 
 export default function AuthLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="grid min-h-dvh lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
+    // the entrance to the product: dark, like the product, whichever theme the website shows
+    <div data-theme="dark" className="grid min-h-dvh bg-canvas text-fg lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
       <div className="flex flex-col px-5 py-6 sm:px-10 lg:px-16">
         <div className="flex items-center justify-between">
           <Logo />

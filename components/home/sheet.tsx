@@ -32,7 +32,7 @@ export function Sheet({ open, onClose, label, header, children }: { open: boolea
     >
       <div className="flex h-full flex-col">
         <div className="flex h-(--header-h) shrink-0 items-center justify-between gap-4 border-b border-line px-6">
-          <div className="min-w-0 text-[11px] uppercase tracking-[0.28em] text-fg-3">{header}</div>
+          <div className="min-w-0 font-label text-label uppercase text-fg-3">{header}</div>
           <button
             type="button"
             onClick={onClose}

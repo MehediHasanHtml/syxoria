@@ -8,6 +8,7 @@ import { useActiveSection } from "@/components/home/use-active-section";
 import { Logo } from "@/components/shared/logo";
 import { cn } from "@/lib/cn";
 import { marketingNav } from "@/lib/site-config";
+import { ThemeToggle } from "./theme-toggle";
 
 /**
  * Immersive header: transparent over the hero, gains a surface + hairline once
@@ -90,6 +91,7 @@ export function Header() {
             </ul>
           </nav>
           <div className="flex items-center gap-2">
+            <ThemeToggle />
             <Link href="/login" className="hidden rounded-md px-3 py-2 text-[13.5px] text-fg-2 transition-colors hover:text-fg sm:block">
               Sign in
             </Link>

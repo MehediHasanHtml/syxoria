@@ -8,8 +8,6 @@ import type { Explore } from "../use-explore";
 import { useCanHover } from "../use-explore";
 import { COL, Eyebrow, LEFT, Layer, Title } from "./primitives";
 
-const pad = (i: number) => String(i + 1).padStart(2, "0");
-
 /**
  * 03 — The Core opened. The words beside it are the Core's information panel:
  * an overview until a branch (or a module name) is explored, then that
@@ -23,7 +21,7 @@ export function ModulesChapter({ focus, explore, onOpen }: { focus: number | nul
   return (
     <Layer name="modules" className={LEFT} labelledBy="modules-title">
       <div className={COL}>
-        <Eyebrow data-r index={3}>
+        <Eyebrow data-r>
           {modules.eyebrow}
         </Eyebrow>
         <Title data-r data-split id="modules-title" lead={modules.titleLead} accent={modules.titleAccent} className="mt-6 short:mt-3" />
@@ -33,14 +31,11 @@ export function ModulesChapter({ focus, explore, onOpen }: { focus: number | nul
           {active === null || focus === null ? (
             <div key="overview" className="animate-fade-in">
               <p className="max-w-[26rem] text-[15px] leading-relaxed text-fg-2 short:text-[14px]">{modules.body}</p>
-              <p className="mt-3 text-[11px] uppercase tracking-[0.24em] text-fg-3 short:hidden">{canHover ? modules.hint.pointer : modules.hint.touch}</p>
+              <p className="mt-3 font-label text-label uppercase text-fg-3 short:hidden">{canHover ? modules.hint.pointer : modules.hint.touch}</p>
             </div>
           ) : (
             <div key={active.key} className="animate-fade-in">
-              <p className="flex items-baseline gap-3 font-mono text-[10.5px] uppercase tracking-[0.24em]">
-                <span className="tabular text-fg-3">
-                  {pad(focus)} / {pad(productModules.length - 1)}
-                </span>
+              <p className="flex items-baseline gap-3 font-label text-label uppercase">
                 <span className="text-fg">{active.name}</span>
                 <span className="text-accent">{active.role}</span>
               </p>
@@ -50,7 +45,7 @@ export function ModulesChapter({ focus, explore, onOpen }: { focus: number | nul
                 {...explore(focus)}
                 onClick={() => onOpen(focus)}
                 aria-haspopup="dialog"
-                className="group mt-3 inline-flex items-center gap-2 text-[13px] text-fg transition-colors hover:text-white short:hidden"
+                className="group mt-3 inline-flex items-center gap-2 text-[13px] text-fg transition-colors hover:text-accent-strong short:hidden"
               >
                 {modules.open} {active.name}
                 <ArrowRight className="size-3.5 transition-transform duration-300 group-hover:translate-x-0.5" aria-hidden="true" />
@@ -84,7 +79,8 @@ export function ModulesChapter({ focus, explore, onOpen }: { focus: number | nul
                     focus !== null && !on && "side:opacity-45",
                   )}
                 >
-                  <span className={cn("tabular text-[11px] transition-colors", on ? "text-accent" : "text-fg-3")}>{pad(i)}</span>
+                  {/* the module being explored: a point of the Core's light where its number used to be */}
+                  <span aria-hidden="true" className={cn("size-1 shrink-0 self-center rounded-full transition-[background-color,box-shadow] duration-300", on ? "bg-accent-strong shadow-[0_0_8px_var(--core-glow)]" : "bg-line-strong")} />
                   <span className={cn("transition-colors", on ? "text-fg" : "text-fg-2 group-hover:text-fg")}>{m.name}</span>
                   <span className="text-[11px] uppercase tracking-[0.18em] text-fg-3 hidden side:inline">{m.role}</span>
                 </button>

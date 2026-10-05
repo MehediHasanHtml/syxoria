@@ -12,7 +12,7 @@ export function HeroChapter() {
   return (
     <Layer name="hero" className={cn(LEFT, "story-layer--visible")}>
       <div className={COL}>
-        <Eyebrow data-r index={1}>
+        <Eyebrow data-r>
           {hero.eyebrow}
         </Eyebrow>
         <Title data-r data-split as="h1" id="hero-title" lead={hero.titleLead} accent={hero.titleAccent} className="mt-6 short:mt-3" />

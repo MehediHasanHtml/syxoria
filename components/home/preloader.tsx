@@ -56,11 +56,11 @@ type Props = {
 
 export function Preloader({ ready, onProgress, onLaunch, onDone }: Props) {
   const [phase, setPhase] = useState<"counting" | "launch" | "gone">("counting");
-  const count = useRef<HTMLSpanElement>(null);
   const words = useRef<HTMLOListElement>(null);
   const ticks = useRef<HTMLDivElement>(null);
   const curve = useRef<SVGPathElement>(null);
   const trail = useRef<SVGPathElement>(null);
+  const count = useRef<HTMLSpanElement>(null);
   const dot = useRef<HTMLSpanElement>(null);
   const readyRef = useRef(ready);
   const cb = useRef({ onProgress, onLaunch, onDone });
@@ -82,6 +82,29 @@ export function Preloader({ ready, onProgress, onLaunch, onDone }: Props) {
 
     const path = curve.current;
     const length = path?.getTotalLength() ?? 0;
+    // The trail's dashes are measured on screen (its stroke doesn't scale with the stretched curve),
+    // so it is drawn from the curve's length on screen — sampled, as the curve is stretched unevenly —
+    // to end exactly at the light, with no repeat of the dash appearing ahead of it on wide screens.
+    const SAMPLES = 64;
+    const arc = new Float32Array(SAMPLES + 1);
+    const measure = () => {
+      const m = path?.getScreenCTM();
+      if (!path || !m) return;
+      let prevPt: DOMPoint | null = null;
+      for (let i = 0; i <= SAMPLES; i++) {
+        const pt = path.getPointAtLength((length * i) / SAMPLES).matrixTransform(m);
+        arc[i] = prevPt ? arc[i - 1] + Math.hypot(pt.x - prevPt.x, pt.y - prevPt.y) : 0;
+        prevPt = pt;
+      }
+      trail.current?.setAttribute("stroke-dasharray", `${arc[SAMPLES]} ${arc[SAMPLES] * 2}`);
+    };
+    const onScreen = (p: number) => {
+      const x = Math.min(Math.max(p, 0), 1) * SAMPLES;
+      const i = Math.min(Math.floor(x), SAMPLES - 1);
+      return arc[i] + (arc[i + 1] - arc[i]) * (x - i);
+    };
+    measure();
+    window.addEventListener("resize", measure);
     const wordEls = [...(words.current?.children ?? [])] as HTMLElement[];
     const tickEls = [...(ticks.current?.children ?? [])] as HTMLElement[];
     let start = 0;
@@ -93,7 +116,6 @@ export function Preloader({ ready, onProgress, onLaunch, onDone }: Props) {
     const timers: number[] = [];
 
     const draw = (p: number, pct: number) => {
-      if (count.current) count.current.textContent = String(pct).padStart(2, "0");
       // milestones: the word of the current one is lit, the ones before stay, dimmed
       const stage = STAGES.findLastIndex(([at]) => pct >= at);
       if (stage !== reached) {
@@ -101,7 +123,8 @@ export function Preloader({ ready, onProgress, onLaunch, onDone }: Props) {
         wordEls.forEach((w, i) => (w.dataset.state = i < stage ? "past" : i === stage ? "on" : ""));
         tickEls.forEach((t, i) => t.toggleAttribute("data-on", i <= stage));
       }
-      trail.current?.setAttribute("stroke-dashoffset", String(1 - p));
+      trail.current?.setAttribute("stroke-dashoffset", String(arc[SAMPLES] - onScreen(p)));
+      if (count.current) count.current.textContent = String(pct);
       if (path && dot.current) {
         const pt = path.getPointAtLength(length * p);
         dot.current.style.left = `${pt.x / 10}%`;
@@ -149,6 +172,7 @@ export function Preloader({ ready, onProgress, onLaunch, onDone }: Props) {
     };
     raf = requestAnimationFrame(tick);
     return () => {
+      window.removeEventListener("resize", measure);
       cancelAnimationFrame(raf);
       timers.forEach(clearTimeout);
       root.style.overflow = "";
@@ -161,16 +185,16 @@ export function Preloader({ ready, onProgress, onLaunch, onDone }: Props) {
   return (
     <div aria-hidden="true" data-phase={phase} className="preloader pointer-events-none fixed inset-0 z-(--z-overlay)">
       {/* the progression curve: faint in full, bright up to the light */}
-      <svg viewBox="0 0 1000 1000" preserveAspectRatio="none" className={cn("absolute inset-0 size-full transition-opacity duration-500", launching && "opacity-0")}>
+      <svg viewBox="0 0 1000 1000" preserveAspectRatio="none" className={cn("absolute inset-0 size-full text-fg transition-opacity duration-500", launching && "opacity-0")}>
         <defs>
           <linearGradient id="preloader-curve" x1="0" x2="1" y1="0" y2="0">
-            <stop offset="0" stopColor="#f5f5f2" stopOpacity="0" />
-            <stop offset="0.35" stopColor="#f5f5f2" stopOpacity="0.5" />
-            <stop offset="1" stopColor="#a8dcc4" stopOpacity="0.9" />
+            <stop offset="0" style={{ stopColor: "var(--color-fg)" }} stopOpacity="0" />
+            <stop offset="0.35" style={{ stopColor: "var(--color-fg)" }} stopOpacity="0.5" />
+            <stop offset="1" style={{ stopColor: "var(--preloader-tip)" }} stopOpacity="0.9" />
           </linearGradient>
         </defs>
-        <path ref={curve} d={CURVE} fill="none" stroke="#f5f5f2" strokeOpacity="0.09" strokeWidth="1" vectorEffect="non-scaling-stroke" />
-        <path ref={trail} d={CURVE} fill="none" stroke="url(#preloader-curve)" strokeWidth="1" vectorEffect="non-scaling-stroke" pathLength={1} strokeDasharray="1 1" strokeDashoffset="1" />
+        <path ref={curve} d={CURVE} fill="none" stroke="currentColor" strokeOpacity="0.09" strokeWidth="1" vectorEffect="non-scaling-stroke" />
+        <path ref={trail} d={CURVE} fill="none" stroke="url(#preloader-curve)" strokeWidth="1" vectorEffect="non-scaling-stroke" strokeDasharray="0 1" />
       </svg>
 
       {/* the travelling light — at 100% it flares into a line */}
@@ -185,21 +209,19 @@ export function Preloader({ ready, onProgress, onLaunch, onDone }: Props) {
       </span>
 
       <div className={cn("container-page relative flex h-full flex-col justify-between py-7 transition-opacity duration-500", launching && "opacity-0 delay-200")}>
-        <p className="font-mono text-[11px] font-medium uppercase tracking-brand text-fg-2">Syxoria</p>
+        <p className="font-label text-[11px] font-medium uppercase tracking-brand text-fg-2">Syxoria</p>
         <div className="flex items-end justify-between gap-8 pb-[8svh] sm:pb-[6svh]">
           {/* the milestones, as they are reached */}
-          <ol ref={words} className="preloader-words grid gap-1.5 font-mono text-[10.5px] uppercase tracking-[0.3em]">
-            {STAGES.map(([at, word]) => (
-              <li key={word} className="flex items-baseline gap-3">
-                <span className="tabular text-fg-3">{String(at).padStart(3, "0")}</span>
-                {word}
-              </li>
+          <ol ref={words} className="preloader-words grid gap-1.5 font-label text-label uppercase">
+            {STAGES.map(([, word]) => (
+              <li key={word}>{word}</li>
             ))}
           </ol>
           <div className="min-w-[9rem] text-right">
+            {/* the progress, 0 → 100 % */}
             <p className="flex items-start justify-end font-display font-extralight leading-none text-fg">
               <span ref={count} className="tabular text-[clamp(2.75rem,2rem+3vw,4.5rem)] tracking-tight">
-                00
+                0
               </span>
               <span className="ml-1 mt-2 text-sm text-fg-2">%</span>
             </p>

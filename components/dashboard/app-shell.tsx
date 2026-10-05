@@ -63,7 +63,7 @@ export function AppShell({ children, ...ctx }: ShellContext & { children: ReactN
   }, [mobileOpen]);
 
   return (
-    <div className="min-h-dvh bg-canvas">
+    <div data-theme="dark" className="product-type min-h-dvh bg-canvas">
       <a
         href="#app-main"
         className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-3 focus:z-(--z-toast) focus:rounded-md focus:bg-fg focus:px-3 focus:py-2 focus:text-sm focus:text-canvas"

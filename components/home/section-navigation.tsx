@@ -6,10 +6,10 @@ import { useSmoothScroll } from "./smooth-scroll";
 import { useActiveSection } from "./use-active-section";
 
 /**
- * The numbered navigation on the right: every number jumps (smoothly) to its
- * section, and the current one follows the scroll — marked by a short line of
- * the Core's light. Hovering the rail shows all the names. For explorers and
- * direct visitors alike.
+ * The section navigation on the right: a quiet rail of short lines, no numbers —
+ * each jumps (smoothly) to its section, and the current one follows the scroll,
+ * drawn longer in the Core's light. Hovering the rail shows all the names. For
+ * explorers and direct visitors alike.
  */
 export function SectionNavigation() {
   const { scrollTo } = useSmoothScroll();
@@ -35,7 +35,7 @@ export function SectionNavigation() {
               >
                 <span
                   className={cn(
-                    "whitespace-nowrap text-[10px] uppercase tracking-[0.28em] transition-[opacity,transform,color] duration-300 ease-out-soft [text-shadow:0_1px_12px_rgb(0_0_0/0.9)]",
+                    "whitespace-nowrap font-label text-label uppercase transition-[opacity,transform,color] duration-300 ease-out-soft [text-shadow:0_1px_12px_var(--text-halo)]",
                     // names appear when the rail is hovered or focused — the rest of the time it stays out of the way
                     "translate-x-1 opacity-0 group-hover/nav:translate-x-0 group-hover/nav:opacity-100 group-focus-visible:translate-x-0 group-focus-visible:opacity-100",
                     on ? "text-fg" : "text-fg-3 group-hover:text-fg",
@@ -43,7 +43,6 @@ export function SectionNavigation() {
                 >
                   {s.label}
                 </span>
-                <span className={cn("tabular text-[11px] transition-colors duration-300", on ? "text-fg" : "text-fg-3 group-hover:text-fg")}>{String(i + 1).padStart(2, "0")}</span>
                 <span
                   aria-hidden="true"
                   className={cn(

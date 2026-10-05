@@ -5,7 +5,7 @@ import { NAV_SECTIONS } from "./chapters";
 
 /**
  * The homepage section being viewed — shared by every navigation (the header,
- * the numbered rail), so they always agree. One scroll listener, checked once
+ * the section rail), so they always agree. One scroll listener, checked once
  * per frame at most, and only while something is listening.
  */
 let current: string | null = null;

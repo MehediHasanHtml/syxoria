@@ -32,9 +32,9 @@ export function Title({
 }: { lead: string; accent: string; highlight?: string; as?: "h1" | "h2"; id?: string; className?: string } & Reveal) {
   const at = highlight ? accent.indexOf(highlight) : -1;
   return (
-    <Tag {...rest} id={id} className={cn("font-display text-display font-extralight tracking-[-0.045em] text-fg short:text-[1.85rem]", className)}>
+    <Tag {...rest} id={id} className={cn("font-display text-display tracking-(--title-tracking) text-fg [font-weight:var(--title-weight)] short:text-[1.85rem]", className)}>
       {lead}{" "}
-      <em className="font-serif text-[1.1em] font-normal italic tracking-[-0.01em] text-fg">
+      <em className="font-serif italic tracking-(--accent-tracking) text-fg [font-size:var(--accent-size)] [font-weight:var(--accent-weight)]">
         {at < 0 || !highlight ? (
           accent
         ) : (
@@ -49,16 +49,10 @@ export function Title({
   );
 }
 
-/** The chapter's index and name, set in mono: "02 — One core" (the index in the Core's light). */
-export function Eyebrow({ index, children, className, ...rest }: { index?: number; children: ReactNode; className?: string } & Reveal) {
+/** The chapter's name, as a small uppercase label — words only, no numbering or marks. */
+export function Eyebrow({ children, className, ...rest }: { children: ReactNode; className?: string; id?: string } & Reveal) {
   return (
-    <p {...rest} className={cn("font-mono text-[10.5px] uppercase tracking-[0.32em] text-fg-3", className)}>
-      {index !== undefined && (
-        <span className="tabular">
-          <span className="text-accent">{String(index).padStart(2, "0")}</span>
-          <span className="text-fg-2"> — </span>
-        </span>
-      )}
+    <p {...rest} className={cn("font-label text-label uppercase text-fg-3", className)}>
       {children}
     </p>
   );

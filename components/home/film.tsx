@@ -80,7 +80,7 @@ function FilmDialog({ options, onClose }: { options: OpenOptions; onClose: () =>
     >
       <div className="flex h-full flex-col">
         <div className="flex h-16 shrink-0 items-center justify-between px-5 sm:px-8">
-          <p className="font-mono text-[11px] uppercase tracking-[0.3em] text-fg-3">Syxoria — live demo</p>
+          <p className="font-label text-label uppercase text-fg-3">Syxoria — live demo</p>
           <button
             type="button"
             onClick={onClose}
@@ -92,7 +92,7 @@ function FilmDialog({ options, onClose }: { options: OpenOptions; onClose: () =>
         </div>
         <div className="grid min-h-0 flex-1 place-items-center px-4 pb-6 sm:px-8">
           {siteConfig.productFilm ? (
-            <video data-film-frame src={siteConfig.productFilm} controls autoPlay playsInline className="aspect-video w-full max-w-6xl bg-black" />
+            <video data-film-frame src={siteConfig.productFilm} controls autoPlay playsInline className="aspect-video w-full max-w-6xl bg-[#000]" />
           ) : (
             <AutoDemo at={options.at ?? 0} />
           )}
@@ -147,7 +147,7 @@ function AutoDemo({ at }: { at: number }) {
     <div className="flex w-full max-w-6xl flex-col gap-5">
       <div
         data-film-frame
-        className="relative mx-auto w-[min(100%,calc((100dvh-15rem)*1.6))] rounded-[22px] bg-[#050506] p-[1.6%] shadow-[inset_0_0_0_1.5px_rgb(255_255_255/0.12),0_40px_120px_-30px_rgb(0_0_0/0.9)]"
+        className="relative mx-auto w-[min(100%,calc((100dvh-15rem)*1.6))] rounded-[22px] bg-[#050506] p-[1.6%] shadow-[inset_0_0_0_1.5px_rgb(255_255_255/0.12),0_40px_120px_-30px_var(--text-halo)]"
       >
         <div ref={frame} className="relative aspect-[1200/750] overflow-hidden rounded-[6px]">
           <div className="absolute left-0 top-0 origin-top-left" style={{ scale: "var(--s, 1)" }}>

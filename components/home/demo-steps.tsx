@@ -46,10 +46,7 @@ export function DemoSteps({ progress, className }: { progress: () => number; cla
           <span className="relative block h-px overflow-hidden bg-line">
             <span ref={(n) => void (fills.current[i] = n)} className="absolute inset-0 origin-left bg-fg" style={{ scale: "0 1" }} />
           </span>
-          <p className="mt-3 flex items-baseline gap-2 font-mono text-[10.5px] uppercase tracking-[0.2em] text-fg">
-            <span className={cn("tabular", i === active ? "text-accent" : "text-fg-3")}>{String(i + 1).padStart(2, "0")}</span>
-            {s.title}
-          </p>
+          <p className={cn("mt-3 font-label text-label uppercase transition-colors duration-500", i === active ? "text-fg" : "text-fg-2")}>{s.title}</p>
           <p className="mt-1.5 text-[12.5px] leading-snug text-fg-3">{s.body}</p>
         </li>
       ))}

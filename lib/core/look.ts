@@ -1,16 +1,19 @@
 /**
- * The Core's look — its light, and one choice the client is comparing, switchable live:
+ * The Core's look — its light, and the choices the client is comparing, switchable live:
  *
  *   ground   "float": no lines under the Core during the journey (they return with the vitrine)
  *            "lines": the contour lines under it all along (the previous version)
+ *   type     the typography: "editorial" (Spectral + Schibsted Grotesk, the default), "modern"
+ *            (Hanken Grotesk + Spectral italic) or "original" (Sora + Instrument Serif, as before)
  *
- * The URL can ask for a ground (?ground=lines) and a small compare panel (?compare). Nothing is
- * remembered between visits. Kept free of three.js.
+ * The URL can ask for a ground (?ground=lines), a type (?type=modern) and a small compare panel
+ * (?compare). Nothing is remembered between visits. Kept free of three.js.
  */
 export type CoreGround = "float" | "lines";
-export type CoreLook = { ground: CoreGround; compare: boolean };
+export type TypeDirection = "editorial" | "modern" | "original";
+export type CoreLook = { ground: CoreGround; type: TypeDirection; compare: boolean };
 
-export const DEFAULT_LOOK: CoreLook = { ground: "float", compare: false };
+export const DEFAULT_LOOK: CoreLook = { ground: "float", type: "editorial", compare: false };
 
 type RGB = [number, number, number];
 
@@ -74,9 +77,11 @@ function load() {
   if (loaded || typeof window === "undefined") return;
   loaded = true;
   const url = new URLSearchParams(window.location.search);
+  const type = url.get("type");
   current = {
     ground: url.get("ground") === "lines" ? "lines" : "float",
-    compare: url.has("compare") || url.has("ground"),
+    type: type === "modern" || type === "original" ? type : "editorial",
+    compare: url.has("compare") || url.has("ground") || url.has("type"),
   };
 }
 
@@ -93,6 +98,11 @@ export const lookStore = {
   set(next: Partial<CoreLook>) {
     load();
     current = { ...current, ...next };
+    // the type is set on <html> (globals.css, TYPOGRAPHY); the inline theme script applies ?type on load
+    if (next.type) {
+      if (next.type === "editorial") delete document.documentElement.dataset.type;
+      else document.documentElement.dataset.type = next.type;
+    }
     listeners.forEach((fn) => fn());
   },
 };

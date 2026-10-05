@@ -55,12 +55,18 @@
   --color-info: #9fb3c8;
   --color-info-soft: rgb(159 179 200 / 0.12);
 
-  /* ---- Typography ---- */
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  /* ---- Typography (the "editorial" direction — see TYPOGRAPHY below for the others) ----
+     Spectral, a fine book serif, for headlines and their italic accent; Schibsted Grotesk, a calm
+     grotesk with a little warmth, for text and the small uppercase labels */
+  --font-sans: var(--font-schibsted), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
-  /* Sora — headings and the single warm accent line in each heading */
-  --font-display: var(--font-sora), var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-serif: var(--font-instrument), ui-serif, Georgia, serif;
+  --font-display: var(--font-spectral), ui-serif, Georgia, serif;
+  --font-serif: var(--font-spectral), ui-serif, Georgia, serif;
+  --font-label: var(--font-schibsted), ui-sans-serif, system-ui, sans-serif;
+  /* the small uppercase labels (chapter names, steps, zones) */
+  --text-label: 0.6875rem;
+  --text-label--line-height: 1rem;
+  --text-label--letter-spacing: var(--label-tracking);
 
   /* Display scale — fluid, clamps inside the ranges from the brief */
   --text-display: clamp(2.125rem, 1.45rem + 2.3vw, 3.75rem);
@@ -119,7 +125,7 @@
 
   /* Layout */
   --header-h: 4.25rem;
-  /* room kept free on the right for the numbered section navigation (homepage) */
+  /* room kept free on the right for the section navigation (homepage) */
   --rail-w: 0px;
   --container: 76rem;
   --gutter: clamp(1rem, 0.6rem + 2vw, 2.5rem);
@@ -127,8 +133,145 @@
   /* The Core's light, as the page uses it (buttons, marks): its deep emerald */
   --core-light: #1d7a55;
   --core-glow: rgb(10 105 70 / 0.5);
+  /* behind words laid over the scene, so they stay legible over the Core's light */
+  --text-halo: rgb(0 0 0 / 0.9);
+  --backdrop: rgb(4 5 6 / 0.72);
+  --glass-glow: rgb(205 235 220 / 0.085);
+  /* the loader's light, at the tip of its curve */
+  --preloader-tip: #a8dcc4;
+
+  /* Type direction (editorial): headline weight and tracking, the italic accent's size and weight */
+  --label-tracking: 0.2em;
+  --title-weight: 200;
+  --title-tracking: -0.022em;
+  --accent-size: 1.02em;
+  --accent-weight: 300;
+  --accent-tracking: -0.012em;
+  --font-features: normal;
 
   color-scheme: dark;
+}
+
+/* ==========================================================================
+   TYPOGRAPHY — the two other directions, to compare live (?compare, or ?type=…)
+   ========================================================================== */
+/* modern: a light grotesk throughout, the accent still in Spectral italic */
+:root[data-type="modern"] {
+  --font-sans: var(--font-hanken), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-hanken), ui-sans-serif, system-ui, sans-serif;
+  --font-label: var(--font-hanken), ui-sans-serif, system-ui, sans-serif;
+  --title-weight: 200;
+  --title-tracking: -0.04em;
+  --accent-size: 1.06em;
+  --accent-weight: 300;
+  --accent-tracking: -0.02em;
+}
+/* original: Sora with Instrument Serif, Geist, labels in mono (the type before this round) —
+   which the product (dashboard) keeps, whichever direction the website shows */
+:root[data-type="original"],
+.product-type {
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-sora), var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-instrument), ui-serif, Georgia, serif;
+  --font-label: var(--font-geist-mono), ui-monospace, monospace;
+  --label-tracking: 0.3em;
+  --title-weight: 200;
+  --title-tracking: -0.045em;
+  --accent-size: 1.1em;
+  --accent-weight: 400;
+  --accent-tracking: -0.01em;
+  --font-features: "ss01", "cv11";
+}
+.product-type {
+  font-family: var(--font-sans);
+  font-feature-settings: var(--font-features);
+}
+
+/* ==========================================================================
+   THEMES — dark is the reference (the tokens above); light is its daylight
+   counterpart: warm paper, ink, the same deep emerald. Set on <html data-theme>
+   (lib/theme.ts); whatever must stay dark (the product, the laptop's screen)
+   declares data-theme="dark" and gets the dark tokens back.
+   ========================================================================== */
+[data-theme="light"] {
+  --color-canvas: #f2f1ed;
+  --color-canvas-2: #ebe9e4;
+  --color-canvas-3: #e4e2dc;
+  --color-surface: #f8f7f4;
+  --color-surface-2: #f4f3ef;
+  --color-surface-3: #e9e7e2;
+  --color-line: #d9d6cf;
+  --color-line-strong: #c8c4bc;
+  --color-fg: #111213;
+  --color-fg-2: #4a4d50;
+  --color-fg-3: #686b6e;
+  /* "white" and "black" are the light and the shade: on paper they trade places, so every faint
+     white veil (white/5 …) becomes a faint ink one, and every dark glass a light one */
+  --color-white: #0e0f10;
+  --color-black: #ffffff;
+  --color-accent: #1f7552;
+  --color-accent-strong: #17845a;
+  --color-accent-soft: rgb(31 117 82 / 0.1);
+  --color-accent-line: rgb(31 117 82 / 0.32);
+  --color-positive: #3f7d57;
+  --color-positive-soft: rgb(63 125 87 / 0.12);
+  --color-negative: #b4533f;
+  --color-negative-soft: rgb(180 83 63 / 0.12);
+  --color-caution: #94701f;
+  --color-caution-soft: rgb(148 112 31 / 0.12);
+  --color-info: #4f6d8c;
+  --color-info-soft: rgb(79 109 140 / 0.12);
+  --shadow-panel: 0 1px 0 0 rgb(255 255 255 / 0.6) inset, 0 24px 48px -28px rgb(40 36 28 / 0.22);
+  --shadow-float: 0 1px 0 0 rgb(255 255 255 / 0.6) inset, 0 32px 80px -36px rgb(40 36 28 / 0.3);
+  --core-glow: rgb(20 120 80 / 0.28);
+  --text-halo: rgb(242 241 237 / 0.92);
+  --backdrop: rgb(28 30 32 / 0.26);
+  --glass-glow: rgb(31 117 82 / 0.07);
+  --preloader-tip: #17845a;
+  color-scheme: light;
+}
+/* (the same values as the tokens above — keep the two in step) */
+[data-theme="dark"] {
+  --color-canvas: #08090a;
+  --color-canvas-2: #0d0f10;
+  --color-canvas-3: #111315;
+  --color-surface: #151719;
+  --color-surface-2: #191b1d;
+  --color-surface-3: #202225;
+  --color-line: #292c2f;
+  --color-line-strong: #34373a;
+  --color-fg: #f5f5f2;
+  --color-fg-2: #a5a8aa;
+  --color-fg-3: #7d8184;
+  --color-white: #ffffff;
+  --color-black: #000000;
+  --color-accent: #2a8d66;
+  --color-accent-strong: #4fae86;
+  --color-accent-soft: rgb(42 141 102 / 0.12);
+  --color-accent-line: rgb(42 141 102 / 0.35);
+  --color-positive: #8fbfa0;
+  --color-positive-soft: rgb(143 191 160 / 0.12);
+  --color-negative: #d98a7c;
+  --color-negative-soft: rgb(217 138 124 / 0.12);
+  --color-caution: #d9b877;
+  --color-caution-soft: rgb(217 184 119 / 0.12);
+  --color-info: #9fb3c8;
+  --color-info-soft: rgb(159 179 200 / 0.12);
+  --shadow-panel: 0 1px 0 0 rgb(255 255 255 / 0.03) inset, 0 24px 48px -24px rgb(0 0 0 / 0.6);
+  --shadow-float: 0 1px 0 0 rgb(255 255 255 / 0.04) inset, 0 32px 80px -32px rgb(0 0 0 / 0.85);
+  --core-glow: rgb(10 105 70 / 0.5);
+  --text-halo: rgb(0 0 0 / 0.9);
+  --backdrop: rgb(4 5 6 / 0.72);
+  --glass-glow: rgb(205 235 220 / 0.085);
+  --preloader-tip: #a8dcc4;
+  color-scheme: dark;
+}
+
+/* Switching theme: the whole page cross-fades (View Transitions; instant where unsupported) */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 650ms;
+  animation-timing-function: cubic-bezier(0.65, 0, 0.35, 1);
 }
 
 @keyframes shimmer {
@@ -159,7 +302,7 @@
     background: var(--color-canvas);
     color: var(--color-fg);
     font-family: var(--font-sans);
-    font-feature-settings: "ss01", "cv11";
+    font-feature-settings: var(--font-features);
     text-rendering: optimizeLegibility;
   }
   h1, h2 {
@@ -180,7 +323,7 @@
   .tabular { font-variant-numeric: tabular-nums; }
 
   dialog::backdrop {
-    background: rgb(4 5 6 / 0.72);
+    background: var(--backdrop);
     backdrop-filter: blur(4px);
   }
 }
@@ -205,7 +348,7 @@
   font-weight: 500;
 }
 
-/* The homepage container: like container-page, but clear of the numbered navigation on the right */
+/* The homepage container: like container-page, but clear of the section navigation on the right */
 @utility container-story {
   width: 100%;
   max-width: calc(var(--container) + var(--gutter) * 2 + var(--rail-w));
@@ -342,7 +485,7 @@ body:has([data-opening]) :is(header, [data-rail]) { opacity: 0; visibility: hidd
 .tool-chip { transition: border-color 450ms var(--ease-out-soft), background-color 450ms var(--ease-out-soft), box-shadow 450ms var(--ease-out-soft), color 300ms; }
 .tool-chip:hover,
 .tool-chip[data-active] { border-color: var(--color-accent-line); color: var(--color-fg); }
-.tool-chip[data-active] { background: rgb(0 0 0 / 0.6); box-shadow: 0 0 0 1px rgb(42 141 102 / 0.18), 0 0 22px -6px var(--core-glow); }
+.tool-chip[data-active] { background: color-mix(in oklab, var(--color-black) 60%, transparent); box-shadow: 0 0 0 1px rgb(42 141 102 / 0.18), 0 0 22px -6px var(--core-glow); }
 .tool-ping { animation: tool-ping 1.15s var(--ease-out-soft) forwards; }
 @keyframes tool-ping {
   0% { opacity: 0.9; scale: 0.6; }
@@ -421,7 +564,8 @@ body:has([data-opening]) :is(header, [data-rail]) { opacity: 0; visibility: hidd
   padding: 0 1.15rem 0 0.45rem;
   border-radius: 999px;
   background: radial-gradient(120% 140% at 30% 0%, #1b1c1e, #0b0c0d 70%);
-  color: var(--color-fg);
+  /* always dark stone, in either theme — so its words are always light */
+  color: #f5f5f2;
   font-size: 0.875rem;
   font-weight: 500;
   white-space: nowrap;
@@ -490,8 +634,8 @@ body:has([data-opening]) :is(header, [data-rail]) { opacity: 0; visibility: hidd
 /* the quiet one ("watch the film"): a lens whose ring of light draws itself on hover */
 .lens-btn { display: inline-flex; align-items: center; gap: 0.85rem; font-size: 0.875rem; color: var(--color-fg-2); translate: var(--tx, 0px) var(--ty, 0px); transition: color 300ms; }
 .lens-btn[data-hover] { color: var(--color-fg); }
-.lens-btn__lens { position: relative; display: grid; place-items: center; width: 2.9rem; height: 2.9rem; border-radius: 999px; background: rgb(255 255 255 / 0.03); box-shadow: inset 0 0 0 1px var(--color-line-strong); transition: scale 500ms var(--ease-out-soft), background-color 500ms; }
-.lens-btn[data-hover] .lens-btn__lens { scale: 1.06; background: rgb(255 255 255 / 0.06); }
+.lens-btn__lens { position: relative; display: grid; place-items: center; width: 2.9rem; height: 2.9rem; border-radius: 999px; background: color-mix(in oklab, var(--color-white) 3%, transparent); box-shadow: inset 0 0 0 1px var(--color-line-strong); transition: scale 500ms var(--ease-out-soft), background-color 500ms; }
+.lens-btn[data-hover] .lens-btn__lens { scale: 1.06; background: color-mix(in oklab, var(--color-white) 6%, transparent); }
 .lens-btn__ring { position: absolute; inset: -1px; rotate: -90deg; }
 .lens-btn__ring circle { fill: none; stroke: var(--core-light); stroke-width: 1.2; stroke-dasharray: 1 1; stroke-dashoffset: 1; transition: stroke-dashoffset 900ms var(--ease-out-soft); filter: drop-shadow(0 0 3px var(--core-glow)); }
 .lens-btn[data-hover] .lens-btn__ring circle { stroke-dashoffset: 0; }
@@ -512,7 +656,7 @@ body:has([data-opening]) :is(header, [data-rail]) { opacity: 0; visibility: hidd
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: radial-gradient(380px circle at var(--gx, 50%) var(--gy, 0%), rgb(205 235 220 / 0.085), transparent 65%);
+  background: radial-gradient(380px circle at var(--gx, 50%) var(--gy, 0%), var(--glass-glow), transparent 65%);
   opacity: var(--go, 0);
 }
 .glass-panel::after {

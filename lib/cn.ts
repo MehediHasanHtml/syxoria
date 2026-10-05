@@ -10,8 +10,8 @@ type ClassValue = string | number | false | null | undefined | ClassValue[];
 const twMerge = extendTailwindMerge({
   extend: {
     theme: {
-      font: ["display"],
-      text: ["display", "headline", "title", "lead"],
+      font: ["display", "label"],
+      text: ["display", "headline", "title", "lead", "label"],
       radius: ["xs", "sm", "md", "lg", "xl"],
       tracking: ["brand", "label"],
       shadow: ["panel", "float", "glow"],

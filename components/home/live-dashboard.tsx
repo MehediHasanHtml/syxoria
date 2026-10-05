@@ -177,7 +177,7 @@ export function LiveDashboard({ progress, className }: { progress: () => number;
   ].slice(0, 4);
 
   return (
-    <div ref={root} style={{ width: DISPLAY.w, height: DISPLAY.h }} className={cn("relative flex select-none overflow-hidden bg-[#0b0c0d] font-sans text-fg", className)}>
+    <div ref={root} data-theme="dark" style={{ width: DISPLAY.w, height: DISPLAY.h }} className={cn("product-type relative flex select-none overflow-hidden bg-[#0b0c0d] font-sans text-fg", className)}>
       {/* sidebar */}
       <aside className="flex w-16 shrink-0 flex-col items-center gap-2 border-r border-white/[0.06] py-5">
         <span className="mb-4 grid size-8 place-items-center rounded-lg bg-fg font-display text-[13px] font-medium text-canvas">S</span>

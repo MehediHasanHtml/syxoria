@@ -235,6 +235,7 @@ uniform vec3 uFillColor;
 uniform vec3 uRimColor;
 uniform vec3 uSpill;
 uniform float uFocus;      // how much one fragment is being explored (the others step back)
+uniform float uDay;        // the light theme: the stone in a bright room (0 dark … 1 light)
 uniform mat4 modelMatrix;
 varying vec3 vObj;
 varying vec3 vWorld;
@@ -271,19 +272,21 @@ vec2 voronoi(vec3 x){
   return vec2(sqrt(d1), sqrt(d2));
 }
 void main(){
+  // detail fades out before it gets finer than a pixel, so it never shimmers or sparkles at a distance —
+  // and the finest of it only comes in close up, where each grain covers several pixels
+  float px = length(fwidth(vObj));
+  float fine = 1.0 - smoothstep(0.2, 0.55, px*24.0);
+  float mid = 1.0 - smoothstep(0.2, 0.55, px*11.0);
+  float ultra = 1.0 - smoothstep(0.2, 0.55, px*52.0);
+
   // a hint of the facets (screen derivatives) over the smooth normal — the chiselled look is carried
-  // by the relief below, which stays smooth however close the camera gets
+  // by the relief below; close up, where a facet would span many pixels, the hint gives way to it
   vec3 fN = normalize(cross(dFdx(vWorld), dFdy(vWorld)));
-  vec3 N = normalize(mix(normalize(vNormalW), fN, 0.2));
+  vec3 N = normalize(mix(normalize(vNormalW), fN, mix(0.05, 0.2, smoothstep(0.0012, 0.0045, px))));
   vec3 V = normalize(cameraPosition - vWorld);
   if (dot(N, V) < 0.0) N = -N;
   // the silhouette rim reads the shape, not the grain: taken before the relief
   float fres = pow(1.0 - max(dot(N, V), 0.0), 3.0);
-
-  // detail fades out before it gets finer than a pixel, so it never shimmers or sparkles at a distance
-  float px = length(fwidth(vObj));
-  float fine = 1.0 - smoothstep(0.2, 0.55, px*24.0);
-  float mid = 1.0 - smoothstep(0.2, 0.55, px*11.0);
 
   // micro relief: a rough, crisp stone surface, lit from the noise's exact gradient (no texture)
   float grain = snoise(vObj*9.0)*0.5 + snoise(vObj*23.0)*0.25*fine;
@@ -293,6 +296,11 @@ void main(){
     snoiseGrad(vObj*11.0, g1);
     snoiseGrad(vObj*24.0, g2);
     vec3 gObj = g0*4.6*0.55 + g1*11.0*0.7*mid + g2*24.0*0.3*fine;
+    if (ultra > 0.0) {
+      vec3 g3;
+      grain += snoiseGrad(vObj*52.0, g3)*0.14*ultra;
+      gObj += g3*52.0*0.1*ultra;
+    }
     // object → world (uniform scale): rotate, divide by the scale
     vec3 gW = mat3(modelMatrix) * gObj / dot(modelMatrix[0].xyz, modelMatrix[0].xyz);
     N = normalize(N - uBump*(gW - dot(gW, N)*N));
@@ -341,6 +349,9 @@ void main(){
   vec3 col = albedo * (uKeyColor*diff*1.2 + uFillColor*fill*0.7 + 0.05)
            + uKeyColor*spec*0.16
            + uRimColor*fres*0.28;
+  // daylight (light theme): the room's soft light from above and the pale walls caught at the edges,
+  // so the dark stone keeps its volume against the paper instead of reading as a cut-out
+  col += uDay * (albedo * (1.6 + 1.4*max(N.y, 0.0)) + vec3(0.62, 0.61, 0.58) * fres * 0.2 + vec3(0.9) * spec * 0.05);
 
   // fissures: cell borders of a warped voronoi field, only in "open" zones
   vec3 q = vObj*2.5 + 0.28*vec3(snoise(vObj*1.6), snoise(vObj*1.6+7.1), snoise(vObj*1.6+3.3));
@@ -728,6 +739,10 @@ export const finalPass = {
     tDiffuse: { value: null },
     uTime: { value: 0 },
     uVignette: { value: 0.55 },
+    uTexel: { value: null }, // set by the scene (1 / the drawing buffer size)
+    uSharpen: { value: 0.4 },
+    uLight: { value: 0 },
+    uPaper: { value: null }, // set by the scene: the light theme's canvas colour
   },
   vertexShader: /* glsl */ `
     varying vec2 vUv;
@@ -737,16 +752,48 @@ export const finalPass = {
     uniform sampler2D tDiffuse;
     uniform float uTime;
     uniform float uVignette;
+    uniform vec2 uTexel;
+    uniform float uSharpen;
+    uniform float uLight;
+    uniform vec3 uPaper;
     varying vec2 vUv;
     void main(){
       vec2 c = vUv - 0.5;
-      vec3 col = texture2D(tDiffuse, vUv).rgb;
-      // display space (after tone mapping)
+      vec4 src = texture2D(tDiffuse, vUv);
+      vec3 col = src.rgb;
+      // display space (after tone mapping). Contrast-adaptive sharpening (after AMD's CAS): each pixel
+      // set against its four neighbours, strongest where the detail is faint, gentle on edges that
+      // are already crisp — so the stone's grain and fissures read sharper without halos or noise
+      {
+        vec3 a = texture2D(tDiffuse, vUv - vec2(0.0, uTexel.y)).rgb;
+        vec3 b = texture2D(tDiffuse, vUv - vec2(uTexel.x, 0.0)).rgb;
+        vec3 d = texture2D(tDiffuse, vUv + vec2(uTexel.x, 0.0)).rgb;
+        vec3 e = texture2D(tDiffuse, vUv + vec2(0.0, uTexel.y)).rgb;
+        vec3 mn = min(col, min(min(a, b), min(d, e)));
+        vec3 mx = max(col, max(max(a, b), max(d, e)));
+        vec3 amp = sqrt(clamp(min(mn, 1.0 - mx) / max(mx, 1e-4), 0.0, 1.0));
+        vec3 w = amp * (-1.0 / mix(8.0, 5.0, uSharpen));
+        col = clamp((col + (a + b + d + e)*w) / (1.0 + 4.0*w), 0.0, 1.0);
+      }
       float vig = smoothstep(0.95, 0.25, length(c*vec2(1.0, 0.85)));
-      col *= mix(1.0, vig, uVignette);
-      // lift black to the page canvas colour (#08090a) so the scene sits flush with the page
+
+      // dark: lift black to the page canvas colour (#08090a) so the scene sits flush with the page
       vec3 bg = vec3(8.0, 9.0, 10.0) / 255.0;
-      col = col + bg * (1.0 - col);
+      vec3 dark = col * mix(1.0, vig, uVignette);
+      dark = dark + bg * (1.0 - dark);
+
+      // light: the stone and everything solid as drawn, over paper (the alpha is their coverage — the
+      // glows add light, never coverage); on the paper, light reads as ink in water — the Core's glow
+      // as a deep emerald tint, faint white light (contour lines, dust) as soft graphite
+      float a = clamp(src.a, 0.0, 1.0);
+      float lum = dot(col, vec3(0.2126, 0.7152, 0.0722));
+      float chroma = max(col.r, max(col.g, col.b)) - min(col.r, min(col.g, col.b));
+      vec3 ink = mix(vec3(0.42, 0.43, 0.43), vec3(0.02, 0.5, 0.32), clamp(chroma / (lum + 0.03) * 1.1, 0.0, 1.0));
+      vec3 paper = uPaper * mix(1.0, mix(0.95, 1.0, vig), uVignette);
+      vec3 lit = mix(paper, ink, (1.0 - exp(-lum*4.5)) * 0.85);
+      vec3 light = mix(lit, col, a);
+
+      col = mix(dark, light, uLight);
       float g = fract(sin(dot(vUv*vec2(1873.1, 4121.7) + uTime, vec2(12.9898, 78.233)))*43758.5453);
       col += (g - 0.5) * (1.5 / 255.0);
       gl_FragColor = vec4(clamp(col, 0.0, 1.0), 1.0);

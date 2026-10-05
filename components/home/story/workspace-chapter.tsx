@@ -25,7 +25,7 @@ export function WorkspaceChapter({ state }: { state: CoreState }) {
     <>
       <Layer name="workspace" className={LEFT} labelledBy="workspace-title">
         <div className="max-w-[34rem] side:max-w-[19rem] xl:max-w-[21rem] short:max-w-[19rem]">
-          <Eyebrow data-r index={4}>
+          <Eyebrow data-r>
             {workspace.eyebrow}
           </Eyebrow>
           <Title data-r data-split id="workspace-title" lead={workspace.titleLead} accent={workspace.titleAccent} className="mt-6 side:text-headline short:mt-3" />
@@ -33,12 +33,11 @@ export function WorkspaceChapter({ state }: { state: CoreState }) {
             {workspace.body}
           </p>
           <ol className="mt-6 grid gap-2.5 max-sm:hidden short:hidden">
-            {workspace.steps.map((s, i) => (
+            {workspace.steps.map((s) => (
               <li key={s} data-r className="flex items-center gap-3 text-[13px] text-fg-2">
                 <span className="grid size-5 place-items-center rounded-full border border-line-strong text-fg">
                   <Check className="size-3" aria-hidden="true" />
                 </span>
-                <span className="tabular font-mono text-[10.5px] text-fg-3">{String(i + 1).padStart(2, "0")}</span>
                 {s}
               </li>
             ))}
@@ -49,11 +48,9 @@ export function WorkspaceChapter({ state }: { state: CoreState }) {
       <Layer name="demo" className="bottom-0 pb-[max(1.75rem,env(safe-area-inset-bottom))]" labelledBy="demo-title">
         <div className="mx-auto max-w-5xl">
           <div data-r className="flex flex-wrap items-center justify-between gap-x-8 gap-y-3">
-            <p id="demo-title" className="font-mono text-[10.5px] uppercase tracking-[0.3em] text-fg-3">
-              <span className="text-accent">04</span>
-              <span className="text-fg-2"> — </span>
+            <Eyebrow id="demo-title">
               {workspace.eyebrow} · {workspace.demo.live}
-            </p>
+            </Eyebrow>
             <div className="flex items-center gap-6">
               <p className="text-[12px] text-fg-3 max-md:hidden">{canHover ? workspace.demo.hint.pointer : workspace.demo.hint.touch}</p>
               <LensButton compact icon={<Maximize2 className="size-3.5" />} onClick={() => film.open({ at: state.live < 1 ? state.live : 0 })} aria-haspopup="dialog">

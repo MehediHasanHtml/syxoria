@@ -20,7 +20,7 @@ const FRONT = { w: DISPLAY.w + BEZEL.x * 2, h: DISPLAY.h + BEZEL.top + BEZEL.bot
  * again — from the moment the laptop appears, wherever the scroll is. It also
  * writes its progress to `state.live`, so the chapter's step-by-step caption follows it.
  *
- *   mouse     hover → an "open fullscreen" cue glides after the pointer · click → the demo opens fullscreen
+ *   mouse     hover → a "full screen" cue glides after the pointer · click → the demo opens fullscreen
  *   touch     tap → fullscreen
  * It duplicates the chapter's own button, so it stays out of the tab order.
  */
@@ -29,6 +29,8 @@ export function LiveScreen({ state }: { state: CoreState }) {
   const display = useRef<HTMLDivElement>(null);
   const cursor = useRef<HTMLSpanElement>(null);
   const [hover, setHover] = useState(false);
+  // where the pointer came in: the cue starts there rather than waiting for the first move
+  const entry = useRef({ x: 0, y: 0 });
   const film = useFilm();
 
   // the demo's clock: runs while the laptop is out, starts over each time it appears
@@ -49,28 +51,25 @@ export function LiveScreen({ state }: { state: CoreState }) {
     return () => cancelAnimationFrame(raf);
   }, [state]);
 
-  // the "open fullscreen" cue: in screen space (readable whatever the laptop's size), eased towards the pointer
+  // the "full screen" cue: in screen space (readable whatever the laptop's size), eased towards the pointer
   useEffect(() => {
     const c = cursor.current;
     if (!hover || !c) return;
-    let x = -1;
-    let y = -1;
-    let tx = 0;
-    let ty = 0;
+    let { x, y } = entry.current;
+    let tx = x;
+    let ty = y;
     let raf = 0;
+    const place = () => (c.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0)`);
     const loop = () => {
       x += (tx - x) * 0.16;
       y += (ty - y) * 0.16;
-      c.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0)`;
+      place();
       raf = Math.abs(tx - x) + Math.abs(ty - y) > 0.3 ? requestAnimationFrame(loop) : 0;
     };
+    place();
     const move = (e: globalThis.PointerEvent) => {
       tx = e.clientX;
       ty = e.clientY;
-      if (x < 0) {
-        x = tx;
-        y = ty;
-      }
       if (!raf) raf = requestAnimationFrame(loop);
     };
     window.addEventListener("pointermove", move);
@@ -84,7 +83,11 @@ export function LiveScreen({ state }: { state: CoreState }) {
     setHover(false);
     film.open({ from: display.current?.getBoundingClientRect(), at: state.live < 1 ? state.live : 0 });
   };
-  const onEnter = (e: PointerEvent) => e.pointerType === "mouse" && setHover(true);
+  const onEnter = (e: PointerEvent) => {
+    if (e.pointerType !== "mouse") return;
+    entry.current = { x: e.clientX, y: e.clientY };
+    setHover(true);
+  };
 
   return (
     <div
@@ -106,16 +109,16 @@ export function LiveScreen({ state }: { state: CoreState }) {
         <span aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[linear-gradient(115deg,transparent_35%,rgb(255_255_255/0.035)_45%,transparent_55%)]" />
       </div>
 
-      {/* hover: a quiet "open fullscreen" cue that glides after the pointer */}
+      {/* hover: a quiet, compact "full screen" cue that glides after the pointer */}
       {createPortal(
         <span
           ref={cursor}
           aria-hidden="true"
           data-shown={hover || undefined}
-          className="pointer-events-none fixed left-0 top-0 z-(--z-toast) flex -translate-x-1/2 -translate-y-1/2 items-center gap-2 rounded-full bg-fg py-1.5 pl-1.5 pr-4 text-[13px] font-medium text-canvas opacity-0 shadow-[0_16px_50px_rgb(0_0_0/0.5)] transition-opacity duration-300 data-[shown]:opacity-100"
+          className="pointer-events-none fixed left-0 top-0 z-(--z-toast) flex -translate-x-1/2 -translate-y-1/2 items-center gap-1.5 rounded-full border border-accent-line bg-[rgb(8_9_10/0.72)] py-1 pl-1 pr-3 text-[12px] font-medium text-fg opacity-0 shadow-[0_12px_36px_rgb(0_0_0/0.55)] backdrop-blur-md transition-opacity duration-300 data-[shown]:opacity-100"
         >
-          <span className="grid size-6 place-items-center rounded-full bg-canvas text-fg">
-            <Maximize2 className="size-3" />
+          <span className="grid size-5 place-items-center rounded-full bg-accent-soft text-accent-strong">
+            <Maximize2 className="size-2.5" />
           </span>
           {workspace.demo.openFull}
         </span>,

@@ -22,13 +22,13 @@ export function IntegrationsChapter({ onMore }: { onMore: () => void }) {
             type="button"
             onClick={onMore}
             aria-haspopup="dialog"
-            className="group inline-flex h-11 items-center gap-2.5 rounded-full border border-line-strong bg-white/[0.03] pl-2 pr-4 text-sm text-fg backdrop-blur-md transition-[border-color,background-color] duration-300 ease-out-soft hover:border-fg-3 hover:bg-white/[0.06]"
+            className="group inline-flex h-11 items-center gap-2.5 rounded-full border border-line-strong bg-white/[0.03] pl-2 pr-4 text-sm text-fg backdrop-blur-md transition-[border-color,background-color,box-shadow] duration-300 ease-out-soft hover:border-accent-line hover:bg-white/[0.05] hover:shadow-[0_0_24px_-8px_var(--core-glow)]"
           >
             <span className="grid size-7 place-items-center rounded-full bg-fg text-canvas transition-transform duration-300 ease-out-soft group-hover:rotate-90">
               <Plus className="size-3.5" aria-hidden="true" />
             </span>
             {integrations.more.label}
-            <span className="tabular text-fg-3">{integrations.more.count}</span>
+            <span className="tabular text-accent">{integrations.more.count}</span>
           </button>
           <p className="text-[12px] text-fg-3 short:hidden">{integrations.more.note}</p>
         </div>

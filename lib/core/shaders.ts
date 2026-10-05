@@ -51,9 +51,60 @@ float snoise(vec3 v){
 }
 `;
 
+/**
+ * The same noise with its exact gradient (needs NOISE). Relief lit from an
+ * analytic gradient stays smooth at any distance — screen-space derivatives
+ * are only known per 2×2 pixel block, which reads as grain up close.
+ */
+const NOISE_GRAD = /* glsl */ `
+float snoiseGrad(vec3 v, out vec3 grad){
+  const vec2 C=vec2(1.0/6.0,1.0/3.0);
+  const vec4 D=vec4(0.0,0.5,1.0,2.0);
+  vec3 i=floor(v+dot(v,C.yyy));
+  vec3 x0=v-i+dot(i,C.xxx);
+  vec3 g=step(x0.yzx,x0.xyz);
+  vec3 l=1.0-g;
+  vec3 i1=min(g.xyz,l.zxy);
+  vec3 i2=max(g.xyz,l.zxy);
+  vec3 x1=x0-i1+C.xxx;
+  vec3 x2=x0-i2+C.yyy;
+  vec3 x3=x0-D.yyy;
+  i=mod289(i);
+  vec4 p=permute(permute(permute(i.z+vec4(0.0,i1.z,i2.z,1.0))+i.y+vec4(0.0,i1.y,i2.y,1.0))+i.x+vec4(0.0,i1.x,i2.x,1.0));
+  float n_=0.142857142857;
+  vec3 ns=n_*D.wyz-D.xzx;
+  vec4 j=p-49.0*floor(p*ns.z*ns.z);
+  vec4 x_=floor(j*ns.z);
+  vec4 y_=floor(j-7.0*x_);
+  vec4 x=x_*ns.x+ns.yyyy;
+  vec4 y=y_*ns.x+ns.yyyy;
+  vec4 h=1.0-abs(x)-abs(y);
+  vec4 b0=vec4(x.xy,y.xy);
+  vec4 b1=vec4(x.zw,y.zw);
+  vec4 s0=floor(b0)*2.0+1.0;
+  vec4 s1=floor(b1)*2.0+1.0;
+  vec4 sh=-step(h,vec4(0.0));
+  vec4 a0=b0.xzyw+s0.xzyw*sh.xxyy;
+  vec4 a1=b1.xzyw+s1.xzyw*sh.zzww;
+  vec3 p0=vec3(a0.xy,h.x);
+  vec3 p1=vec3(a0.zw,h.y);
+  vec3 p2=vec3(a1.xy,h.z);
+  vec3 p3=vec3(a1.zw,h.w);
+  vec4 norm=taylorInvSqrt(vec4(dot(p0,p0),dot(p1,p1),dot(p2,p2),dot(p3,p3)));
+  p0*=norm.x;p1*=norm.y;p2*=norm.z;p3*=norm.w;
+  vec4 m=max(0.5-vec4(dot(x0,x0),dot(x1,x1),dot(x2,x2),dot(x3,x3)),0.0);
+  vec4 m2=m*m;
+  vec4 m4=m2*m2;
+  vec4 pdotx=vec4(dot(p0,x0),dot(p1,x1),dot(p2,x2),dot(p3,x3));
+  vec4 t=m2*m*pdotx;
+  grad=105.0*(-8.0*(t.x*x0+t.y*x1+t.z*x2+t.w*x3) + m4.x*p0+m4.y*p1+m4.z*p2+m4.w*p3);
+  return 105.0*dot(m4,pdotx);
+}
+`;
+
 
 /**
- * The Core's light, as uniforms shared by every material (see PALETTES in
+ * The Core's light, as uniforms shared by every material (see CORE_LIGHT in
  * look.ts): the heat ramp deep → bright → hot → white-hot. Returns HDR colour.
  */
 const HEAT = /* glsl */ `
@@ -184,6 +235,7 @@ uniform vec3 uFillColor;
 uniform vec3 uRimColor;
 uniform vec3 uSpill;
 uniform float uFocus;      // how much one fragment is being explored (the others step back)
+uniform mat4 modelMatrix;
 varying vec3 vObj;
 varying vec3 vWorld;
 varying vec3 vNormalW;
@@ -198,6 +250,7 @@ varying float vDepth;
 varying float vSocket;
 #endif
 ${NOISE}
+${NOISE_GRAD}
 ${HEAT}
 vec3 hash33(vec3 p){
   p = fract(p * vec3(443.897, 441.423, 437.195));
@@ -218,27 +271,31 @@ vec2 voronoi(vec3 x){
   return vec2(sqrt(d1), sqrt(d2));
 }
 void main(){
-  // faceted normal from screen derivatives, softened with the smooth one
-  vec3 dpx = dFdx(vWorld);
-  vec3 dpy = dFdy(vWorld);
-  vec3 fN = normalize(cross(dpx, dpy));
-  vec3 N = normalize(mix(normalize(vNormalW), fN, 0.55));
+  // a hint of the facets (screen derivatives) over the smooth normal — the chiselled look is carried
+  // by the relief below, which stays smooth however close the camera gets
+  vec3 fN = normalize(cross(dFdx(vWorld), dFdy(vWorld)));
+  vec3 N = normalize(mix(normalize(vNormalW), fN, 0.2));
   vec3 V = normalize(cameraPosition - vWorld);
   if (dot(N, V) < 0.0) N = -N;
   // the silhouette rim reads the shape, not the grain: taken before the relief
   float fres = pow(1.0 - max(dot(N, V), 0.0), 3.0);
 
-  // micro relief: a rough, crisp stone surface (derivative bump mapping, no texture)
-  float grain = snoise(vObj*9.0)*0.5 + snoise(vObj*23.0)*0.25;
-  float bump = snoise(vObj*11.0)*0.7 + snoise(vObj*24.0)*0.3;
+  // detail fades out before it gets finer than a pixel, so it never shimmers or sparkles at a distance
+  float px = length(fwidth(vObj));
+  float fine = 1.0 - smoothstep(0.2, 0.55, px*24.0);
+  float mid = 1.0 - smoothstep(0.2, 0.55, px*11.0);
+
+  // micro relief: a rough, crisp stone surface, lit from the noise's exact gradient (no texture)
+  float grain = snoise(vObj*9.0)*0.5 + snoise(vObj*23.0)*0.25*fine;
   {
-    float bx = dFdx(bump);
-    float by = dFdy(bump);
-    vec3 r1 = cross(dpy, N);
-    vec3 r2 = cross(N, dpx);
-    float det = dot(dpx, r1);
-    vec3 grad = sign(det) * (bx*r1 + by*r2);
-    N = normalize(abs(det)*N - uBump*grad);
+    vec3 g0, g1, g2;
+    snoiseGrad(vObj*4.6, g0);
+    snoiseGrad(vObj*11.0, g1);
+    snoiseGrad(vObj*24.0, g2);
+    vec3 gObj = g0*4.6*0.55 + g1*11.0*0.7*mid + g2*24.0*0.3*fine;
+    // object → world (uniform scale): rotate, divide by the scale
+    vec3 gW = mat3(modelMatrix) * gObj / dot(modelMatrix[0].xyz, modelMatrix[0].xyz);
+    N = normalize(N - uBump*(gW - dot(gW, N)*N));
   }
 
   // the opening sequence: shards materialise through a lit dissolve, and float as separate pieces
@@ -280,7 +337,7 @@ void main(){
   float fill = max(dot(N, uFillDir), 0.0);
   vec3 H = normalize(uKeyDir + V);
   float glint = smoothstep(0.35, 0.85, grain + 0.45);
-  float spec = pow(max(dot(N, H), 0.0), 38.0) * (0.15 + 0.85*glint);
+  float spec = pow(max(dot(N, H), 0.0), 38.0) * (0.3 + 0.7*glint);
   vec3 col = albedo * (uKeyColor*diff*1.2 + uFillColor*fill*0.7 + 0.05)
            + uKeyColor*spec*0.16
            + uRimColor*fres*0.28;
@@ -292,8 +349,11 @@ void main(){
   float zoneMask = smoothstep(-0.3, 0.55, snoise(vObj*1.2 + 2.0));
   float reach = clamp(zoneMask*0.85 + vCavity*1.6 + probe*0.6 + zone*0.7 + waves*0.6 + vHi*0.2, 0.0, 1.0);
   float width = mix(0.02, 0.085, clamp(aw, 0.0, 1.0)) * reach + 1e-4;
-  float crack = 1.0 - smoothstep(0.0, width, edge);
-  crack *= crack;
+  // anti-aliased: a fissure never thinner than a pixel — one finer than that is drawn a pixel wide and
+  // dimmer by as much, so it carries the same light (no crawling, no stair-steps, no added glow)
+  float aa = fwidth(edge);
+  float crack = 1.0 - smoothstep(0.0, width + aa, edge);
+  crack *= crack * (width / (width + aa));
   float spill = (1.0 - smoothstep(0.0, width*4.5, edge)) * reach;
   float flow = 0.5 + 0.5*snoise(vObj*3.4 + vec3(0.0, t*0.32, t*0.18));
   float pulse = 0.88 + 0.12*sin(t*1.25) + 0.05*sin(t*3.1);
@@ -316,7 +376,7 @@ void main(){
   // opened: each fragment's outline is a thin line of light where it breaks from the Core (it glows
   // first, as the Core gets ready to part), brighter on the module explored
   float op = smoothstep(0.0, 0.3, uOpen);
-  float outline = 1.0 - smoothstep(0.0, 0.012 + 0.008*uOpen, vSeam);
+  float outline = 1.0 - smoothstep(0.0, 0.012 + 0.008*uOpen + fwidth(vSeam), vSeam);
   col += heat((0.5 + 0.4*flow) * (1.0 + 0.9*vHi) * back) * outline * outline * (1.0 - vBroken) * (0.2 + 0.5*op) * (vId < -0.5 ? 0.45 : 1.0);
   // broken stone — a fragment's underside and walls, the socket it leaves: dark and rough, lit from
   // within along its own fissures; a socket glows the deeper it goes (the Core's heart is there)

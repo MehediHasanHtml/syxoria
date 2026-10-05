@@ -53,7 +53,7 @@ export default function HomePage() {
     <SmoothScrollProvider>
       <FilmProvider>
         <JsonLd />
-        <CoreExperience  />
+        <CoreExperience />
         <SectionNavigation />
       </FilmProvider>
     </SmoothScrollProvider>

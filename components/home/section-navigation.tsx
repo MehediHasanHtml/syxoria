@@ -1,45 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { cn } from "@/lib/cn";
 import { NAV_SECTIONS } from "./chapters";
 import { useSmoothScroll } from "./smooth-scroll";
+import { useActiveSection } from "./use-active-section";
 
 /**
  * The numbered navigation on the right: every number jumps (smoothly) to its
- * section, and the current one follows the scroll. Hovering the rail shows
- * all the names. For explorers and direct visitors alike.
+ * section, and the current one follows the scroll — marked by a short line of
+ * the Core's light. Hovering the rail shows all the names. For explorers and
+ * direct visitors alike.
  */
 export function SectionNavigation() {
   const { scrollTo } = useSmoothScroll();
-  const [active, setActive] = useState(0);
-
-  useEffect(() => {
-    let raf = 0;
-    const check = () => {
-      raf = 0;
-      const vh = window.innerHeight;
-      let current = 0;
-      NAV_SECTIONS.forEach((s, i) => {
-        const el = document.querySelector<HTMLElement>(`[data-nav-start="${s.id}"]`);
-        if (!el) return;
-        const offset = parseFloat(el.dataset.navOffset ?? "0") * vh;
-        if (el.getBoundingClientRect().top <= offset + 2) current = i;
-      });
-      setActive(current);
-    };
-    const onScroll = () => {
-      if (!raf) raf = requestAnimationFrame(check);
-    };
-    check();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
-    return () => {
-      cancelAnimationFrame(raf);
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
-    };
-  }, []);
+  const activeId = useActiveSection();
+  const active = Math.max(0, NAV_SECTIONS.findIndex((s) => s.id === activeId));
 
   return (
     <nav data-rail aria-label="Sections" className="group/nav transition-opacity duration-700 ease-out-soft fixed right-2 top-1/2 z-(--z-sticky) hidden -translate-y-1/2 md:block lg:right-3">
@@ -69,7 +44,13 @@ export function SectionNavigation() {
                   {s.label}
                 </span>
                 <span className={cn("tabular text-[11px] transition-colors duration-300", on ? "text-fg" : "text-fg-3 group-hover:text-fg")}>{String(i + 1).padStart(2, "0")}</span>
-                <span aria-hidden="true" className={cn("h-px transition-[width,background-color] duration-300 ease-out-soft", on ? "w-4 bg-fg" : "w-2 bg-fg-3 group-hover:w-3 group-hover:bg-fg")} />
+                <span
+                  aria-hidden="true"
+                  className={cn(
+                    "h-px transition-[width,background-color,box-shadow] duration-500 ease-out-soft",
+                    on ? "w-4 bg-accent-strong shadow-[0_0_8px_rgb(79_174_134/0.6)]" : "w-2 bg-fg-3 group-hover:w-3 group-hover:bg-fg-2",
+                  )}
+                />
               </a>
             </li>
           );

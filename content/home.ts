@@ -23,6 +23,8 @@ export const oneCore = {
   eyebrow: "One core",
   titleLead: "A single core runs through",
   titleAccent: "your entire company.",
+  // the one phrase of the chapter set in the Core's light
+  titleHighlight: "entire company",
   body: "Your business lives in a dozen tools. Syxoria gathers every signal into one core that understands it.",
   // each step is written on the Core, at the zone where it happens
   steps: [
@@ -60,7 +62,7 @@ export const workspace = {
   demo: {
     label: "Watch it run",
     live: "Live",
-    openFull: "Open fullscreen",
+    openFull: "Full Screen",
     hint: { pointer: "It’s running live. Click the laptop to open it fullscreen.", touch: "It’s running live. Tap the laptop to open it fullscreen." },
     summary: "A short session in the Syxoria workspace: a payment arrives and is linked to its client, Nexo proposes following up four invoices, you review and approve, Volt sends the reminders, and the numbers update.",
     // the session the screen plays — `at` is where each moment starts (0..1, see LiveDashboard)

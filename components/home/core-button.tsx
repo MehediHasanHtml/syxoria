@@ -12,7 +12,7 @@ import { cn } from "@/lib/cn";
  *   CoreButton  dark stone with a line of the Core's light running around its edge; a small core
  *               on the left whose two halves part on hover to show its light. The line follows the
  *               cursor, a soft light travels inside, and the button leans towards the pointer.
- *   LensButton  the quiet one — a lens whose ring of light draws itself on hover.
+ *   LensButton  the quiet one — a lens whose ring of light draws itself on hover (compact: a smaller one).
  */
 
 type Action = { href?: string; onClick?: () => void; className?: string; children: ReactNode; "aria-haspopup"?: "dialog" };
@@ -119,15 +119,16 @@ export function CoreButton({ className, children, ...rest }: Action) {
   );
 }
 
-export function LensButton({ className, children, note, ...rest }: Action & { note?: string }) {
+/** `compact`: a smaller lens tinted with the Core's light, for a secondary control beside other content. */
+export function LensButton({ className, children, note, icon, compact, ...rest }: Action & { note?: string; icon?: ReactNode; compact?: boolean }) {
   const ref = useMagnet<HTMLAnchorElement & HTMLButtonElement>(0.16, 4);
   return (
-    <Action {...rest} innerRef={ref} className={cn("lens-btn", className)}>
+    <Action {...rest} innerRef={ref} className={cn("lens-btn", compact && "lens-btn--compact", className)}>
       <span aria-hidden="true" className="lens-btn__lens">
         <svg viewBox="0 0 40 40" className="lens-btn__ring size-[calc(100%+2px)]">
           <circle cx="20" cy="20" r="19.4" pathLength={1} />
         </svg>
-        <Play className="ml-0.5 size-3.5 fill-current" />
+        {icon ?? <Play className="ml-0.5 size-3.5 fill-current" />}
       </span>
       <span className="lens-btn__label">{children}</span>
       {note && <span className="tabular text-fg-3">{note}</span>}

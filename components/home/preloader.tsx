@@ -166,7 +166,7 @@ export function Preloader({ ready, onProgress, onLaunch, onDone }: Props) {
           <linearGradient id="preloader-curve" x1="0" x2="1" y1="0" y2="0">
             <stop offset="0" stopColor="#f5f5f2" stopOpacity="0" />
             <stop offset="0.35" stopColor="#f5f5f2" stopOpacity="0.5" />
-            <stop offset="1" stopColor="#ffd9b0" stopOpacity="0.9" />
+            <stop offset="1" stopColor="#a8dcc4" stopOpacity="0.9" />
           </linearGradient>
         </defs>
         <path ref={curve} d={CURVE} fill="none" stroke="#f5f5f2" strokeOpacity="0.09" strokeWidth="1" vectorEffect="non-scaling-stroke" />

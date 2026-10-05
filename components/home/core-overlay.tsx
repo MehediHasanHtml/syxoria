@@ -32,8 +32,8 @@ type Props = {
 
 /**
  * The DOM layer over the Core, positioned by the scene every frame:
- *   · each module, named at the edge of its own fragment of the opened Core (a lit point on the fragment,
- *     its name just outside — no wires); hover / tap to explore, click to open
+ *   · each module, named just outside the edge of its own fragment of the opened Core (no marks on the
+ *     stone itself, no wires); hover / tap to explore, click to open
  *   · the three areas of the brain, each written beside the place it works
  *   · each connected tool: pointing at it sends a pulse down its wire
  *   · the Core itself, clickable at the start of the story ("open the Core")
@@ -72,15 +72,14 @@ export function CoreOverlay({ ref, focus, explore, tool, onTool, onOpenCore }: P
         const H = el.clientHeight;
         const right = W - railW.current - MARGIN;
 
-        // Modules: a lit point on each fragment, its name just outside the Core's edge, in the fragment's direction
+        // Modules: each one named just outside the Core's edge, in the direction of its fragment
         a.modules.forEach((p, i) => {
           const m = moduleEls.current[i];
           if (!m) return;
           const shown = p.alpha > 0.04;
           if (m.style.visibility !== (shown ? "visible" : "hidden")) m.style.visibility = shown ? "visible" : "hidden";
           if (!shown) return;
-          const dot = m.firstElementChild as HTMLElement;
-          const label = m.lastElementChild as HTMLElement;
+          const label = m.firstElementChild as HTMLElement;
           const dx = p.x - a.core.x;
           const dy = p.y - a.core.y;
           const len = Math.hypot(dx, dy) || 1;
@@ -101,7 +100,6 @@ export function CoreOverlay({ ref, focus, explore, tool, onTool, onOpenCore }: P
           ly = Math.min(Math.max(ly, TOP), H - MARGIN - lh);
           const hidden = overlaps(lx, ly, lw, lh, words, 10);
           m.style.opacity = p.alpha.toFixed(3);
-          dot.style.transform = `translate3d(${p.x.toFixed(1)}px, ${p.y.toFixed(1)}px, 0)`;
           label.style.transform = `translate3d(${lx.toFixed(1)}px, ${ly.toFixed(1)}px, 0)`;
           label.style.opacity = hidden ? "0" : "";
           if (label.dataset.side !== side) label.dataset.side = side;
@@ -229,16 +227,6 @@ export function CoreOverlay({ ref, focus, explore, tool, onTool, onOpenCore }: P
         const on = focus === i;
         return (
           <div key={m.key} ref={(n) => void (moduleEls.current[i] = n)} aria-hidden="true" className="invisible absolute inset-0">
-            {/* the point of light on the module's fragment */}
-            <span className="absolute left-0 top-0 will-change-transform">
-              <span
-                className={cn(
-                  "absolute size-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[var(--core-light)] transition-[transform,box-shadow] duration-500 ease-out-soft",
-                  on ? "scale-150 shadow-[0_0_14px_4px_var(--core-glow)]" : "shadow-[0_0_8px_2px_var(--core-glow)]",
-                )}
-              />
-              {on && <span className="module-ring absolute size-6 -translate-x-1/2 -translate-y-1/2 rounded-full border border-[var(--core-light)]" />}
-            </span>
             {/* its name, just outside the Core: hover / tap to explore, click to open */}
             <button
               type="button"
@@ -259,8 +247,8 @@ export function CoreOverlay({ ref, focus, explore, tool, onTool, onOpenCore }: P
       {oneCore.steps.map((s, i) => (
         <div key={s.title} ref={(n) => void (zoneEls.current[i] = n)} aria-hidden="true" className="invisible absolute inset-0">
           {/* leader line, with the zone's spot at its origin */}
-          <span className="absolute left-0 top-0 h-px origin-left bg-gradient-to-r from-[var(--core-light)] via-white/35 to-white/15 will-change-transform">
-            <span className="absolute -left-1 -top-1 size-2 rounded-full bg-[var(--core-light)] shadow-[0_0_12px_3px_var(--core-glow)]" />
+          <span className="absolute left-0 top-0 h-px origin-left bg-gradient-to-r from-accent-strong/80 via-white/30 to-white/15 will-change-transform">
+            <span className="absolute -left-1 -top-1 size-2 rounded-full bg-accent-strong shadow-[0_0_12px_3px_var(--core-glow)]" />
           </span>
           <div className="group absolute left-0 top-0 w-max max-w-[15rem] will-change-transform data-[side=below]:text-center data-[side=left]:text-right sm:max-w-[17rem]">
             <p className="font-mono text-[10.5px] uppercase tracking-[0.26em] text-fg-2 [text-shadow:0_1px_14px_rgb(0_0_0/0.9)]">

@@ -7,7 +7,7 @@ import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js"
 import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
 import { CSS3DObject, CSS3DRenderer } from "three/addons/renderers/CSS3DRenderer.js";
 import { mergeVertices } from "three/addons/utils/BufferGeometryUtils.js";
-import { PALETTES, type CorePalette } from "./look";
+import { CORE_LIGHT } from "./look";
 import { createNoise3D, fbm, mulberry32, smoothstep } from "./noise";
 import * as S from "./shaders";
 import { DEFAULT_STATE, type Anchor, type CoreAnchors, type CoreState } from "./state";
@@ -38,7 +38,6 @@ export type CoreSceneOptions = {
   interactive?: boolean;
   reducedMotion?: boolean;
   nodeCount?: number;
-  palette?: CorePalette;
   /** pre-built rock (see buildRockGeometry) so the caller can spread the work over several frames */
   rockGeometry?: THREE.BufferGeometry;
   /** an HTML element (the front of the product monitor) placed in the scene beside the Core */
@@ -54,7 +53,8 @@ const PLINTH_TOP = FLOOR_Y + PLINTH_H;
 const CORE_Y = 0.12;
 /** The Core stays compact: everything around it scales with it. */
 const CORE_SIZE = 0.8;
-export const ROCK_DETAIL = { high: 34, low: 18 };
+/** How finely the rock is sculpted (icosphere subdivisions): fine enough to stay smooth in close-up. */
+export const ROCK_DETAIL = { high: 48, low: 26 };
 
 /**
  * The shards of the opening sequence (the loader): the whole Core cut into six
@@ -312,7 +312,8 @@ type Piece = {
  * and the body always keeps a strip of stone between two of them.
  */
 function buildPieces(base: THREE.BufferGeometry) {
-  const pos = base.attributes.position as THREE.BufferAttribute;
+  // a copy: the cut lines are smoothed below, the closed rock keeps its own
+  const pos = (base.attributes.position as THREE.BufferAttribute).clone();
   const nrm = base.attributes.normal as THREE.BufferAttribute;
   const cav = base.attributes.aCavity as THREE.BufferAttribute;
   const sphere = base.userData.sphere as Float32Array;
@@ -404,22 +405,54 @@ function buildPieces(base: THREE.BufferGeometry) {
 
   // The broken edges: between a fragment and the body
   const rimEdges: [number, number][][] = FRAGMENTS.map(() => []);
-  const onRim = new Uint8Array(n);
   for (let t = 0; t < tris; t++) {
     const k = tri[t];
     if (k < 0) continue;
     for (let e = 0; e < 3; e++) {
       const a = index[t * 3 + e];
       const b = index[t * 3 + ((e + 1) % 3)];
-      if (edges.get(edgeKey(a, b))!.some((o) => tri[o] !== k)) {
-        rimEdges[k].push([a, b]);
-        onRim[a] = onRim[b] = 1;
-      }
+      if (edges.get(edgeKey(a, b))!.some((o) => tri[o] !== k)) rimEdges[k].push([a, b]);
     }
   }
-  // How far each vertex of the skin is from a broken edge (its outline glows)
-  const rimPts: number[] = [];
-  for (let i = 0; i < n; i++) if (onRim[i]) rimPts.push(pos.getX(i), pos.getY(i), pos.getZ(i));
+  // The cut follows the mesh's triangles, a staircase: smooth each broken edge along itself (keeping it on
+  // the surface), so a fragment's outline reads as a clean break, not a row of teeth. The body's socket and
+  // the fragment share these vertices, so they still fit together exactly.
+  const rimNext = new Map<number, number[]>();
+  for (const list of rimEdges)
+    for (const [a, b] of list) {
+      (rimNext.get(a) ?? rimNext.set(a, []).get(a)!).push(b);
+      (rimNext.get(b) ?? rimNext.set(b, []).get(b)!).push(a);
+    }
+  const rimIds = [...rimNext.keys()];
+  const next = new Float32Array(n * 3);
+  const avg = new THREE.Vector3();
+  const nbp = new THREE.Vector3();
+  for (let pass = 0; pass < 4; pass++) {
+    for (const i of rimIds) {
+      const nb = rimNext.get(i)!;
+      avg.set(0, 0, 0);
+      let len = 0;
+      for (const j of nb) {
+        nbp.fromBufferAttribute(pos, j);
+        avg.add(nbp);
+        len += nbp.length();
+      }
+      avg.divideScalar(nb.length);
+      nbp.fromBufferAttribute(pos, i);
+      const r = (nbp.length() + len / nb.length) / 2;
+      nbp.lerp(avg, 0.5).setLength(r).toArray(next, i * 3);
+    }
+    for (const i of rimIds) pos.setXYZ(i, next[i * 3], next[i * 3 + 1], next[i * 3 + 2]);
+  }
+
+  // How far each vertex of the skin is from a broken edge (its outline glows) — rim points binned in a grid
+  const CELL = 0.2;
+  const grid = new Map<string, number[]>();
+  const cellKey = (x: number, y: number, z: number) => `${Math.floor(x / CELL)},${Math.floor(y / CELL)},${Math.floor(z / CELL)}`;
+  for (const i of rimIds) {
+    const key = cellKey(pos.getX(i), pos.getY(i), pos.getZ(i));
+    (grid.get(key) ?? grid.set(key, []).get(key)!).push(pos.getX(i), pos.getY(i), pos.getZ(i));
+  }
   const seam = new Float32Array(n).fill(1);
   const near = Math.cos(THREE.MathUtils.degToRad(Math.max(...FRAGMENTS.map((f) => f.size)) + 18));
   for (let i = 0; i < n; i++) {
@@ -428,14 +461,23 @@ function buildPieces(base: THREE.BufferGeometry) {
     const x = pos.getX(i);
     const y = pos.getY(i);
     const z = pos.getZ(i);
+    const cx = Math.floor(x / CELL);
+    const cy = Math.floor(y / CELL);
+    const cz = Math.floor(z / CELL);
     let m = 0.04;
-    for (let j = 0; j < rimPts.length; j += 3) {
-      const dx = rimPts[j] - x;
-      const dy = rimPts[j + 1] - y;
-      const dz = rimPts[j + 2] - z;
-      const dd = dx * dx + dy * dy + dz * dz;
-      if (dd < m) m = dd;
-    }
+    for (let ox = -1; ox <= 1; ox++)
+      for (let oy = -1; oy <= 1; oy++)
+        for (let oz = -1; oz <= 1; oz++) {
+          const pts = grid.get(`${cx + ox},${cy + oy},${cz + oz}`);
+          if (!pts) continue;
+          for (let j = 0; j < pts.length; j += 3) {
+            const dx = pts[j] - x;
+            const dy = pts[j + 1] - y;
+            const dz = pts[j + 2] - z;
+            const dd = dx * dx + dy * dy + dz * dz;
+            if (dd < m) m = dd;
+          }
+        }
     seam[i] = Math.sqrt(m);
   }
 
@@ -620,10 +662,10 @@ export class CoreScene {
   private petalHi = FRAGMENTS.map(() => 0);
   private hoverPetal = -1;
   private hits: THREE.Intersection[] = [];
-  private opts: Required<Omit<CoreSceneOptions, "state" | "onFrame" | "rockGeometry" | "screen" | "palette">> & Pick<CoreSceneOptions, "onFrame">;
+  private opts: Required<Omit<CoreSceneOptions, "state" | "onFrame" | "rockGeometry" | "screen">> & Pick<CoreSceneOptions, "onFrame">;
   private rockGeometry?: THREE.BufferGeometry;
 
-  /** the Core's light, shared by reference by every material that uses it (see setPalette) */
+  /** the Core's light, shared by reference by every material that uses it (see applyLight) */
   private light = {
     uHeat0: { value: new THREE.Color() },
     uHeat1: { value: new THREE.Color() },
@@ -687,6 +729,7 @@ export class CoreScene {
   private laptopExtent = new THREE.Vector2();
   private monitorParts: HTMLElement[] = [];
   private screenShown = false;
+  private screenFade = "";
   private besideQ = new THREE.Quaternion();
   private euler = new THREE.Euler();
 
@@ -707,7 +750,7 @@ export class CoreScene {
     this.state = options.state ?? { ...DEFAULT_STATE };
     this.rockGeometry = options.rockGeometry;
     const low = this.opts.quality === "low";
-    this.maxDpr = Math.min(window.devicePixelRatio || 1, low ? 1.5 : 1.75);
+    this.maxDpr = Math.min(window.devicePixelRatio || 1, low ? 1.5 : 2);
     this.dpr = this.maxDpr;
 
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: false, alpha: false, powerPreference: "high-performance" });
@@ -719,10 +762,13 @@ export class CoreScene {
 
     this.scene.add(this.camera);
     this.build(low);
-    this.setPalette(options.palette ?? "gold");
+    this.applyLight();
     if (options.screen) this.buildMonitor(options.screen);
 
-    this.composer = new EffectComposer(this.renderer);
+    // Multisampled: clean edges on the Core's silhouette, its fragments and the fine wires (the canvas
+    // itself is not antialiased — the scene is drawn into this target, then post-processed)
+    const target = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples: low ? 2 : 4 });
+    this.composer = new EffectComposer(this.renderer, target);
     this.composer.addPass(new RenderPass(this.scene, this.camera));
     this.bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.8, 0.5, 0.72);
     this.composer.addPass(this.bloom);
@@ -744,9 +790,9 @@ export class CoreScene {
     this.ready = this.prepare(output);
   }
 
-  /** Switch the colour of the Core's light (gold / emerald) — live, nothing is rebuilt. */
-  setPalette(name: CorePalette) {
-    const p = PALETTES[name];
+  /** Colours every material with the Core's light (CORE_LIGHT in look.ts). */
+  private applyLight() {
+    const p = CORE_LIGHT;
     p.heat.forEach((c, i) => this.light[`uHeat${i as 0 | 1 | 2 | 3}`].value.setRGB(c[0], c[1], c[2]));
     this.light.uRimColor.value.setRGB(...p.rim);
     this.light.uSpill.value.setRGB(...p.spill);
@@ -757,6 +803,7 @@ export class CoreScene {
     this.colors.line.setRGB(...p.line);
     this.halos[0].material.uniforms.uColor.value.setRGB(...p.haloWide);
     this.halos[1].material.uniforms.uColor.value.setRGB(...p.haloTight);
+    this.halos[2].material.uniforms.uColor.value.setRGB(...p.haloVeil);
     this.nodes.forEach((n) => {
       n.link.material.uniforms.uWarm.value.copy(this.colors.line);
       n.halo.material.uniforms.uColor.value.copy(color(p.node));
@@ -767,10 +814,6 @@ export class CoreScene {
     this.floor.material.uniforms.uPool.value.setRGB(...p.pool);
     this.plinth.material.uniforms.uGlow.value.copy(color(p.edge));
     this.panes.forEach((m) => m.material.uniforms.uTint.value.setRGB(...p.glass));
-    if (!this.running && this.compiled) {
-      this.update(0);
-      this.render();
-    }
   }
 
   /**
@@ -922,12 +965,15 @@ export class CoreScene {
     this.parts.visible = false;
     this.body.add(this.parts);
 
-    // Halos: wide atmosphere + tight breath (both follow how awake the Core is)
+    // Halos, layered soft light rather than one strong glow (all follow how awake the Core is):
+    // a wide atmosphere, a tight breath, and a faint far veil — the air around the Core holding its light
     const wide = haloMesh(2.4);
     wide.scale.set(6.5, 6.5, 1);
     const tight = haloMesh(3.2);
     tight.scale.set(3.1, 3.1, 1);
-    this.halos = [wide, tight];
+    const veil = haloMesh(2);
+    veil.scale.set(10, 10, 1);
+    this.halos = [wide, tight, veil];
     this.halos.forEach((h) => this.coreGroup.add(h));
 
     // Embers rise around the awake Core
@@ -1027,7 +1073,7 @@ export class CoreScene {
           exit.clone().lerp(end, 0.72).addScaledVector(sway, 0.55),
           end,
         ]);
-        const link = new THREE.Mesh(taperedTube(curve, 90, 0.03, 0.005, low ? 4 : 6), lineMaterial());
+        const link = new THREE.Mesh(taperedTube(curve, 120, 0.03, 0.007, low ? 6 : 10), lineMaterial());
         link.frustumCulled = false;
         this.nodeGroup.add(dot, halo, link);
         this.nodes.push({ dot, halo, link, hi: 0 });
@@ -1429,8 +1475,10 @@ export class CoreScene {
     const portrait = this.w / this.h < 1;
     // portrait: width is the limit; short screens also leave less room above the words
     const fit = portrait ? Math.pow(this.h / this.w, 0.6) * Math.sqrt(Math.max(1, 780 / this.h)) : 1;
-    const az = s.az + (this.opts.interactive ? this.pointerSmooth.x * 0.05 : 0);
-    const el = s.el + (this.opts.interactive ? this.pointerSmooth.y * 0.03 : 0);
+    // the cursor turns the camera gently — except while the tools are wired: reaching for a logo must not move it
+    const parallax = this.opts.interactive ? 1 - smoothstep(0, 0.6, s.network) : 0;
+    const az = s.az + this.pointerSmooth.x * 0.05 * parallax;
+    const el = s.el + this.pointerSmooth.y * 0.03 * parallax;
     const d = s.dist * fit;
     this.camera.position.set(s.tx + d * Math.cos(el) * Math.sin(az), s.ty + d * Math.sin(el), s.tz + d * Math.cos(el) * Math.cos(az));
     this.camera.lookAt(s.tx, s.ty, s.tz);
@@ -1440,7 +1488,10 @@ export class CoreScene {
 
     // The Core: drifts on its own, or turns to face the viewer (and present a zone, or open towards them)
     const sc = s.scale * (0.82 + 0.18 * k);
-    this.coreGroup.position.y = CORE_Y + (rm ? 0 : Math.sin(t * 0.9) * 0.03);
+    const bob = rm ? 0 : Math.sin(t * 0.9) * 0.03;
+    this.coreGroup.position.y = CORE_Y + bob;
+    // the tools stay anchored where they are: the Core floats, they do not
+    this.nodeGroup.position.y = -bob / CORE_SIZE;
     this.coreGroup.scale.setScalar(CORE_SIZE);
     const drift = s.spin + (rm ? 0 : Math.sin(t * 0.17) * 0.28 + t * 0.012);
     this.body.rotation.y = drift + angleDelta(drift, s.az + s.turn) * s.face;
@@ -1512,6 +1563,7 @@ export class CoreScene {
     const glow = aw + 0.2 * s.open + 0.08 * s.understand + 0.35 * this.flash;
     this.halos[0].material.uniforms.uIntensity.value = (0.04 + 0.16 * glow) * k * (0.25 + 0.75 * near);
     this.halos[1].material.uniforms.uIntensity.value = (0.03 + 0.34 * glow) * k * (0.9 + 0.1 * Math.sin(t * 1.25)) * (0.45 + 0.55 * near);
+    this.halos[2].material.uniforms.uIntensity.value = (0.018 + 0.04 * glow) * k * (0.15 + 0.85 * near);
     this.halos.forEach((h) => (h.visible = k > 0.001));
 
     const em = this.embers.material.uniforms;
@@ -1564,7 +1616,7 @@ export class CoreScene {
 
     // Tool network: faces the viewer, its roots leave the Core; the tool pointed at sends a pulse down its wire
     this.nodeGroup.visible = s.network > 0.001;
-    this.nodeGroup.rotation.y = s.az + (rm ? 0 : Math.sin(t * 0.1) * 0.06);
+    this.nodeGroup.rotation.y = s.az;
     // in portrait the constellation stands taller and narrower so every tool stays on screen
     this.nodeGroup.scale.set(portrait ? 0.56 : 1, portrait ? 1.15 : 1, 1);
     const tool = s.network > 0.5 ? Math.round(s.tool) : -1;
@@ -1653,6 +1705,10 @@ export class CoreScene {
     if (!shown) return;
     const a = smoothstep(0, 1, e);
     const c = smoothstep(0, 1, s.center);
+    // it emerges from the Core progressively — invisible, faint, then whole — and fades the same way back
+    // into it (the HTML layer is drawn over the canvas, so without this it would pop up in front of the Core)
+    const fade = (smoothstep(0.04, 0.62, e) ** 1.6).toFixed(3);
+    if (fade !== this.screenFade && this.css) this.css.domElement.style.opacity = this.screenFade = fade;
     const unit = SCREEN_W / LAPTOP.w;
     // the lid opens once it is out of the Core
     lid.rotation.x = THREE.MathUtils.lerp(Math.PI / 2, -LAPTOP.lean, smoothstep(0.3, 1, a));

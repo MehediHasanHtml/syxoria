@@ -8,7 +8,6 @@ import { SplitText } from "gsap/SplitText";
 import { CoreCanvas } from "@/components/brand/core-canvas";
 import { hero, integrations } from "@/content/home";
 import { cn } from "@/lib/cn";
-import type { CorePalette } from "@/lib/core/look";
 import { createCoreState, type CoreAnchors } from "@/lib/core/state";
 import { motion } from "@/lib/motion";
 import { productModules } from "@/lib/mock-data/modules";
@@ -53,11 +52,8 @@ function walkAt(p: number) {
  * can also explore directly: the cursor warms the Core, its branches open the
  * modules, the product screen plays the demo. Chapters are anchored so the
  * numbered navigation and the header can jump straight to them.
- *
- * `palette`: the colour of the Core's light on this page — the original gold
- * unless the page says otherwise (the /emerald test page) or its URL asks.
  */
-export function CoreExperience({ palette: fixed }: { palette?: CorePalette } = {}) {
+export function CoreExperience() {
   const { scrollTo, start } = useSmoothScroll();
   const root = useRef<HTMLElement>(null);
   const overlay = useRef<CoreOverlayHandle>(null);
@@ -80,7 +76,6 @@ export function CoreExperience({ palette: fixed }: { palette?: CorePalette } = {
   // the tool being pointed at (a pulse runs down its wire)
   const [tool, setTool] = useState<number | null>(null);
   const look = useCoreLook();
-  const palette = fixed ?? look.palette;
   const ground = look.ground;
 
   const exploring = chapter === MODULES_CHAPTER ? (focus ?? walk) : null;
@@ -244,7 +239,6 @@ export function CoreExperience({ palette: fixed }: { palette?: CorePalette } = {
             onFrame={onFrame}
             onReady={() => setSceneReady(true)}
             nodeCount={integrations.tools.length}
-            palette={palette}
             screen={screenEl}
           />
           {sceneReady && screenEl && createPortal(<LiveScreen state={state} />, screenEl)}
@@ -272,7 +266,7 @@ export function CoreExperience({ palette: fixed }: { palette?: CorePalette } = {
 
       <ModuleSheet index={sheet} onClose={() => setSheet(null)} onNavigate={setSheet} />
       <IntegrationsSheet open={moreOpen} onClose={() => setMoreOpen(false)} />
-      <LookSwitcher palette={fixed} />
+      <LookSwitcher />
     </>
   );
 }

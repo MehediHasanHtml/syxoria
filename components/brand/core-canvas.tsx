@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
-import type { CorePalette } from "@/lib/core/look";
 import type { CoreAnchors, CoreState } from "@/lib/core/state";
 
 type Props = {
@@ -13,8 +12,6 @@ type Props = {
   /** Pointer parallax */
   interactive?: boolean;
   nodeCount?: number;
-  /** The colour of the Core's light — switched live, without rebuilding the scene. */
-  palette?: CorePalette;
   /** An HTML element (the front of the product monitor) the scene places in 3D beside the Core. */
   screen?: HTMLElement | null;
   /** Screen positions of the modules, tool nodes and zones, every frame. */
@@ -28,18 +25,14 @@ type Props = {
  * text paints first; the canvas only renders while it is on screen and the
  * tab is visible. Without WebGL, a quiet CSS glow stands in.
  */
-export function CoreCanvas({ state, className, label, interactive = true, nodeCount, palette = "gold", screen, onFrame, onReady }: Props) {
+export function CoreCanvas({ state, className, label, interactive = true, nodeCount, screen, onFrame, onReady }: Props) {
   const wrap = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "failed">("loading");
   const callbacks = useRef({ onFrame, onReady });
-  const sceneRef = useRef<{ setPalette: (p: CorePalette) => void } | null>(null);
-  const paletteRef = useRef(palette);
   useEffect(() => {
     callbacks.current = { onFrame, onReady };
-    paletteRef.current = palette;
   });
-  useEffect(() => sceneRef.current?.setPalette(palette), [palette]);
 
   useEffect(() => {
     let disposed = false;
@@ -78,17 +71,12 @@ export function CoreCanvas({ state, className, label, interactive = true, nodeCo
           nodeCount,
           rockGeometry,
           screen: screen ?? undefined,
-          palette: paletteRef.current,
           onFrame: (a) => callbacks.current.onFrame?.(a),
         });
       } catch {
         return fail();
       }
-      sceneRef.current = scene;
-      cleanup.push(() => {
-        sceneRef.current = null;
-        scene.dispose();
-      });
+      cleanup.push(() => scene.dispose());
       await scene.ready;
       if (disposed) return;
       setStatus("ready");
@@ -148,8 +136,8 @@ export function CoreCanvas({ state, className, label, interactive = true, nodeCo
       {status === "failed" && (
         <div className="absolute inset-0 grid place-items-center">
           <div className="relative aspect-square w-[min(38%,22rem)]">
-            <div className="absolute inset-[-40%] rounded-full bg-[radial-gradient(closest-side,rgb(255_140_50/0.22),transparent)]" />
-            <div className="absolute inset-[12%] rounded-[46%_54%_50%_50%/55%_52%_48%_45%] bg-[radial-gradient(circle_at_50%_58%,#ffb45a_0%,#a0400e_14%,#1b1512_34%,#0b0a09_70%)] shadow-[0_0_80px_-10px_rgb(255_140_50/0.45)]" />
+            <div className="absolute inset-[-40%] rounded-full bg-[radial-gradient(closest-side,rgb(20_150_100/0.2),transparent)]" />
+            <div className="absolute inset-[12%] rounded-[46%_54%_50%_50%/55%_52%_48%_45%] bg-[radial-gradient(circle_at_50%_58%,#4fae86_0%,#145c40_14%,#121614_34%,#090b0a_70%)] shadow-[0_0_80px_-10px_rgb(20_150_100/0.4)]" />
           </div>
         </div>
       )}

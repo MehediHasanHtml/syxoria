@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { ArrowRight, Menu as MenuIcon, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { useActiveSection } from "@/components/home/use-active-section";
 import { Logo } from "@/components/shared/logo";
 import { cn } from "@/lib/cn";
 import { marketingNav } from "@/lib/site-config";
@@ -10,12 +12,17 @@ import { marketingNav } from "@/lib/site-config";
 /**
  * Immersive header: transparent over the hero, gains a surface + hairline once
  * the page scrolls (sentinel IntersectionObserver — no scroll listener).
+ * On the homepage, the link to the section being viewed is marked with the
+ * Core's light (see useActiveSection).
  */
 export function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const sentinel = useRef<HTMLDivElement>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const section = useActiveSection();
+  const home = usePathname() === "/";
+  const isActive = (href: string) => home && section !== null && href === `/#${section}`;
 
   useEffect(() => {
     const el = sentinel.current;
@@ -59,16 +66,27 @@ export function Header() {
           <Logo />
           <nav aria-label="Main" className="hidden lg:block">
             <ul className="flex items-center gap-1">
-              {marketingNav.map((item) => (
-                <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    className="relative rounded-md px-3.5 py-2 text-[13.5px] text-fg-2 transition-colors duration-200 hover:text-fg after:absolute after:inset-x-3.5 after:bottom-1 after:h-px after:origin-left after:scale-x-0 after:bg-fg/60 after:transition-transform after:duration-300 after:ease-out-soft hover:after:scale-x-100"
-                  >
-                    {item.label}
-                  </Link>
-                </li>
-              ))}
+              {marketingNav.map((item) => {
+                const on = isActive(item.href);
+                return (
+                  <li key={item.href}>
+                    <Link
+                      href={item.href}
+                      aria-current={on ? "location" : undefined}
+                      className={cn(
+                        "relative block rounded-md px-3.5 py-2 text-[13.5px] transition-[color,text-shadow] duration-300 ease-out-soft",
+                        // a fine line of the Core's light under the label: drawn faintly on hover, lit when current
+                        "after:absolute after:inset-x-3.5 after:bottom-1 after:h-px after:origin-left after:rounded-full after:transition-[transform,background-color,box-shadow] after:duration-500 after:ease-out-soft",
+                        on
+                          ? "text-fg after:scale-x-100 after:bg-accent-strong after:shadow-[0_0_10px_1px_rgb(79_174_134/0.5)]"
+                          : "text-fg-2 after:scale-x-0 after:bg-accent/55 hover:text-fg hover:[text-shadow:0_0_16px_rgb(79_174_134/0.35)] hover:after:scale-x-100",
+                      )}
+                    >
+                      {item.label}
+                    </Link>
+                  </li>
+                );
+              })}
             </ul>
           </nav>
           <div className="flex items-center gap-2">
@@ -120,14 +138,26 @@ export function Header() {
           </div>
           <nav aria-label="Mobile" className="flex-1 overflow-y-auto px-5 pt-4">
             <ul className="divide-y divide-line border-y border-line">
-              {marketingNav.map((item, i) => (
-                <li key={item.href} className="mobile-sheet-item" style={{ transitionDelay: `${80 + i * 40}ms` }}>
-                  <Link href={item.href} onClick={() => setOpen(false)} className="group flex items-center justify-between gap-4 py-4 font-display text-lg tracking-tight text-fg-2 transition-colors hover:text-fg">
-                    {item.label}
-                    <ArrowRight className="size-4 text-fg-3 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-accent" aria-hidden="true" />
-                  </Link>
-                </li>
-              ))}
+              {marketingNav.map((item, i) => {
+                const on = isActive(item.href);
+                return (
+                  <li key={item.href} className="mobile-sheet-item" style={{ transitionDelay: `${80 + i * 40}ms` }}>
+                    <Link
+                      href={item.href}
+                      onClick={() => setOpen(false)}
+                      aria-current={on ? "location" : undefined}
+                      className={cn("group flex items-center justify-between gap-4 py-4 font-display text-lg tracking-tight transition-colors hover:text-fg", on ? "text-fg" : "text-fg-2")}
+                    >
+                      <span className="flex items-center gap-3">
+                        {/* the current section: a point of the Core's light */}
+                        <span aria-hidden="true" className={cn("size-1.5 rounded-full transition-[background-color,box-shadow] duration-300", on ? "bg-accent-strong shadow-[0_0_8px_rgb(79_174_134/0.7)]" : "bg-line-strong")} />
+                        {item.label}
+                      </span>
+                      <ArrowRight className={cn("size-4 transition-[transform,color] duration-300 group-hover:translate-x-0.5 group-hover:text-accent", on ? "text-accent" : "text-fg-3")} aria-hidden="true" />
+                    </Link>
+                  </li>
+                );
+              })}
             </ul>
           </nav>
           <div className="grid gap-2 p-5">

@@ -1,29 +1,17 @@
 "use client";
 
-import { useEffect, useSyncExternalStore } from "react";
-import { lookStore, type CoreLook, type CorePalette } from "@/lib/core/look";
+import { useSyncExternalStore } from "react";
+import { lookStore, type CoreLook } from "@/lib/core/look";
 import { cn } from "@/lib/cn";
 
-/** The Core's current look (palette, ground), from the URL / browser; server: the default. */
+/** The Core's current look (ground), from the URL / browser; server: the default. */
 export function useCoreLook(): CoreLook {
   return useSyncExternalStore(lookStore.subscribe, lookStore.get, lookStore.server);
 }
 
-/**
- * A small panel to compare the Core's looks side by side, live — shown with
- * ?compare in the URL. Also keeps the page's accent colour in step with the
- * Core's light (html[data-core]). `palette`: the light this page shows (the
- * /emerald test page) — then only the ground can be compared.
- */
-export function LookSwitcher({ palette: fixed }: { palette?: CorePalette }) {
+/** A small panel to compare the Core's looks side by side, live — shown with ?compare in the URL. */
+export function LookSwitcher() {
   const look = useCoreLook();
-  const palette = fixed ?? look.palette;
-
-  useEffect(() => {
-    const root = document.documentElement;
-    root.dataset.core = palette;
-    return () => void delete root.dataset.core;
-  }, [palette]);
 
   if (!look.compare) return null;
   return (
@@ -38,17 +26,6 @@ export function LookSwitcher({ palette: fixed }: { palette?: CorePalette }) {
           ✕
         </button>
       </p>
-      {!fixed && (
-        <Segment
-          label="Light"
-          value={look.palette}
-          options={[
-            { id: "gold", label: "Gold", swatch: "#f2b46e" },
-            { id: "emerald", label: "Emerald", swatch: "#14684a" },
-          ]}
-          onChange={(palette) => lookStore.set({ palette })}
-        />
-      )}
       <Segment
         label="Ground"
         value={look.ground}
@@ -62,7 +39,7 @@ export function LookSwitcher({ palette: fixed }: { palette?: CorePalette }) {
   );
 }
 
-function Segment<T extends string>({ label, value, options, onChange }: { label: string; value: T; options: { id: T; label: string; swatch?: string }[]; onChange: (v: T) => void }) {
+function Segment<T extends string>({ label, value, options, onChange }: { label: string; value: T; options: { id: T; label: string }[]; onChange: (v: T) => void }) {
   const index = options.findIndex((o) => o.id === value);
   return (
     <div className="flex items-center gap-3">
@@ -78,7 +55,6 @@ function Segment<T extends string>({ label, value, options, onChange }: { label:
             onClick={() => onChange(o.id)}
             className={cn("relative z-10 flex h-7 min-w-[5.5rem] items-center justify-center gap-1.5 rounded-full px-3 text-[11.5px] transition-colors", o.id === value ? "text-fg" : "text-fg-3 hover:text-fg-2")}
           >
-            {o.swatch && <span className="size-2 rounded-full" style={{ background: o.swatch }} />}
             {o.label}
           </button>
         ))}

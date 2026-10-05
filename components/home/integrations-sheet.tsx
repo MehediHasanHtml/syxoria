@@ -10,14 +10,24 @@ const { more } = integrations;
 /** The wider list behind "More integrations", grouped by what they do. */
 export function IntegrationsSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   return (
-    <Sheet open={open} onClose={onClose} label={more.title} header={`${integrations.eyebrow} · ${more.count}`}>
+    <Sheet
+      open={open}
+      onClose={onClose}
+      label={more.title}
+      header={
+        <span>
+          {integrations.eyebrow} · <span className="tabular text-accent">{more.count}</span>
+        </span>
+      }
+    >
       <h2 className="font-display text-headline font-light text-fg">{more.title}</h2>
       <p className="mt-4 text-[15px] leading-relaxed text-fg-2">{more.body}</p>
 
       <div className="mt-10 grid gap-9">
         {more.groups.map((g) => (
           <section key={g.name} aria-labelledby={`int-${g.name}`}>
-            <h3 id={`int-${g.name}`} className="text-[11px] uppercase tracking-[0.28em] text-fg-3">
+            <h3 id={`int-${g.name}`} className="flex items-center gap-2.5 text-[11px] uppercase tracking-[0.28em] text-fg-3">
+              <span aria-hidden="true" className="size-1 rounded-full bg-accent" />
               {g.name}
             </h3>
             <ul className="mt-3.5 grid grid-cols-2 gap-2">
@@ -38,11 +48,11 @@ export function IntegrationsSheet({ open, onClose }: { open: boolean; onClose: (
         ))}
       </div>
 
-      <div className="mt-10 rounded-xl border border-line p-5">
+      <div className="mt-10 rounded-xl border border-line bg-[linear-gradient(135deg,rgb(42_141_102/0.06),transparent_55%)] p-5">
         <p className="text-[14px] text-fg-2">{more.api}</p>
-        <a href={more.request.href} className="group mt-3 inline-flex items-center gap-2 text-sm text-fg">
+        <a href={more.request.href} className="group mt-3 inline-flex items-center gap-2 text-sm text-fg transition-colors hover:text-accent-strong">
           {more.request.label}
-          <ArrowRight className="size-4 transition-transform duration-300 group-hover:translate-x-0.5" aria-hidden="true" />
+          <ArrowRight className="size-4 text-accent transition-transform duration-300 group-hover:translate-x-0.5" aria-hidden="true" />
         </a>
       </div>
     </Sheet>

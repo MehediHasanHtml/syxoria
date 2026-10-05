@@ -39,11 +39,11 @@
   --color-fg-3: #7d8184;
   --color-white: #ffffff;
 
-  /* ---- Color: the single restrained accent (warm light from the concept) ---- */
-  --color-accent: #d6a871;
-  --color-accent-strong: #ecc896;
-  --color-accent-soft: rgb(214 168 113 / 0.12);
-  --color-accent-line: rgb(214 168 113 / 0.35);
+  /* ---- Color: the single restrained accent (the Core's deep emerald light) ---- */
+  --color-accent: #2a8d66;
+  --color-accent-strong: #4fae86;
+  --color-accent-soft: rgb(42 141 102 / 0.12);
+  --color-accent-line: rgb(42 141 102 / 0.35);
 
   /* ---- Color: status (muted — always paired with icon/label, never alone) ---- */
   --color-positive: #8fbfa0;
@@ -88,7 +88,7 @@
   /* ---- Elevation — lines first, shadows barely ---- */
   --shadow-panel: 0 1px 0 0 rgb(255 255 255 / 0.03) inset, 0 24px 48px -24px rgb(0 0 0 / 0.6);
   --shadow-float: 0 1px 0 0 rgb(255 255 255 / 0.04) inset, 0 32px 80px -32px rgb(0 0 0 / 0.85);
-  --shadow-glow: 0 0 0 1px var(--color-accent-line), 0 0 32px -8px rgb(214 168 113 / 0.35);
+  --shadow-glow: 0 0 0 1px var(--color-accent-line), 0 0 32px -8px rgb(42 141 102 / 0.35);
 
   /* ---- Motion ---- */
   --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
@@ -124,21 +124,11 @@
   --container: 76rem;
   --gutter: clamp(1rem, 0.6rem + 2vw, 2.5rem);
 
-  /* The Core's light, as the page uses it (buttons, marks): follows the Core's palette */
-  --core-light: #f2b46e;
-  --core-glow: rgb(255 150 70 / 0.55);
-
-  color-scheme: dark;
-}
-
-/* The emerald test: only the light changes — the Core's, and the page's single accent with it */
-:root[data-core="emerald"] {
+  /* The Core's light, as the page uses it (buttons, marks): its deep emerald */
   --core-light: #1d7a55;
   --core-glow: rgb(10 105 70 / 0.5);
-  --color-accent: #2a8d66;
-  --color-accent-strong: #4fae86;
-  --color-accent-soft: rgb(42 141 102 / 0.12);
-  --color-accent-line: rgb(42 141 102 / 0.35);
+
+  color-scheme: dark;
 }
 
 @keyframes shimmer {
@@ -347,18 +337,12 @@ body:has([data-opening]) :is(header, [data-rail]) { opacity: 0; visibility: hidd
 /* Titles split into lines: each line rises out of its own mask */
 .split-line { will-change: transform; }
 
-/* Modules: the explored fragment's point of light breathes */
-.module-ring { animation: module-ring 2.4s var(--ease-out-soft) infinite; }
-@keyframes module-ring {
-  0% { opacity: 0.8; transform: translate(-50%, -50%) scale(0.4); }
-  100% { opacity: 0; transform: translate(-50%, -50%) scale(1.6); }
-}
-
-/* Tools: pointing at one makes it answer (the pulse runs down its wire in the scene) */
-.tool-chip { transition: scale 450ms var(--ease-out-soft), border-color 450ms var(--ease-out-soft), background-color 450ms var(--ease-out-soft), color 300ms; }
-.tool-chip[data-active] { scale: 1.08; border-color: color-mix(in oklab, var(--core-light) 55%, transparent); background: rgb(0 0 0 / 0.6); color: var(--color-fg); }
-.tool-chip .tool-logo { transition: scale 450ms var(--ease-spring); }
-.tool-chip[data-active] .tool-logo { scale: 1.2; }
+/* Tools: pointing at one makes it answer — in light only: the chip and its logo stay exactly where they are
+   while the pulse runs down its wire in the scene */
+.tool-chip { transition: border-color 450ms var(--ease-out-soft), background-color 450ms var(--ease-out-soft), box-shadow 450ms var(--ease-out-soft), color 300ms; }
+.tool-chip:hover,
+.tool-chip[data-active] { border-color: var(--color-accent-line); color: var(--color-fg); }
+.tool-chip[data-active] { background: rgb(0 0 0 / 0.6); box-shadow: 0 0 0 1px rgb(42 141 102 / 0.18), 0 0 22px -6px var(--core-glow); }
 .tool-ping { animation: tool-ping 1.15s var(--ease-out-soft) forwards; }
 @keyframes tool-ping {
   0% { opacity: 0.9; scale: 0.6; }
@@ -514,6 +498,10 @@ body:has([data-opening]) :is(header, [data-rail]) { opacity: 0; visibility: hidd
 .lens-btn__label { position: relative; }
 .lens-btn__label::after { content: ""; position: absolute; left: 0; right: 0; bottom: -3px; height: 1px; background: currentColor; scale: 0 1; transform-origin: left; transition: scale 500ms var(--ease-out-soft); opacity: 0.5; }
 .lens-btn[data-hover] .lens-btn__label::after { scale: 1 1; }
+/* compact: a smaller lens, its glass and icon faintly tinted with the Core's light */
+.lens-btn--compact { gap: 0.6rem; font-size: 0.8125rem; }
+.lens-btn--compact .lens-btn__lens { width: 2.15rem; height: 2.15rem; color: var(--color-accent-strong); background: rgb(42 141 102 / 0.07); box-shadow: inset 0 0 0 1px var(--color-accent-line); }
+.lens-btn--compact[data-hover] .lens-btn__lens { background: rgb(42 141 102 / 0.13); }
 @media (prefers-reduced-motion: reduce) {
   .core-btn__ring { animation: none; }
 }
@@ -524,7 +512,7 @@ body:has([data-opening]) :is(header, [data-rail]) { opacity: 0; visibility: hidd
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: radial-gradient(380px circle at var(--gx, 50%) var(--gy, 0%), rgb(255 232 205 / 0.085), transparent 65%);
+  background: radial-gradient(380px circle at var(--gx, 50%) var(--gy, 0%), rgb(205 235 220 / 0.085), transparent 65%);
   opacity: var(--go, 0);
 }
 .glass-panel::after {

@@ -1,11 +1,11 @@
 "use client";
 
-import Link from "next/link";
-import { ArrowLeft, ArrowRight, Check, Play } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { useState } from "react";
 import { ModuleIcon } from "@/components/shared/module-icon";
-import { moduleExamples } from "@/content/home";
+import { hero, moduleExamples } from "@/content/home";
 import { productModules } from "@/lib/mock-data/modules";
+import { CoreButton, LensButton } from "./core-button";
 import { useFilm } from "./film";
 import { Sheet } from "./sheet";
 
@@ -47,7 +47,7 @@ export function ModuleSheet({ index, onClose, onNavigate }: { index: number | nu
         <ul className="mt-4 grid gap-3">
           {m.capabilities.map((c) => (
             <li key={c} className="flex items-start gap-3 text-[15px] text-fg">
-              <Check className="mt-1 size-4 shrink-0 text-fg-3" aria-hidden="true" />
+              <Check className="mt-1 size-4 shrink-0 text-accent" aria-hidden="true" />
               {c}
             </li>
           ))}
@@ -63,22 +63,18 @@ export function ModuleSheet({ index, onClose, onNavigate }: { index: number | nu
           <p className="mt-1.5 text-[13.5px] leading-relaxed text-fg-2">{example.detail}</p>
         </div>
 
-        <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-3">
-          <Link href="/signup" className="inline-flex h-11 items-center gap-2 rounded-full bg-fg pl-5 pr-4 text-sm font-medium text-canvas transition-colors hover:bg-white">
-            Start free
-            <ArrowRight className="size-4" aria-hidden="true" />
-          </Link>
-          <button
-            type="button"
+        {/* the homepage's own calls to action, exactly as in the hero */}
+        <div className="mt-10 flex flex-wrap items-center gap-x-7 gap-y-4">
+          <CoreButton href={hero.primaryCta.href}>{hero.primaryCta.label}</CoreButton>
+          <LensButton
             onClick={() => {
               onClose();
               film.open();
             }}
-            className="inline-flex items-center gap-2 text-sm text-fg-2 transition-colors hover:text-fg"
+            aria-haspopup="dialog"
           >
-            <Play className="size-3.5 fill-current" aria-hidden="true" />
             Watch the demo
-          </button>
+          </LensButton>
         </div>
 
         {/* Step through the branches without closing */}

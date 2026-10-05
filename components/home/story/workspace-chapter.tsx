@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Check } from "lucide-react";
+import { ArrowRight, Check, Maximize2 } from "lucide-react";
 import { workspace } from "@/content/home";
 import type { CoreState } from "@/lib/core/state";
 import { LensButton } from "../core-button";
@@ -50,12 +50,13 @@ export function WorkspaceChapter({ state }: { state: CoreState }) {
         <div className="mx-auto max-w-5xl">
           <div data-r className="flex flex-wrap items-center justify-between gap-x-8 gap-y-3">
             <p id="demo-title" className="font-mono text-[10.5px] uppercase tracking-[0.3em] text-fg-3">
-              <span className="text-fg-2">04 — </span>
+              <span className="text-accent">04</span>
+              <span className="text-fg-2"> — </span>
               {workspace.eyebrow} · {workspace.demo.live}
             </p>
             <div className="flex items-center gap-6">
               <p className="text-[12px] text-fg-3 max-md:hidden">{canHover ? workspace.demo.hint.pointer : workspace.demo.hint.touch}</p>
-              <LensButton onClick={() => film.open({ at: state.live < 1 ? state.live : 0 })} aria-haspopup="dialog">
+              <LensButton compact icon={<Maximize2 className="size-3.5" />} onClick={() => film.open({ at: state.live < 1 ? state.live : 0 })} aria-haspopup="dialog">
                 {workspace.demo.openFull}
               </LensButton>
               <Link href={workspace.enter.href} className="group hidden items-center gap-2 text-sm text-fg-2 transition-colors hover:text-fg sm:inline-flex">

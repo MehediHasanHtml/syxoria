@@ -37,7 +37,7 @@ export function Sheet({ open, onClose, label, header, children }: { open: boolea
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="grid size-10 shrink-0 place-items-center rounded-full border border-line text-fg-2 transition-colors hover:border-fg-3 hover:text-fg"
+            className="grid size-10 shrink-0 place-items-center rounded-full border border-line text-fg-2 transition-colors duration-300 hover:border-accent-line hover:text-fg"
           >
             <X className="size-4" aria-hidden="true" />
           </button>

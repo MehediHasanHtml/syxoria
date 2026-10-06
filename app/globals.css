@@ -708,4 +708,159 @@ html.lenis { scroll-behavior: auto; }
 .film-progress { animation: film-progress linear forwards; width: 0; }
 @keyframes film-progress { to { width: 100%; } }
 
+/* Core buttons that submit, wait or work (onboarding): unavailable = quiet stone; working = its core breathes */
+.core-btn:disabled { cursor: not-allowed; }
+.core-btn:disabled:not([aria-busy]) { opacity: 0.42; box-shadow: none; }
+.core-btn:disabled:not([aria-busy]) .core-btn__ring { animation: none; }
+.core-btn[aria-busy] { cursor: progress; }
+.core-btn[aria-busy] .core-btn__ring { animation-duration: 2.4s; }
+.core-btn[aria-busy] .core-btn__seed::before { animation: seed-breathe 1.5s var(--ease-in-out-soft) infinite; }
+@keyframes seed-breathe {
+  0%, 100% { opacity: 0.35; inset: 24%; }
+  50% { opacity: 1; inset: 6%; }
+}
+
+/* ==========================================================================
+   ONBOARDING (components/onboarding) — one environment that evolves as the
+   system learns the company. Calmer than the homepage: the Core is a small
+   mark, light is rationed, motion is a soft rise and a few morphs.
+   ========================================================================== */
+
+/* the environment's light: a faint emerald dawn at the top, following how awake the system is */
+.onb-atmosphere {
+  background:
+    radial-gradient(60rem 26rem at 50% -8rem, rgb(42 141 102 / calc(0.02 + var(--awake, 0) * 0.1)), transparent 70%),
+    radial-gradient(40rem 40rem at 100% 100%, rgb(42 141 102 / calc(var(--awake, 0) * 0.035)), transparent 70%);
+}
+
+/* Layout: it morphs between moments rather than navigating */
+.onb-stage { display: grid; grid-template-columns: minmax(0, 1fr); }
+.onb[data-layout="focus"] .onb-stage { min-height: calc(100dvh - 4rem); align-items: center; padding-block: 3rem 4rem; }
+.onb[data-layout="split"] .onb-stage { padding-block: clamp(2rem, 1rem + 4vw, 5rem) 6rem; }
+.onb[data-layout="briefing"] .onb-stage { max-width: 68rem; padding-block: clamp(2rem, 1rem + 4vw, 5rem) 6rem; }
+@media (min-width: 1024px) {
+  .onb[data-layout="split"] .onb-stage { grid-template-columns: minmax(0, 1fr) 21rem; column-gap: clamp(3rem, 6vw, 7rem); }
+}
+@media (min-width: 1280px) {
+  .onb[data-layout="split"] .onb-stage { grid-template-columns: minmax(0, 1fr) 23rem; }
+}
+
+/* Arrivals: a soft rise, staggered by --i */
+.onb-rise { animation: onb-rise 700ms var(--ease-out-soft) both; animation-delay: calc(var(--i, 0) * 85ms); }
+@keyframes onb-rise {
+  from { opacity: 0; transform: translate3d(0, 10px, 0); }
+  to { opacity: 1; transform: none; }
+}
+/* words that change in place (the system's state, a phase, a level) */
+.onb-word { animation: onb-word 600ms var(--ease-out-soft) both; }
+@keyframes onb-word {
+  from { opacity: 0; filter: blur(3px); transform: translate3d(0, 3px, 0); }
+  to { opacity: 1; filter: none; transform: none; }
+}
+.onb-pop { animation: onb-pop 500ms var(--ease-spring) both; }
+@keyframes onb-pop { from { transform: scale(0.4); opacity: 0; } }
+
+/* The Core mark: fissures light one by one; while working, its light breathes */
+.core-mark__fissure { opacity: 0; transition: opacity 1.4s var(--ease-out-soft); }
+.core-mark__fissure[data-lit] { opacity: 1; }
+.core-mark__heart { opacity: calc(0.08 + var(--awake) * 0.85); transition: opacity 1.4s var(--ease-out-soft); }
+.core-mark__aura { opacity: calc(var(--awake) * 0.85); transform-origin: 50% 52%; transition: opacity 1.4s var(--ease-out-soft); }
+.core-mark--working .core-mark__aura { animation: core-breathe 2.6s var(--ease-in-out-soft) infinite; }
+.core-mark--working .core-mark__heart { animation: core-heart 2.6s var(--ease-in-out-soft) infinite; }
+@keyframes core-breathe {
+  0%, 100% { scale: 0.92; opacity: calc(0.25 + var(--awake) * 0.5); }
+  50% { scale: 1.08; opacity: calc(0.45 + var(--awake) * 0.55); }
+}
+@keyframes core-heart { 50% { opacity: 1; } }
+
+/* Sources: connecting = a slow line of the Core's light running along the row */
+.onb-connecting {
+  background: linear-gradient(90deg, transparent, var(--color-accent-strong), transparent) 0 0 / 40% 100% no-repeat;
+  animation: onb-connecting 1.6s var(--ease-in-out-soft) infinite;
+}
+@keyframes onb-connecting {
+  from { background-position: -40% 0; }
+  to { background-position: 140% 0; }
+}
+
+/* Segmented control (permission modes) */
+.onb-segment { display: inline-flex; padding: 2px; border-radius: 999px; box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.08); }
+.onb-segment__item { cursor: pointer; padding: 0.35rem 0.8rem; border-radius: 999px; font-size: 12.5px; color: var(--color-fg-3); transition: color 250ms, background-color 250ms, box-shadow 250ms; white-space: nowrap; }
+.onb-segment__item:hover { color: var(--color-fg); }
+.onb-segment__item--on { color: var(--color-fg); background: rgb(255 255 255 / 0.06); }
+.onb-segment__item--on[data-mode="auto"] { color: var(--color-accent-strong); background: var(--color-accent-soft); box-shadow: inset 0 0 0 1px var(--color-accent-line); }
+.onb-segment__item:has(input:focus-visible) { outline: 2px solid var(--color-fg); outline-offset: 2px; }
+
+/* Autonomy levels: the line fills to the chosen stop */
+.onb-levels__fill { width: calc(var(--at) * 33.333%); transition: width 600ms var(--ease-out-soft); }
+
+/* The understanding map */
+.onb-map__line { fill: none; stroke: rgb(255 255 255 / 0.07); stroke-width: 1; }
+.onb-map__flow { fill: none; stroke: var(--color-accent-strong); stroke-width: 1.4; stroke-linecap: round; stroke-dasharray: 0.015 0.11; animation: onb-flow 2.2s linear infinite; opacity: 0.85; transition: opacity 1.2s; }
+.onb-map__flow--out { stroke-width: 1.1; opacity: 0.6; animation-duration: 2.8s; }
+@keyframes onb-flow { to { stroke-dashoffset: -0.5; } }
+.onb-map--done .onb-map__flow { animation: none; opacity: 0; }
+.onb-map__draw { fill: none; stroke: rgb(255 255 255 / 0.1); stroke-width: 1; stroke-dasharray: 1; stroke-dashoffset: 1; transition: stroke-dashoffset 1.2s var(--ease-out-soft), stroke 1s; }
+.onb-map__branch--on .onb-map__draw { stroke-dashoffset: 0; stroke: rgb(79 174 134 / 0.32); }
+.onb-map__relation { fill: none; stroke: rgb(79 174 134 / 0.45); stroke-width: 1; stroke-dasharray: 1; stroke-dashoffset: 1; animation: onb-draw 1.4s var(--ease-out-soft) forwards; }
+@keyframes onb-draw { to { stroke-dashoffset: 0; } }
+.onb-map__halo { fill: rgb(42 141 102 / 0); stroke: rgb(255 255 255 / 0.05); stroke-dasharray: 2 4; transition: fill 1s, stroke 1s; }
+.onb-map__halo--on { fill: rgb(42 141 102 / 0.05); stroke: rgb(79 174 134 / 0.14); }
+.onb-map__missing { fill: none; stroke: rgb(255 255 255 / 0.12); stroke-dasharray: 2 3; }
+.onb-map__dot { fill: #9fe0c2; opacity: 0; transform-box: fill-box; transform-origin: center; scale: 0; transition: opacity 700ms var(--ease-out-soft), scale 700ms var(--ease-spring); }
+.onb-map__dot[data-on] { opacity: 0.8; scale: 1; }
+.onb-map--done .onb-map__dot[data-on] { opacity: 0.6; }
+
+/* The editorial voice inside the product (the briefing keeps the brand's type in the app) */
+.editorial-type {
+  --font-sans: var(--font-schibsted), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-spectral), ui-serif, Georgia, serif;
+  --font-serif: var(--font-spectral), ui-serif, Georgia, serif;
+  --font-label: var(--font-schibsted), ui-sans-serif, system-ui, sans-serif;
+  --label-tracking: 0.2em;
+  --title-weight: 200;
+  --title-tracking: -0.022em;
+  --accent-size: 1.02em;
+  --accent-weight: 300;
+  --accent-tracking: -0.012em;
+  font-family: var(--font-sans);
+  font-feature-settings: normal;
+}
+
+/* Shared elements between moments (View Transitions): the bar, the memory, the conversation, the briefing's title */
+.onb-bar { view-transition-name: onb-bar; }
+.onb-memory { view-transition-name: onb-memory; }
+.onb-conversation { view-transition-name: onb-conversation; }
+.onb-briefing__title { view-transition-name: onb-briefing-title; }
+html[data-vt="onboarding"]::view-transition-group(*) { animation-duration: 650ms; animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1); }
+/* snapshots keep their own size, pinned to the top, so text never stretches while a box changes height */
+html[data-vt="onboarding"]::view-transition-old(onb-conversation),
+html[data-vt="onboarding"]::view-transition-new(onb-conversation),
+html[data-vt="onboarding"]::view-transition-old(onb-memory),
+html[data-vt="onboarding"]::view-transition-new(onb-memory) { height: auto; object-fit: none; object-position: 50% 0; }
+html[data-vt="onboarding"]::view-transition-group(onb-memory),
+html[data-vt="onboarding"]::view-transition-group(onb-conversation) { overflow: clip; }
+html[data-vt="onboarding"]::view-transition-old(onb-memory) { animation: onb-vt-fade 240ms ease both; }
+html[data-vt="onboarding"]::view-transition-new(onb-memory) { animation: onb-vt-in 520ms var(--ease-out-soft) 120ms both; }
+html[data-vt="onboarding"]::view-transition-old(onb-conversation) { animation: onb-vt-out 260ms var(--ease-in-out-soft) both; }
+html[data-vt="onboarding"]::view-transition-new(onb-conversation) { animation: onb-vt-in 520ms var(--ease-out-soft) 140ms both; }
+@keyframes onb-vt-fade { to { opacity: 0; } }
+html[data-vt="onboarding"]::view-transition-old(root),
+html[data-vt="onboarding"]::view-transition-new(root) { animation-duration: 500ms; }
+@keyframes onb-vt-out { to { opacity: 0; transform: translate3d(0, -6px, 0); filter: blur(2px); } }
+@keyframes onb-vt-in { from { opacity: 0; transform: translate3d(0, 8px, 0); } }
+
+/* ARRIVAL: the briefing becomes the workspace, and the product's frame arrives around it */
+[data-arrival] aside { animation: arrive-side 900ms var(--ease-out-soft) 150ms both; }
+[data-arrival] header { animation: arrive-top 800ms var(--ease-out-soft) 300ms both; }
+[data-arrival] .arrival-late { animation: onb-rise 800ms var(--ease-out-soft) 700ms both; }
+@keyframes arrive-side { from { transform: translate3d(-100%, 0, 0); opacity: 0; } }
+@keyframes arrive-top { from { transform: translate3d(0, -100%, 0); opacity: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .onb-rise, .onb-word, .onb-pop, [data-arrival] aside, [data-arrival] header, [data-arrival] .arrival-late { animation: none; }
+  .onb-map__flow { display: none; }
+  .onb-map__relation { animation: none; stroke-dashoffset: 0; }
+}
+
 

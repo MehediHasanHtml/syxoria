@@ -203,3 +203,149 @@ export type PricingPlan = {
   cta: { label: string; href: string };
   features: string[];
 };
+
+/* ---------- Onboarding (the system meets a company) ---------- */
+/** The single continuous onboarding, as one state — the UI reacts to it rather than to pages. */
+export type OnboardingStage = "account" | "company" | "connections" | "syncing" | "analysis" | "autonomy" | "briefing" | "complete";
+
+export type AccountSession = {
+  email: string;
+  /** From the email when it looks like a name ("mael@…" → "Maël"); null otherwise */
+  firstName: string | null;
+  /** Signed in to an existing account rather than created one */
+  returning: boolean;
+};
+
+export type CompanyEditableField = "name" | "address" | "headcount";
+
+/** A company as the national register (INSEE / Sirene) describes it, then as the user confirmed it. */
+export type CompanyProfile = {
+  siren: string;
+  siret: string | null;
+  name: string;
+  legalName: string;
+  legalForm: string;
+  address: string;
+  city: string;
+  activity: { code: string; label: string };
+  /** Plain-language sector the analysis talks about ("design studio") */
+  sector: string;
+  founded: string; // ISO date
+  headcount: string;
+  director: string | null;
+  source: "register" | "manual";
+  /** Fields the user corrected after the lookup */
+  edited: CompanyEditableField[];
+};
+
+export type SourceCategory = "email" | "crm" | "documents" | "finance" | "files";
+
+export type DataSource = {
+  id: string;
+  name: string;
+  /** IntegrationLogo id, when the brand mark is available */
+  logo: string | null;
+  category: SourceCategory;
+  /** Why it matters, in one line */
+  purpose: string;
+  /** What Syxoria will be able to see — always read-only during onboarding */
+  reads: string[];
+  kind: "oauth" | "file";
+};
+
+export type ConnectionStatus = "idle" | "connecting" | "connected" | "error";
+export type SourceConnection = {
+  status: ConnectionStatus;
+  /** Connecting: the step in progress · connected: what was found · error: what happened */
+  note?: string;
+};
+
+export type KnowledgeKind = "clients" | "opportunities" | "invoices" | "documents" | "conversations";
+
+export type KnowledgeEntry = { kind: KnowledgeKind; label: string; count: number; from: string[] };
+
+/** What the understanding stream reports as it reads the company (later: server-sent events). */
+export type UnderstandingEvent =
+  | { type: "phase"; id: string; message: string }
+  | { type: "found"; kind: KnowledgeKind; count: number }
+  | { type: "link"; from: KnowledgeKind; to: KnowledgeKind; label: string }
+  | { type: "notice"; text: string }
+  | { type: "done"; knowledge: KnowledgeEntry[]; period: string };
+
+export type FindingTone = "priority" | "observation" | "opportunity" | "attention";
+
+export type AnalysisFinding = {
+  id: string;
+  tone: FindingTone;
+  title: string;
+  detail: string;
+  /** Where it comes from, in words ("HubSpot deals and Gmail threads") */
+  basedOn: string;
+  evidence?: { label: string; value: string; note: string }[];
+};
+
+export type KpiSuggestion = {
+  id: string;
+  label: string;
+  value: string;
+  context: string;
+  /** Why the system chose to follow this number for this company */
+  reason: string;
+  series?: number[];
+};
+
+export type InitialAnalysis = {
+  objectives: string[];
+  findings: AnalysisFinding[];
+  kpis: KpiSuggestion[];
+};
+
+export type AutonomyLevel = "guided" | "assisted" | "autonomous";
+export type PermissionMode = "auto" | "ask" | "off";
+
+export type PermissionRule = {
+  id: string;
+  label: string;
+  description: string;
+  group: "understand" | "prepare" | "act";
+  defaults: Record<AutonomyLevel, PermissionMode>;
+  /** Modes the user may pick — sensitive actions can never become automatic */
+  allowed: PermissionMode[];
+  lockedReason?: string;
+};
+
+export type AutonomyPolicy = {
+  recommended: AutonomyLevel;
+  levels: { id: AutonomyLevel; name: string; summary: string }[];
+  rules: PermissionRule[];
+  /** Hard limits, whatever the level */
+  never: string[];
+};
+
+export type Mandate = { level: AutonomyLevel; overrides: Record<string, PermissionMode> };
+
+export type BriefingDraft = { id: string; contact: string; company: string; subject: string; value: number; quietDays: number };
+
+export type Briefing = {
+  priority: { title: string; detail: string };
+  observation: { title: string; detail: string };
+  kpi: { label: string; value: number; change: number; series: number[] };
+  recommendation: { title: string; detail: string };
+  drafts: BriefingDraft[];
+  basedOn: string;
+};
+
+/** Everything the onboarding has learned so far — also what the backend returns to resume it. */
+export type OnboardingSnapshot = {
+  stage: OnboardingStage;
+  session: AccountSession | null;
+  company: CompanyProfile | null;
+  /** Only sources the user touched; absent = not connected */
+  connections: Record<string, SourceConnection>;
+  /** Running counts while the system reads, then final */
+  found: Partial<Record<KnowledgeKind, number>>;
+  knowledge: KnowledgeEntry[] | null;
+  analysis: InitialAnalysis | null;
+  mandate: Mandate | null;
+  briefing: Briefing | null;
+};

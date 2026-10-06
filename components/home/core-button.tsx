@@ -15,7 +15,17 @@ import { cn } from "@/lib/cn";
  *   LensButton  the quiet one — a lens whose ring of light draws itself on hover (compact: a smaller one).
  */
 
-type Action = { href?: string; onClick?: () => void; className?: string; children: ReactNode; "aria-haspopup"?: "dialog" };
+type Action = {
+  href?: string;
+  onClick?: () => void;
+  className?: string;
+  children: ReactNode;
+  "aria-haspopup"?: "dialog";
+  /** As a <button> only: submit a form, be unavailable, or be working (its core glows and breathes) */
+  type?: "button" | "submit";
+  disabled?: boolean;
+  busy?: boolean;
+};
 
 /** Magnetic hover, eased every frame: the button leans towards the pointer and reports where it is. */
 function useMagnet<T extends HTMLElement>(strength = 0.22, max = 6) {
@@ -80,7 +90,7 @@ function useMagnet<T extends HTMLElement>(strength = 0.22, max = 6) {
 }
 
 /** A link (internal or not) or a button, with the same look. */
-function Action({ href, onClick, className, children, innerRef, ...rest }: Action & { innerRef: Ref<HTMLAnchorElement & HTMLButtonElement> }) {
+function Action({ href, onClick, className, children, innerRef, type = "button", disabled, busy, ...rest }: Action & { innerRef: Ref<HTMLAnchorElement & HTMLButtonElement> }) {
   if (href && /^(mailto:|https?:)/.test(href))
     return (
       <a ref={innerRef} href={href} className={className} {...rest}>
@@ -94,7 +104,7 @@ function Action({ href, onClick, className, children, innerRef, ...rest }: Actio
       </Link>
     );
   return (
-    <button ref={innerRef} type="button" onClick={onClick} className={className} {...rest}>
+    <button ref={innerRef} type={type} onClick={onClick} disabled={disabled || busy} aria-busy={busy || undefined} className={className} {...rest}>
       {children}
     </button>
   );

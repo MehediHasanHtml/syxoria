@@ -4,13 +4,7 @@ import { Lock } from "lucide-react";
 import { useId } from "react";
 import { autonomy as copy } from "@/content/onboarding";
 import { cn } from "@/lib/cn";
-import type { Mandate, PermissionMode, PermissionRule } from "@/types";
-
-/** What a rule does under a mandate: the user's choice for it, else the level's default */
-export function effectiveMode(rule: PermissionRule, mandate: Mandate): PermissionMode {
-  const chosen = mandate.overrides[rule.id];
-  return chosen && rule.allowed.includes(chosen) ? chosen : rule.defaults[mandate.level];
-}
+import type { PermissionMode, PermissionRule } from "@/types";
 
 /**
  * One action the system may take, and how: automatically, after asking, or not at all.

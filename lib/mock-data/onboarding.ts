@@ -1,22 +1,24 @@
 import { knowledgeLabels } from "@/content/onboarding";
 import type {
-  AnalysisFinding,
   AutonomyPolicy,
   Briefing,
   CompanyProfile,
   DataSource,
+  Discovery,
   InitialAnalysis,
   KnowledgeEntry,
   KnowledgeKind,
+  Priority,
   SourceCategory,
   UnderstandingEvent,
 } from "@/types";
 
 /**
- * Mock data for the onboarding. Everything here is what the backend will
- * answer later (company register, connectors, the understanding stream, the
- * first analysis, the briefing) — the UI only ever reads it through
- * services/onboarding.ts.
+ * Mock data for the onboarding. Everything here is what the backend will answer later
+ * (company register, connectors, the understanding stream, the priorities, the mandate policy,
+ * the briefing) — the UI only ever reads it through services/onboarding.ts.
+ *
+ *   company · sources · discoveries · relationships · priorities (+ their KPIs) · autonomy · briefing
  */
 
 /* ---------- Company register (stands in for INSEE / Sirene) ---------- */
@@ -68,7 +70,7 @@ export const mockSources: DataSource[] = [
     logo: "gmail",
     category: "email",
     kind: "oauth",
-    purpose: "Client conversations, quotes you sent, follow-ups.",
+    purpose: "Client conversations and the quotes you sent.",
     reads: ["Emails with clients and prospects", "Attachments such as quotes and contracts"],
   },
   {
@@ -77,7 +79,7 @@ export const mockSources: DataSource[] = [
     logo: "outlook",
     category: "email",
     kind: "oauth",
-    purpose: "Client conversations, quotes you sent, follow-ups.",
+    purpose: "Client conversations and the quotes you sent.",
     reads: ["Emails with clients and prospects", "Attachments such as quotes and contracts"],
   },
   {
@@ -86,7 +88,7 @@ export const mockSources: DataSource[] = [
     logo: "hubspot",
     category: "crm",
     kind: "oauth",
-    purpose: "Your clients, your prospects and the deals in progress.",
+    purpose: "Your clients and the deals in progress.",
     reads: ["Contacts and companies", "Deals and their stages", "Notes and logged activity"],
   },
   {
@@ -95,7 +97,7 @@ export const mockSources: DataSource[] = [
     logo: "salesforce",
     category: "crm",
     kind: "oauth",
-    purpose: "Your clients, your prospects and the deals in progress.",
+    purpose: "Your accounts and open opportunities.",
     reads: ["Accounts and contacts", "Opportunities and their stages", "Logged activity"],
   },
   {
@@ -131,17 +133,17 @@ export const mockSources: DataSource[] = [
     logo: "excel",
     category: "files",
     kind: "file",
-    purpose: "A client list, an export, a budget — anything in a spreadsheet.",
+    purpose: "A client list, an export, a budget.",
     reads: ["Only the file you choose"],
   },
 ];
 
-/** What a source holds, once connected — the line shown in its row */
+/** What a source holds, once connected — the line shown on its card */
 export const sourceFindings: Record<string, string> = {
   gmail: "18,640 emails since 2024",
   outlook: "17,920 emails since 2024",
-  hubspot: "214 companies · 38 open deals",
-  salesforce: "206 accounts · 36 open opportunities",
+  hubspot: "214 contacts · 38 open deals",
+  salesforce: "206 accounts · 36 opportunities",
   drive: "1,240 documents",
   notion: "320 pages",
   stripe: "412 invoices since 2024",
@@ -158,15 +160,16 @@ export function recommendedSourceIds(company: CompanyProfile | null): string[] {
   return ["gmail", "hubspot", "drive", "stripe"];
 }
 
-/* ---------- Understanding (the discovery stream) ---------- */
+/* ---------- Understanding: knowledge, relationships, discoveries ---------- */
 
 /** For each kind of knowledge: which source categories can provide it, and how much they hold */
 const knowledgeSupply: Record<KnowledgeKind, Partial<Record<SourceCategory, number>>> = {
   clients: { crm: 214, finance: 168, files: 186, email: 152 },
-  opportunities: { crm: 156, documents: 94, email: 61 },
+  conversations: { email: 18640, crm: 2310 },
+  quotes: { crm: 156, documents: 94, email: 61 },
+  opportunities: { crm: 38, email: 21, files: 18 },
   invoices: { finance: 412, documents: 138, files: 120 },
   documents: { documents: 1240, email: 860 },
-  conversations: { email: 18640, crm: 2310 },
 };
 
 export function buildKnowledge(sources: DataSource[]): KnowledgeEntry[] {
@@ -178,15 +181,33 @@ export function buildKnowledge(sources: DataSource[]): KnowledgeEntry[] {
   });
 }
 
+/**
+ * How the business holds together, as the understanding screen draws it: a client talks to
+ * you, the conversation leads to a quote, the quote becomes an opportunity.
+ */
+export const relationshipChain: KnowledgeKind[] = ["clients", "conversations", "quotes", "opportunities"];
+
+function buildDiscoveries(knowledge: KnowledgeEntry[]): Discovery[] {
+  const n = (k: KnowledgeKind) => knowledge.find((e) => e.kind === k)?.count ?? 0;
+  const out: Discovery[] = [];
+  if (n("clients")) out.push({ id: "contacts", value: n("clients").toLocaleString("en-GB"), label: "contacts identified", tone: "fact" });
+  if (n("opportunities")) out.push({ id: "opportunities", value: String(n("opportunities")), label: "active opportunities", tone: "fact" });
+  if (n("quotes")) out.push({ id: "quotes", value: "12", label: "quotes requiring attention", tone: "attention" });
+  if (n("clients") > 100) out.push({ id: "duplicates", value: "3", label: "duplicate contacts identified", tone: "attention" });
+  return out;
+}
+
 type Timed = { at: number; event: UnderstandingEvent };
 
 /**
- * The script the mock stream plays: phases, running counts, relationships, and the things the
- * system notices along the way. `at` is milliseconds from the start.
+ * The script the mock stream plays: phases, running counts, the relationships it establishes and
+ * what it discovers along the way. `at` is milliseconds from the start.
  */
 export function buildUnderstandingScript(company: CompanyProfile, sources: DataSource[]): Timed[] {
   const knowledge = buildKnowledge(sources);
   const total = (k: KnowledgeKind) => knowledge.find((e) => e.kind === k)?.count ?? 0;
+  const has = (k: KnowledgeKind) => total(k) > 0;
+  const discoveries = Object.fromEntries(buildDiscoveries(knowledge).map((d) => [d.id, d]));
   const out: Timed[] = [];
   // a count rising in steps between two moments
   const rise = (kind: KnowledgeKind, from: number, to: number, steps = 7) => {
@@ -197,32 +218,32 @@ export function buildUnderstandingScript(company: CompanyProfile, sources: DataS
       out.push({ at: Math.round(from + (to - from) * p), event: { type: "found", kind, count: Math.round(n * (1 - (1 - p) ** 2)) } });
     }
   };
-  const has = (k: KnowledgeKind) => total(k) > 0;
+  const discover = (at: number, id: string) => discoveries[id] && out.push({ at, event: { type: "discovery", discovery: discoveries[id] } });
 
-  out.push({ at: 0, event: { type: "phase", id: "connect", message: "Connecting your company data…" } });
-  out.push({ at: 1800, event: { type: "phase", id: "discover", message: "Discovering your business activity…" } });
-  rise("conversations", 1900, 5200, 9);
-  rise("documents", 2300, 5000);
-  out.push({ at: 3600, event: { type: "notice", text: `${company.name} has been active since ${new Date(company.founded).getUTCFullYear()} — reading the last two years.` } });
-  out.push({ at: 4800, event: { type: "phase", id: "customers", message: "Understanding your customers…" } });
-  rise("clients", 4900, 7200);
-  if (has("clients") && has("conversations")) out.push({ at: 6400, event: { type: "link", from: "conversations", to: "clients", label: "matched to clients" } });
-  if (has("clients")) out.push({ at: 7000, event: { type: "notice", text: "Most of your revenue comes from 12 returning clients." } });
-  out.push({ at: 7800, event: { type: "phase", id: "opportunities", message: "Analysing your opportunities…" } });
-  rise("opportunities", 7900, 9800);
-  rise("invoices", 8200, 10200);
-  if (has("clients") && has("opportunities")) out.push({ at: 9200, event: { type: "link", from: "clients", to: "opportunities", label: "38 deals open" } });
-  if (has("opportunities") && has("invoices")) out.push({ at: 9900, event: { type: "notice", text: "A signed quote becomes an invoice in 19 days on average." } });
-  out.push({ at: 10600, event: { type: "phase", id: "profile", message: "Building your company profile…" } });
-  if (has("opportunities") && has("invoices")) out.push({ at: 10900, event: { type: "link", from: "opportunities", to: "invoices", label: "quote → invoice" } });
-  if (has("documents") && has("opportunities")) out.push({ at: 11400, event: { type: "link", from: "documents", to: "opportunities", label: "proposals" } });
-  out.push({ at: 12300, event: { type: "phase", id: "priorities", message: "Identifying priorities…" } });
-  if (has("opportunities")) out.push({ at: 12800, event: { type: "notice", text: "Five deals worth €96,400 have gone quiet for more than ten days." } });
-  out.push({ at: 14400, event: { type: "done", knowledge, period: "Jan 2024 – today" } });
+  out.push({ at: 0, event: { type: "phase", id: "open", message: `Opening ${company.name}’s sources` } });
+  out.push({ at: 1300, event: { type: "phase", id: "conversations", message: "Reading your conversations" } });
+  rise("conversations", 1400, 4300, 9);
+  rise("documents", 1800, 4600);
+  out.push({ at: 3100, event: { type: "phase", id: "clients", message: "Recognising your clients" } });
+  rise("clients", 3200, 5200);
+  if (has("clients") && has("conversations")) out.push({ at: 4700, event: { type: "link", relationship: { from: "clients", to: "conversations", label: "talk to you" } } });
+  discover(5400, "contacts");
+  out.push({ at: 5900, event: { type: "phase", id: "quotes", message: "Following your quotes" } });
+  rise("quotes", 6000, 7600);
+  rise("invoices", 6200, 8200);
+  if (has("conversations") && has("quotes")) out.push({ at: 7200, event: { type: "link", relationship: { from: "conversations", to: "quotes", label: "lead to" } } });
+  discover(7900, "quotes");
+  out.push({ at: 8500, event: { type: "phase", id: "opportunities", message: "Connecting quotes to opportunities" } });
+  rise("opportunities", 8600, 9800);
+  if (has("quotes") && has("opportunities")) out.push({ at: 9600, event: { type: "link", relationship: { from: "quotes", to: "opportunities", label: "become" } } });
+  discover(10100, "opportunities");
+  out.push({ at: 10700, event: { type: "phase", id: "check", message: "Checking what doesn’t add up" } });
+  discover(11400, "duplicates");
+  out.push({ at: 12800, event: { type: "done", knowledge, period: "Jan 2024 – today" } });
   return out.sort((a, b) => a.at - b.at);
 }
 
-/* ---------- The first analysis ---------- */
+/* ---------- Priorities: what deserves attention, and the evidence ---------- */
 
 /** Names of the connected sources, by what they are, with a plain fallback */
 function namesFor(sources: DataSource[], cats: SourceCategory[], fallback: string) {
@@ -238,89 +259,113 @@ export const quietDeals = [
   { contact: "Élise Belval", company: "Ferme Belval", value: 8500, quietDays: 18, subject: "Website refresh — where we left it" },
 ];
 
+const MONTHS = ["Nov", "Dec", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct"];
+
 export function buildAnalysis(company: CompanyProfile, sources: DataSource[]): InitialAnalysis {
   const crm = namesFor(sources, ["crm"], "your emails and documents");
   const mail = namesFor(sources, ["email"], "logged activity");
   const money = namesFor(sources, ["finance"], namesFor(sources, ["documents", "files"], "your documents"));
 
-  const findings: AnalysisFinding[] = [
+  const priorities: Priority[] = [
     {
-      id: "f_followup",
-      tone: "priority",
-      title: "Improve follow-up on active opportunities.",
-      detail: "38 deals are open. Five of them, worth €96,400, have had no activity for more than ten days — follow-up is where you lose the most.",
+      id: "conversion",
+      title: "Improve opportunity conversion",
+      insight: "Five open deals worth €96,400 have been quiet for more than ten days. Here, deals that go quiet this long close half as often.",
+      kpis: [
+        { id: "rate", label: "conversion", value: "24%" },
+        { id: "open", label: "open opportunities", value: "38" },
+      ],
       basedOn: `${crm} deals, ${mail} threads`,
+      graph: {
+        label: "Quotes signed",
+        unit: "%",
+        months: MONTHS,
+        series: [31, 30, 31, 29, 30, 28, 27, 27, 26, 25, 24, 24],
+        reference: { value: 30, label: "Your average in 2025" },
+        focus: [5, 11],
+        focusLabel: "Slipping since April",
+      },
     },
     {
-      id: "f_quiet",
-      tone: "observation",
-      title: "Several high-value opportunities have gone quiet.",
-      detail: "Atelier Rive (€42,000) hasn’t replied in 12 days — the longest silence on a deal above €20,000 this year.",
+      id: "activity",
+      title: "Protect client activity",
+      insight: `Three returning clients — 18% of ${company.name}’s revenue last year — haven’t started a project this year.`,
+      kpis: [
+        { id: "active", label: "of clients active", value: "71%" },
+        { id: "drifting", label: "returning clients drifting", value: "3" },
+      ],
       basedOn: `${crm}, ${mail}`,
-      evidence: quietDeals.map((d) => ({ label: d.company, value: `€${d.value.toLocaleString("en-GB")}`, note: `quiet ${d.quietDays} days` })),
+      graph: {
+        label: "Clients active in the last 90 days",
+        unit: "%",
+        months: MONTHS,
+        series: [83, 82, 83, 81, 80, 80, 78, 77, 75, 73, 72, 71],
+        reference: { value: 82, label: "A year ago" },
+        focus: [6, 11],
+        focusLabel: "Down 12 points",
+      },
     },
     {
-      id: "f_returning",
-      tone: "opportunity",
-      title: "Returning clients are worth 2.4× new ones.",
-      detail: `62% of ${company.name}’s revenue in the last 12 months came from clients who had worked with you before. Three of them haven’t started a project this year.`,
-      basedOn: `${money}, ${crm}`,
-    },
-    {
-      id: "f_late",
-      tone: "attention",
-      title: "Invoices are paid nine days later than your terms.",
-      detail: "Payment takes 39 days on average against 30-day terms. €27,300 is overdue today, across six invoices.",
+      id: "payment",
+      title: "Get paid closer to your terms",
+      insight: "Invoices are paid nine days later than your 30-day terms. €27,300 is overdue today, across six invoices.",
+      kpis: [
+        { id: "days", label: "to get paid", value: "39 days" },
+        { id: "overdue", label: "overdue", value: "€27,300" },
+      ],
       basedOn: money,
+      graph: {
+        label: "Days to get paid",
+        unit: "days",
+        months: MONTHS,
+        series: [33, 34, 32, 35, 36, 35, 37, 38, 36, 38, 40, 39],
+        reference: { value: 30, label: "Your terms" },
+        focus: [8, 11],
+        focusLabel: "Nine days over terms",
+      },
     },
   ];
-
-  return {
-    objectives: ["Convert more of the pipeline already open", "Bring returning clients back earlier", "Get paid closer to your terms"],
-    findings,
-    kpis: [
-      {
-        id: "k_conversion",
-        label: "Conversion rate",
-        value: "24%",
-        context: "of quotes signed · last 12 months",
-        reason: "Most of your revenue starts as a quote — this is the number that moves it.",
-        series: [19, 21, 20, 22, 21, 23, 22, 24, 23, 25, 24, 24],
-      },
-      {
-        id: "k_open",
-        label: "Open opportunities",
-        value: "38",
-        context: "worth €184,000 in total",
-        reason: "Your pipeline is concentrated: five deals hold half of its value.",
-      },
-      {
-        id: "k_deal",
-        label: "Average deal value",
-        value: "€4,850",
-        context: "+12% on last year",
-        reason: "Your projects are getting larger — this shows whether it holds.",
-        series: [3900, 4100, 4050, 4300, 4250, 4400, 4500, 4480, 4620, 4700, 4790, 4850],
-      },
-      {
-        id: "k_activity",
-        label: "Client activity",
-        value: "71%",
-        context: "of clients active in the last 90 days",
-        reason: "Returning clients drive your growth — this catches the ones drifting away.",
-      },
-    ],
-  };
+  return { priorities };
 }
 
 /* ---------- Autonomy ---------- */
 
 export const mockAutonomyPolicy: AutonomyPolicy = {
   recommended: "assisted",
+  scenarioSubject: "Atelier Rive, a €42,000 deal, has gone quiet for 12 days.",
   levels: [
-    { id: "guided", name: "Guided", summary: "Syxoria analyses and recommends. Every action waits for you." },
-    { id: "assisted", name: "Assisted", summary: "Syxoria prepares the work and handles routine tasks. Anything important waits for you." },
-    { id: "autonomous", name: "Autonomous", summary: "Syxoria acts on its own within the limits you set, and tells you what it did." },
+    {
+      id: "guided",
+      name: "Guided",
+      summary: "Syxoria identifies what needs attention and prepares the work. Nothing happens until you approve it.",
+      scenario: [
+        { id: "notice", label: "Notices the deal has gone quiet", by: "syxoria" },
+        { id: "prepare", label: "Prepares a follow-up", by: "syxoria" },
+        { id: "approve", label: "Waits for your approval", by: "you" },
+      ],
+    },
+    {
+      id: "assisted",
+      name: "Assisted",
+      summary: "Syxoria handles the routine — notes, records, drafts — and asks you when it matters.",
+      scenario: [
+        { id: "notice", label: "Notices the deal has gone quiet", by: "syxoria" },
+        { id: "update", label: "Logs the activity, updates the deal", by: "syxoria" },
+        { id: "prepare", label: "Prepares a follow-up", by: "syxoria" },
+        { id: "approve", label: "Asks you before sending", by: "you" },
+      ],
+    },
+    {
+      id: "autonomous",
+      name: "Autonomous",
+      summary: "Syxoria acts on its own within your mandate — and stops the moment something falls outside it.",
+      scenario: [
+        { id: "notice", label: "Notices the deal has gone quiet", by: "syxoria" },
+        { id: "update", label: "Updates the deal", by: "syxoria" },
+        { id: "send", label: "Sends a routine follow-up", by: "syxoria" },
+        { id: "approve", label: "They ask for a new quote — it stops and asks you", by: "you" },
+      ],
+    },
   ],
   rules: [
     {
@@ -343,18 +388,18 @@ export const mockAutonomyPolicy: AutonomyPolicy = {
     {
       id: "reports",
       group: "prepare",
-      label: "Prepare reports and briefings",
+      label: "Prepare briefings",
       description: "Your morning briefing, weekly summaries, client reports.",
       defaults: { guided: "auto", assisted: "auto", autonomous: "auto" },
       allowed: ["auto", "ask", "off"],
     },
     {
-      id: "suggest",
+      id: "draft",
       group: "prepare",
-      label: "Suggest next actions",
-      description: "Who to call, what to follow up, what can wait.",
+      label: "Draft follow-ups",
+      description: "Follow-ups and replies, written for you — never sent on their own.",
       defaults: { guided: "auto", assisted: "auto", autonomous: "auto" },
-      allowed: ["auto", "off"],
+      allowed: ["auto", "ask", "off"],
     },
     {
       id: "organise",
@@ -365,19 +410,11 @@ export const mockAutonomyPolicy: AutonomyPolicy = {
       allowed: ["auto", "ask", "off"],
     },
     {
-      id: "draft",
-      group: "prepare",
-      label: "Draft emails and documents",
-      description: "Follow-ups, quotes, replies — written, never sent on their own.",
-      defaults: { guided: "ask", assisted: "auto", autonomous: "auto" },
-      allowed: ["auto", "ask", "off"],
-    },
-    {
       id: "records",
       group: "act",
       label: "Update records",
       description: "Move a deal to its next stage, log a call, fix a contact.",
-      defaults: { guided: "ask", assisted: "ask", autonomous: "auto" },
+      defaults: { guided: "ask", assisted: "auto", autonomous: "auto" },
       allowed: ["auto", "ask", "off"],
     },
     {
@@ -400,8 +437,8 @@ export const mockAutonomyPolicy: AutonomyPolicy = {
     {
       id: "financial",
       group: "act",
-      label: "Financial actions",
-      description: "Create an invoice, send a payment reminder.",
+      label: "Quotes, invoices and reminders",
+      description: "Create or change a quote, an invoice, a payment reminder.",
       defaults: { guided: "ask", assisted: "ask", autonomous: "ask" },
       allowed: ["ask", "off"],
       lockedReason: "Nothing involving money happens without your approval.",
@@ -421,21 +458,21 @@ export const mockAutonomyPolicy: AutonomyPolicy = {
 
 /* ---------- The first briefing ---------- */
 
-export function buildBriefing(sources: DataSource[]): Briefing {
+export function buildBriefing(company: CompanyProfile, sources: DataSource[]): Briefing {
   const top = quietDeals.slice(0, 3);
+  const worth = top.reduce((s, d) => s + d.value, 0);
   return {
     priority: {
-      title: `${top.length} opportunities need your attention today.`,
-      detail: `Together they are worth €${top.reduce((s, d) => s + d.value, 0).toLocaleString("en-GB")}, and each has been quiet for more than ten days.`,
+      title: "Three opportunities need your attention today.",
+      detail: `Together they are worth €${worth.toLocaleString("en-GB")}, and each has been quiet for more than ten days.`,
     },
-    observation: {
+    insight: {
       title: "Atelier Rive has been quiet for 12 days.",
-      detail: "It is your largest open deal (€42,000). Their last email asked about timing for the spring launch.",
+      detail: "It is your largest open deal. Their last email asked about timing for the spring launch.",
     },
-    kpi: { label: "Pipeline value", value: 184000, change: 8, series: [141, 148, 146, 152, 158, 155, 163, 168, 171, 169, 178, 184] },
     recommendation: {
-      title: "Follow up with these three this morning.",
-      detail: "Here, deals that get a reply within two weeks of going quiet close twice as often.",
+      title: "Follow up with all three this morning.",
+      detail: `At ${company.name}, deals that get a reply within two weeks of going quiet close twice as often.`,
     },
     drafts: top.map((d, i) => ({ id: `d_${i}`, ...d })),
     basedOn: `Based on ${sources.length} ${sources.length === 1 ? "source" : "sources"} and two years of activity`,

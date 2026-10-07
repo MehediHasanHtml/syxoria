@@ -253,52 +253,65 @@ export type DataSource = {
   kind: "oauth" | "file";
 };
 
-export type ConnectionStatus = "idle" | "connecting" | "connected" | "error";
+/**
+ * A connector's state — one model for every tool, in onboarding and later in Settings:
+ * available (not connected) → connecting → connected; error (the attempt failed, nothing was
+ * shared); reconnect (it was connected, but access lapsed and needs renewing).
+ */
+export type ConnectorState = "available" | "connecting" | "connected" | "error" | "reconnect";
 export type SourceConnection = {
-  status: ConnectionStatus;
-  /** Connecting: the step in progress · connected: what was found · error: what happened */
+  status: Exclude<ConnectorState, "available">;
+  /** Connecting: the step in progress · connected: what was found · error/reconnect: what happened */
   note?: string;
 };
 
-export type KnowledgeKind = "clients" | "opportunities" | "invoices" | "documents" | "conversations";
+export type KnowledgeKind = "clients" | "conversations" | "quotes" | "opportunities" | "invoices" | "documents";
 
 export type KnowledgeEntry = { kind: KnowledgeKind; label: string; count: number; from: string[] };
+
+/** A relationship the system established between two kinds of records ("conversations matched to clients") */
+export type Relationship = { from: KnowledgeKind; to: KnowledgeKind; label: string };
+
+/** Something the system concluded while reading — a fact about the business, not a row count */
+export type Discovery = { id: string; value: string; label: string; tone: "fact" | "attention" };
 
 /** What the understanding stream reports as it reads the company (later: server-sent events). */
 export type UnderstandingEvent =
   | { type: "phase"; id: string; message: string }
   | { type: "found"; kind: KnowledgeKind; count: number }
-  | { type: "link"; from: KnowledgeKind; to: KnowledgeKind; label: string }
-  | { type: "notice"; text: string }
+  | { type: "link"; relationship: Relationship }
+  | { type: "discovery"; discovery: Discovery }
   | { type: "done"; knowledge: KnowledgeEntry[]; period: string };
 
-export type FindingTone = "priority" | "observation" | "opportunity" | "attention";
+/** A point of evidence behind a priority: a number, and what it is */
+export type PriorityKpi = { id: string; label: string; value: string };
 
-export type AnalysisFinding = {
+/**
+ * What deserves attention — identified by the system, never configured by the user.
+ * Priority (what) → insight (what was discovered) → KPIs (the evidence), and what the graph draws.
+ */
+export type Priority = {
   id: string;
-  tone: FindingTone;
   title: string;
-  detail: string;
+  insight: string;
+  kpis: PriorityKpi[];
   /** Where it comes from, in words ("HubSpot deals and Gmail threads") */
   basedOn: string;
-  evidence?: { label: string; value: string; note: string }[];
+  graph: {
+    label: string;
+    unit: "%" | "€" | "days";
+    /** Twelve months, oldest first, and their short names */
+    series: number[];
+    months: string[];
+    /** A level worth comparing against (a target, your payment terms…) */
+    reference?: { value: number; label: string };
+    /** The stretch the system points at, as indices into series */
+    focus: [number, number];
+    focusLabel: string;
+  };
 };
 
-export type KpiSuggestion = {
-  id: string;
-  label: string;
-  value: string;
-  context: string;
-  /** Why the system chose to follow this number for this company */
-  reason: string;
-  series?: number[];
-};
-
-export type InitialAnalysis = {
-  objectives: string[];
-  findings: AnalysisFinding[];
-  kpis: KpiSuggestion[];
-};
+export type InitialAnalysis = { priorities: Priority[] };
 
 export type AutonomyLevel = "guided" | "assisted" | "autonomous";
 export type PermissionMode = "auto" | "ask" | "off";
@@ -314,9 +327,14 @@ export type PermissionRule = {
   lockedReason?: string;
 };
 
+/** One step of the example the mandate plays out: who does it under this level, and where Syxoria stops */
+export type ScenarioStep = { id: string; label: string; by: "syxoria" | "you" };
+
 export type AutonomyPolicy = {
   recommended: AutonomyLevel;
-  levels: { id: AutonomyLevel; name: string; summary: string }[];
+  levels: { id: AutonomyLevel; name: string; summary: string; scenario: ScenarioStep[] }[];
+  /** The situation every level's scenario plays out ("Atelier Rive has gone quiet for 12 days") */
+  scenarioSubject: string;
   rules: PermissionRule[];
   /** Hard limits, whatever the level */
   never: string[];
@@ -326,14 +344,18 @@ export type Mandate = { level: AutonomyLevel; overrides: Record<string, Permissi
 
 export type BriefingDraft = { id: string; contact: string; company: string; subject: string; value: number; quietDays: number };
 
+/** Priority → insight → recommendation → action: the briefing reads as one line of reasoning */
 export type Briefing = {
   priority: { title: string; detail: string };
-  observation: { title: string; detail: string };
-  kpi: { label: string; value: number; change: number; series: number[] };
+  insight: { title: string; detail: string };
   recommendation: { title: string; detail: string };
+  /** The follow-ups the action is about — what Syxoria may do with them depends on the mandate and the tools */
   drafts: BriefingDraft[];
   basedOn: string;
 };
+
+/** What the system is doing inside a moment — it drives the Core and the word beside it */
+export type OnboardingActivity = "searching" | "found" | "connecting" | null;
 
 /** Everything the onboarding has learned so far — also what the backend returns to resume it. */
 export type OnboardingSnapshot = {
@@ -342,6 +364,9 @@ export type OnboardingSnapshot = {
   company: CompanyProfile | null;
   /** Only sources the user touched; absent = not connected */
   connections: Record<string, SourceConnection>;
+  /** The company the register returned, before the user confirmed it */
+  candidate: CompanyProfile | null;
+  activity: OnboardingActivity;
   /** Running counts while the system reads, then final */
   found: Partial<Record<KnowledgeKind, number>>;
   knowledge: KnowledgeEntry[] | null;

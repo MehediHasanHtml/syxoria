@@ -9,6 +9,8 @@
 /* Phones/tablets with little height (small Android, landscape): the story tightens its words.
    Declared after "side" so it wins where both apply. */
 @custom-variant short (@media (max-width: 1023.98px) and (max-height: 740px));
+/* Desktop screens with little height (13" laptops): the onboarding tightens its rhythm to stay in one viewport */
+@custom-variant tight (@media (min-width: 1024px) and (max-height: 820px));
 
 /* ==========================================================================
    SYXORIA DESIGN TOKENS
@@ -721,28 +723,100 @@ html.lenis { scroll-behavior: auto; }
 }
 
 /* ==========================================================================
-   ONBOARDING (components/onboarding) — one environment that evolves as the
-   system learns the company. Calmer than the homepage: the Core is a small
-   mark, light is rationed, motion is a soft rise and a few morphs.
+   SYXORIA CORE (components/brand/syxoria-core.tsx) — one Core, many states.
+   --light (0–1): how strong its emerald is · --open (0–1): how far its halves
+   have parted · data-motion: still | breathe | scan | flow.
+   Three layers: light behind · stone (static, its own compositing layer) · light in the folds.
+   ========================================================================== */
+.syx-core { --light: 0.1; --open: 0; position: relative; display: inline-block; flex: none; aspect-ratio: 1; }
+.syx-core__layer { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.syx-core__layer--stone { will-change: transform; filter: drop-shadow(0 6px 10px rgb(0 0 0 / 0.55)); }
+.syx-core[data-detail="mark"] .syx-core__layer--stone { filter: none; }
+
+.syx-core__aura { opacity: calc(var(--light) * var(--light) * 0.55 + var(--light) * 0.22); transition: opacity 1.4s var(--ease-out-soft); }
+.syx-core__heart { opacity: calc(var(--light) * 0.3 + var(--open) * 0.45); transform-box: view-box; transform-origin: 60px 58px; scale: calc(0.55 + var(--open) * 0.5); transition: opacity 1.4s var(--ease-out-soft), scale 1.4s var(--ease-out-soft); }
+.syx-core__seam { fill: none; stroke: #7cc9a5; stroke-width: calc(0.3 + var(--open) * 0.6); stroke-linecap: round; opacity: calc(var(--light) * 0.55); transition: opacity 1.2s, stroke-width 1.2s var(--ease-out-soft); }
+.syx-core__seam-glow { fill: none; stroke: var(--core-light); stroke-width: calc(2 + var(--open) * 3.5); stroke-linecap: round; opacity: calc(0.06 + var(--light) * 0.5); transition: opacity 1.2s, stroke-width 1.2s var(--ease-out-soft); }
+
+/* the halves part — hinged at the bottom of the seam, so they open like a book */
+.syx-core__half { transform-box: view-box; transition: translate 1.4s var(--ease-out-soft), rotate 1.4s var(--ease-out-soft); }
+.syx-core__half--l { transform-origin: 59px 106px; translate: calc(var(--open) * -1.4px) 0; rotate: calc(var(--open) * -1.8deg); }
+.syx-core__half--r { transform-origin: 61px 106px; translate: calc(var(--open) * 1.4px) 0; rotate: calc(var(--open) * 1.8deg); }
+.syx-core__rim { stroke-width: 0.7; }
+.syx-core__grain { mix-blend-mode: soft-light; opacity: 0.9; }
+.syx-core__groove { fill: none; stroke: rgb(0 0 0 / 0.6); stroke-width: 1.35; stroke-linecap: round; stroke-linejoin: round; }
+.syx-core__lip { fill: none; stroke: rgb(255 255 255 / 0.05); stroke-width: 1; stroke-linecap: round; translate: 0.3px 0.7px; }
+.syx-core__edge { fill: none; stroke: #6fc79f; stroke-width: 1.2; opacity: calc(var(--open) * var(--light) * 0.7); transition: opacity 1.4s; }
+
+/* a fold's light: it arrives slowly, from inside the groove; its strength follows the Core's */
+.syx-core__fold { fill: none; stroke-linecap: round; stroke-linejoin: round; opacity: 0; transition: opacity 1.6s var(--ease-out-soft); }
+.syx-core__fold[data-lit] { opacity: calc(0.2 + var(--light) * 0.62); }
+.syx-core__fold-glow { stroke: #14694a; stroke-width: 2.6; }
+.syx-core__fold-line { stroke: #5db38c; stroke-width: 0.5; }
+.syx-core__spark { fill: none; stroke: #d3f4e4; stroke-width: 0.9; stroke-linecap: round; stroke-dasharray: 0.08 0.92; opacity: 0; }
+/* searching: light runs out along the folds · taking information in: it runs in, towards the seam */
+.syx-core[data-motion="scan"] .syx-core__spark { opacity: 0.85; animation: syx-out 2.2s var(--ease-in-out-soft) infinite; }
+.syx-core[data-motion="flow"] .syx-core__spark { opacity: 0.6; animation: syx-in 2.8s linear infinite; }
+@keyframes syx-out { from { stroke-dashoffset: 0.08; } to { stroke-dashoffset: -1; } }
+@keyframes syx-in { from { stroke-dashoffset: -1; } to { stroke-dashoffset: 0.08; } }
+.syx-core[data-motion="breathe"] .syx-core__heart,
+.syx-core[data-motion="breathe"] .syx-core__seam-glow { animation: syx-breathe 3.8s var(--ease-in-out-soft) infinite; }
+.syx-core[data-motion="scan"] .syx-core__seam-glow { animation: syx-breathe 2.2s var(--ease-in-out-soft) infinite; }
+@keyframes syx-breathe { 50% { opacity: calc(0.25 + var(--light) * 0.6 + var(--open) * 0.3); } }
+
+/* the small Core of a bar: bolder folds, no grain */
+.syx-core[data-detail="mark"] .syx-core__groove { stroke-width: 2.6; stroke: rgb(0 0 0 / 0.7); }
+.syx-core[data-detail="mark"] .syx-core__fold-glow { stroke-width: 5.5; }
+.syx-core[data-detail="mark"] .syx-core__fold-line { stroke-width: 1.6; }
+.syx-core[data-detail="mark"] .syx-core__spark { stroke-width: 2.6; }
+.syx-core[data-detail="mark"] .syx-core__rim { stroke-width: 1.6; }
+.syx-core[data-detail="mark"] .syx-core__seam { stroke-width: calc(1 + var(--open) * 1.5); }
+
+/* something reached it: one ring of light, and its heart flares */
+.syx-core__pulse { fill: none; stroke: var(--color-accent-strong); transform-box: view-box; transform-origin: 60px 59px; animation: syx-pulse 1.3s var(--ease-out-soft) both; pointer-events: none; }
+@keyframes syx-pulse {
+  from { scale: 0.92; opacity: 0.8; stroke-width: 1.6; }
+  to { scale: 1.4; opacity: 0; stroke-width: 0.3; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .syx-core__spark, .syx-core__pulse { display: none; }
+  .syx-core__heart, .syx-core__seam-glow { animation: none !important; }
+}
+
+/* ==========================================================================
+   ONBOARDING (components/onboarding) — one environment that evolves as
+   Syxoria learns the company. One desktop viewport per moment. Emerald is a
+   state, not a decoration: restrained while it knows little, stronger as it
+   understands, confident where it acts. Motion: a soft rise, a few morphs,
+   information flowing into the Core.
    ========================================================================== */
 
-/* the environment's light: a faint emerald dawn at the top, following how awake the system is */
+/* the environment's light: a faint emerald dawn at the top, following how much Syxoria knows */
 .onb-atmosphere {
   background:
-    radial-gradient(60rem 26rem at 50% -8rem, rgb(42 141 102 / calc(0.02 + var(--awake, 0) * 0.1)), transparent 70%),
-    radial-gradient(40rem 40rem at 100% 100%, rgb(42 141 102 / calc(var(--awake, 0) * 0.035)), transparent 70%);
+    radial-gradient(60rem 26rem at 50% -8rem, rgb(42 141 102 / calc(0.015 + var(--awake, 0) * 0.09)), transparent 70%),
+    radial-gradient(40rem 40rem at 100% 100%, rgb(42 141 102 / calc(var(--awake, 0) * 0.03)), transparent 70%);
 }
 
-/* Layout: it morphs between moments rather than navigating */
-.onb-stage { display: grid; grid-template-columns: minmax(0, 1fr); }
-.onb[data-layout="focus"] .onb-stage { min-height: calc(100dvh - 4rem); align-items: center; padding-block: 3rem 4rem; }
-.onb[data-layout="split"] .onb-stage { padding-block: clamp(2rem, 1rem + 4vw, 5rem) 6rem; }
-.onb[data-layout="briefing"] .onb-stage { max-width: 68rem; padding-block: clamp(2rem, 1rem + 4vw, 5rem) 6rem; }
+/* Layout: one viewport per moment on desktop; it morphs between moments rather than navigating */
+.onb-stage { display: grid; grid-template-columns: minmax(0, 1fr); align-items: start; padding-block: 1.75rem 4rem; }
+.onb[data-layout="focus"] .onb-stage { min-height: calc(100dvh - 4rem); align-content: center; padding-block: 2rem 3rem; }
 @media (min-width: 1024px) {
-  .onb[data-layout="split"] .onb-stage { grid-template-columns: minmax(0, 1fr) 21rem; column-gap: clamp(3rem, 6vw, 7rem); }
-}
-@media (min-width: 1280px) {
-  .onb[data-layout="split"] .onb-stage { grid-template-columns: minmax(0, 1fr) 23rem; }
+  /* every moment starts at the same height, so nothing jumps as the memory grows */
+  .onb-stage {
+    min-height: calc(100dvh - 4rem);
+    align-content: start;
+    column-gap: clamp(2.5rem, 5vw, 5.5rem);
+    padding-block: clamp(1rem, 12vh - 3.5rem, 5rem) clamp(1rem, 3vh, 2.5rem);
+    transition: grid-template-columns 700ms var(--ease-out-soft);
+  }
+  .onb[data-layout="focus"] .onb-stage { align-content: center; }
+  .onb[data-layout="split"] .onb-stage { max-width: 80rem; }
+  .onb[data-layout="split"][data-density="detailed"] .onb-stage { grid-template-columns: minmax(0, 1fr) 20rem; }
+  .onb[data-layout="split"][data-density="compact"] .onb-stage { grid-template-columns: minmax(0, 1fr) 14rem; }
+  .onb[data-layout="briefing"] .onb-stage { max-width: 78rem; }
+  .onb-memory-slot { position: sticky; top: 5.5rem; }
 }
 
 /* Arrivals: a soft rise, staggered by --i */
@@ -751,7 +825,7 @@ html.lenis { scroll-behavior: auto; }
   from { opacity: 0; transform: translate3d(0, 10px, 0); }
   to { opacity: 1; transform: none; }
 }
-/* words that change in place (the system's state, a phase, a level) */
+/* words that change in place (the Core's word, a phase, a level) */
 .onb-word { animation: onb-word 600ms var(--ease-out-soft) both; }
 @keyframes onb-word {
   from { opacity: 0; filter: blur(3px); transform: translate3d(0, 3px, 0); }
@@ -759,21 +833,10 @@ html.lenis { scroll-behavior: auto; }
 }
 .onb-pop { animation: onb-pop 500ms var(--ease-spring) both; }
 @keyframes onb-pop { from { transform: scale(0.4); opacity: 0; } }
+.onb-ellipsis::after { content: "…"; animation: pulse-soft 1.8s var(--ease-in-out-soft) infinite; }
+.onb-searching { animation: pulse-soft 1.8s var(--ease-in-out-soft) infinite; }
 
-/* The Core mark: fissures light one by one; while working, its light breathes */
-.core-mark__fissure { opacity: 0; transition: opacity 1.4s var(--ease-out-soft); }
-.core-mark__fissure[data-lit] { opacity: 1; }
-.core-mark__heart { opacity: calc(0.08 + var(--awake) * 0.85); transition: opacity 1.4s var(--ease-out-soft); }
-.core-mark__aura { opacity: calc(var(--awake) * 0.85); transform-origin: 50% 52%; transition: opacity 1.4s var(--ease-out-soft); }
-.core-mark--working .core-mark__aura { animation: core-breathe 2.6s var(--ease-in-out-soft) infinite; }
-.core-mark--working .core-mark__heart { animation: core-heart 2.6s var(--ease-in-out-soft) infinite; }
-@keyframes core-breathe {
-  0%, 100% { scale: 0.92; opacity: calc(0.25 + var(--awake) * 0.5); }
-  50% { scale: 1.08; opacity: calc(0.45 + var(--awake) * 0.55); }
-}
-@keyframes core-heart { 50% { opacity: 1; } }
-
-/* Sources: connecting = a slow line of the Core's light running along the row */
+/* a slow line of the Core's light running along an edge (connecting, searching, working) */
 .onb-connecting {
   background: linear-gradient(90deg, transparent, var(--color-accent-strong), transparent) 0 0 / 40% 100% no-repeat;
   animation: onb-connecting 1.6s var(--ease-in-out-soft) infinite;
@@ -783,6 +846,225 @@ html.lenis { scroll-behavior: auto; }
   to { background-position: 140% 0; }
 }
 
+/* information travelling to the Core (flow-to-core.ts) */
+.onb-flow-dot {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: var(--z-toast);
+  width: 7px;
+  height: 7px;
+  margin: -3.5px 0 0 -3.5px;
+  border-radius: 999px;
+  background: #c9f2de;
+  box-shadow: 0 0 0 2px rgb(79 174 134 / 0.3), 0 0 14px 4px rgb(29 122 85 / 0.7);
+  pointer-events: none;
+}
+
+/* ---------- ONBOARDING BUTTON — a clean slab, not the landing page's stone ---------- */
+.onb-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  height: 2.875rem;
+  padding: 0 1.1rem 0 1.35rem;
+  overflow: hidden;
+  border-radius: 10px;
+  background: #ecebe6;
+  color: #0b0c0d;
+  font-size: 0.875rem;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  white-space: nowrap;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.6), 0 1px 2px rgb(0 0 0 / 0.4), 0 12px 28px -14px rgb(0 0 0 / 0.8);
+  transition: background-color 250ms, color 250ms, box-shadow 400ms var(--ease-out-soft), scale 150ms var(--ease-out-soft);
+}
+.onb-btn:hover { background: #fff; }
+.onb-btn:active { scale: 0.985; }
+.onb-btn:focus-visible { outline: 2px solid var(--color-accent-strong); outline-offset: 3px; }
+.onb-btn__arrow { flex: none; transition: translate 400ms var(--ease-out-soft), opacity 300ms; }
+.onb-btn:hover .onb-btn__arrow { translate: 3px 0; }
+.onb-btn:disabled:not([aria-busy]) { cursor: not-allowed; background: rgb(255 255 255 / 0.07); color: var(--color-fg-3); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.06); }
+.onb-btn:disabled:not([aria-busy]) .onb-btn__arrow { translate: 0 0; }
+.onb-btn[aria-busy] { cursor: progress; }
+.onb-btn[aria-busy] .onb-btn__arrow { opacity: 0.3; translate: 0 0; }
+.onb-btn__progress { position: absolute; inset: auto 0 0; height: 2px; background: linear-gradient(90deg, transparent, var(--color-accent), transparent) 0 0 / 40% 100% no-repeat; animation: onb-connecting 1.3s var(--ease-in-out-soft) infinite; }
+/* the last step, into the product: the Core's own emerald, confident */
+.onb-btn[data-tone="emerald"] { background: linear-gradient(180deg, #23936a, #18704f); color: #f2fbf6; box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.18), 0 0 0 1px rgb(79 174 134 / 0.35), 0 14px 36px -12px rgb(29 122 85 / 0.7); }
+.onb-btn[data-tone="emerald"]:hover { background: linear-gradient(180deg, #28a075, #1a7a56); }
+
+/* ---------- Company: the search, and the identity it finds ---------- */
+.onb-search__line { position: absolute; left: 6px; right: 6px; bottom: 0; height: 1px; opacity: 0; transition: opacity 500ms; }
+.onb-search[data-phase="reading"] .onb-search__line,
+.onb-search[data-phase="register"] .onb-search__line {
+  opacity: 1;
+  background: linear-gradient(90deg, transparent, var(--color-accent-strong), transparent) 0 0 / 35% 100% no-repeat;
+  animation: onb-connecting 1.4s var(--ease-in-out-soft) infinite;
+}
+.onb-search[data-phase="identified"] .onb-search__line { opacity: 1; background: linear-gradient(90deg, transparent, var(--color-accent-strong) 20%, var(--color-accent-strong) 80%, transparent); }
+.onb-search input { transition: color 500ms, border-color 600ms; }
+.onb-search[data-phase="reading"] input { color: var(--color-accent-strong); }
+.onb-search[data-phase="identified"] input { border-color: var(--color-accent-line); }
+
+.onb-identity {
+  padding: 1.4rem 1.6rem 0.4rem;
+  border-radius: 14px;
+  border: 1px solid rgb(255 255 255 / 0.06);
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.025), transparent 60%);
+  transition: border-color 900ms, box-shadow 900ms;
+}
+.onb-identity:not([data-validated]) { padding-bottom: 1.4rem; }
+.onb-identity[data-validated] { border-color: var(--color-accent-line); box-shadow: 0 30px 60px -40px rgb(10 105 70 / 0.5); }
+.onb-identity__seal { opacity: 0; }
+.onb-identity[data-validated] .onb-identity__seal { opacity: 1; animation: onb-pop 600ms var(--ease-spring) both; }
+.onb-identity dl > div:nth-last-child(-n + 2) { border-bottom-color: transparent; }
+.onb-verified { animation: onb-pop 500ms var(--ease-spring) both; animation-delay: calc(var(--i, 0) * 85ms + 250ms); }
+
+/* ---------- CONNECTORS ---------- */
+.onb-connector { padding: 1rem 1.1rem; border-radius: 12px; border: 1px solid rgb(255 255 255 / 0.07); background: rgb(255 255 255 / 0.018); transition: border-color 600ms, background-color 600ms; }
+.onb-connector:hover { border-color: rgb(255 255 255 / 0.12); }
+.onb-connector[data-variant="row"] { padding: 0.8rem 0.9rem; }
+.onb-connector__tile { border: 1px solid rgb(255 255 255 / 0.08); background: rgb(255 255 255 / 0.03); transition: border-color 700ms, box-shadow 700ms; }
+.onb-connector[data-state="connected"] { border-color: var(--color-accent-line); background: linear-gradient(180deg, rgb(42 141 102 / 0.07), rgb(42 141 102 / 0.012)); }
+.onb-connector[data-state="connected"] .onb-connector__tile { border-color: var(--color-accent-line); box-shadow: 0 0 18px -6px var(--core-glow); }
+.onb-connector[data-state="error"],
+.onb-connector[data-state="reconnect"] { border-color: rgb(217 184 119 / 0.22); }
+.onb-connector__action { height: 1.9rem; padding: 0 0.8rem; border-radius: 7px; font-size: 12.5px; color: var(--color-fg); background: rgb(255 255 255 / 0.06); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1); transition: background-color 200ms, color 200ms, opacity 200ms; }
+.onb-connector__action:hover { background: rgb(255 255 255 / 0.11); }
+.onb-connector__action:focus-visible { outline: 2px solid var(--color-fg); outline-offset: 2px; }
+.onb-connector__action--quiet { background: transparent; box-shadow: none; color: var(--color-fg-3); }
+.onb-connector__action--quiet:hover { background: rgb(255 255 255 / 0.05); color: var(--color-fg); }
+.onb-connector__action:disabled { opacity: 0.4; pointer-events: none; }
+@media (hover: hover) {
+  .onb-connector__disconnect { opacity: 0; }
+  .onb-connector:hover .onb-connector__disconnect,
+  .onb-connector__disconnect:focus-visible { opacity: 1; }
+}
+.onb-see { position: relative; }
+.onb-connector__reads {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 8px);
+  z-index: var(--z-overlay);
+  width: max-content;
+  max-width: 17rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: 8px;
+  border: 1px solid var(--color-line);
+  background: var(--color-canvas-3);
+  color: var(--color-fg-2);
+  font-size: 12px;
+  line-height: 1.45;
+  opacity: 0;
+  translate: 0 4px;
+  pointer-events: none;
+  transition: opacity 200ms, translate 200ms;
+}
+.onb-see:hover .onb-connector__reads,
+.onb-see:focus-within .onb-connector__reads { opacity: 1; translate: 0 0; }
+
+/* ---------- Understanding: the Core's moment ---------- */
+.onb-core-large { width: clamp(12rem, 44vh - 2rem, 25rem); }
+@media (max-width: 1023.98px) { .onb-core-large { width: clamp(10rem, 48vw, 15rem); } }
+.onb-flow__path { fill: none; stroke: rgb(255 255 255 / 0.07); stroke-width: 1; }
+.onb-flow__packet { fill: none; stroke: var(--color-accent-strong); stroke-width: 1.6; stroke-linecap: round; stroke-dasharray: 0.035 0.965; opacity: 0.9; animation: onb-packet 2.6s linear infinite; transition: opacity 1s; }
+@keyframes onb-packet { from { stroke-dashoffset: 0.035; } to { stroke-dashoffset: -1; } }
+.onb-understanding[data-done] .onb-flow__packet { opacity: 0; }
+.onb-understanding[data-done] .onb-flow__path { stroke: rgb(79 174 134 / 0.16); transition: stroke 1.2s; }
+.onb-branch { fill: none; stroke: rgb(79 174 134 / 0); stroke-width: 1; stroke-dasharray: 1; stroke-dashoffset: 1; transition: stroke-dashoffset 1.4s var(--ease-out-soft), stroke 1s; }
+.onb-branch--on { stroke: rgb(79 174 134 / 0.32); stroke-dashoffset: 0; }
+.onb-chain__node { background: rgb(255 255 255 / 0.18); box-shadow: 0 0 0 3px var(--color-canvas); transition: background-color 700ms, box-shadow 700ms; }
+.onb-chain__node--on { background: var(--color-accent-strong); box-shadow: 0 0 0 3px var(--color-canvas), 0 0 12px 2px var(--core-glow); }
+.onb-chain__edge { height: 100%; background: var(--color-accent-strong); transform-origin: top; scale: 1 0; transition: scale 900ms var(--ease-out-soft); }
+.onb-chain__edge--on { scale: 1 1; }
+.onb-discovery { padding-left: 0.9rem; border-left: 1px solid var(--color-accent-line); }
+.onb-discovery[data-tone="attention"] { border-left-color: rgb(217 184 119 / 0.4); }
+.onb-hold { position: relative; overflow: hidden; }
+.onb-hold::after { content: ""; position: absolute; inset: 0; background: var(--color-accent-strong); transform-origin: left; animation: onb-hold var(--hold) linear both; }
+@keyframes onb-hold { from { scale: 0 1; } }
+
+/* ---------- Priorities ---------- */
+.onb-priority { position: relative; border-bottom: 1px solid rgb(255 255 255 / 0.07); }
+.onb-priority:focus-visible { outline: 2px solid var(--color-fg); outline-offset: 4px; border-radius: 4px; }
+.onb-priority__mark { background: rgb(255 255 255 / 0.2); transition: background-color 400ms, width 400ms var(--ease-out-soft); }
+.onb-priority--on .onb-priority__mark { width: 1.25rem; background: var(--color-accent-strong); }
+.onb-graph-panel { background: linear-gradient(180deg, rgb(255 255 255 / 0.022), transparent 70%); }
+.onb-graph__line { fill: none; stroke: rgb(255 255 255 / 0.5); stroke-width: 1.6; stroke-linejoin: round; stroke-linecap: round; transition: d 800ms var(--ease-out-soft); }
+.onb-graph__line--focus { stroke: var(--color-accent-strong); stroke-width: 2.4; filter: drop-shadow(0 0 6px rgb(29 122 85 / 0.6)); }
+.onb-graph__area { transition: d 800ms var(--ease-out-soft); }
+.onb-graph__band,
+.onb-graph__band-clip { transition: x 800ms var(--ease-out-soft), width 800ms var(--ease-out-soft); }
+.onb-graph__band-edge { stroke: var(--color-accent-line); stroke-dasharray: 2 3; }
+.onb-graph__dot { fill: var(--color-accent-strong); stroke: var(--color-canvas); stroke-width: 2; transition: cx 800ms var(--ease-out-soft), cy 800ms var(--ease-out-soft); }
+.onb-graph__ref line,
+.onb-graph__ref text { transition: transform 800ms var(--ease-out-soft); }
+
+/* ---------- Mandate: the autonomy track, and what it means ---------- */
+.onb-autonomy__track,
+.onb-autonomy__fill { position: absolute; left: 0; top: 7px; height: 2px; border-radius: 2px; }
+.onb-autonomy__track { right: 0; background: rgb(255 255 255 / 0.08); }
+.onb-autonomy__fill { width: calc(var(--at) * 50%); background: linear-gradient(90deg, rgb(42 141 102 / 0.45), var(--color-accent-strong)); box-shadow: 0 0 14px rgb(29 122 85 / calc(0.25 + var(--at) * 0.3)); transition: width 700ms var(--ease-out-soft), box-shadow 700ms; }
+.onb-autonomy__knob { position: relative; z-index: 1; width: 16px; height: 16px; border-radius: 999px; background: var(--color-canvas); box-shadow: inset 0 0 0 1.5px rgb(255 255 255 / 0.22); transition: box-shadow 500ms, background-color 500ms; }
+.onb-autonomy__stop:hover .onb-autonomy__knob { box-shadow: inset 0 0 0 1.5px rgb(255 255 255 / 0.45); }
+.onb-autonomy__knob--passed { background: var(--color-accent); box-shadow: inset 0 0 0 1.5px var(--color-accent-strong); }
+.onb-autonomy__knob--on { background: var(--color-accent-strong); box-shadow: 0 0 0 4px rgb(42 141 102 / 0.18), 0 0 18px 2px var(--core-glow); }
+.onb-autonomy__stop:has(input:focus-visible) .onb-autonomy__knob { outline: 2px solid var(--color-fg); outline-offset: 3px; }
+
+.onb-scenario__steps { padding-top: 1.1rem; }
+.onb-scenario__step { animation: onb-rise 600ms var(--ease-out-soft) both; animation-delay: calc(var(--i, 0) * 140ms); }
+.onb-scenario__rail { position: absolute; left: 6px; right: 0; top: 5px; height: 2px; background: var(--color-accent-strong); opacity: 0.75; transform-origin: left; animation: onb-rail 500ms var(--ease-out-soft) both; animation-delay: calc(var(--i, 0) * 140ms + 150ms); }
+@keyframes onb-rail { from { scale: 0 1; } }
+.onb-scenario__step:last-child .onb-scenario__rail { display: none; }
+.onb-scenario__step:has(+ .onb-scenario__step--you) .onb-scenario__rail { right: 1.4rem; }
+.onb-scenario__node { position: relative; display: block; width: 12px; height: 12px; border-radius: 999px; background: var(--color-accent-strong); box-shadow: 0 0 0 3px #0b0c0d, 0 0 10px var(--core-glow); }
+.onb-scenario__step--you .onb-scenario__node { background: #0b0c0d; box-shadow: inset 0 0 0 1.5px var(--color-fg), 0 0 0 3px #0b0c0d; }
+.onb-scenario__boundary {
+  position: absolute;
+  left: -0.9rem;
+  top: -1.15rem;
+  bottom: 0;
+  padding-left: 0.45rem;
+  border-left: 1px dashed rgb(255 255 255 / 0.3);
+  color: var(--color-fg-2);
+  font-size: 10.5px;
+  line-height: 1;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.onb-chip { padding: 0.3rem 0.65rem; border-radius: 999px; font-size: 12.5px; color: var(--color-fg-2); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.09); }
+.onb-chip--auto { color: var(--color-fg); background: rgb(42 141 102 / 0.1); box-shadow: inset 0 0 0 1px var(--color-accent-line); }
+
+/* ---------- The first briefing: one line of reasoning, ending in action ---------- */
+.onb-prelude__line { opacity: 0; translate: 0 8px; filter: blur(3px); transition: opacity 600ms var(--ease-out-soft), translate 600ms var(--ease-out-soft), filter 600ms; }
+.onb-prelude__line.is-on { opacity: 1; translate: 0 0; filter: none; }
+.onb-reasoning { border-top: 1px solid rgb(255 255 255 / 0.08); }
+.onb-brief { position: relative; padding: 1.4rem 1.5rem 1.5rem 0; opacity: 0; translate: 0 10px; transition: opacity 700ms var(--ease-out-soft), translate 700ms var(--ease-out-soft); }
+.onb-brief[data-shown] { opacity: 1; translate: 0 0; }
+@container (min-width: 56rem) {
+  .onb-brief + .onb-brief { padding-left: 1.5rem; border-left: 1px solid rgb(255 255 255 / 0.06); }
+}
+/* the reasoning advancing: a hairline lights along the top as each step is reached */
+.onb-brief::before { content: ""; position: absolute; left: 0; right: 0; top: -1px; height: 1px; background: rgb(255 255 255 / 0.35); transform-origin: left; scale: 0 1; transition: scale 700ms var(--ease-out-soft) 150ms; }
+.onb-brief[data-shown]::before { scale: 1 1; }
+.onb-brief__label { color: var(--color-fg-3); }
+.onb-brief__mark { width: 0.75rem; height: 1px; background: rgb(255 255 255 / 0.3); }
+/* the action: where understanding becomes execution — a little more emerald */
+.onb-brief--action {
+  margin-top: 0.75rem;
+  padding: 1.4rem 1.5rem 1.5rem !important;
+  border-radius: 14px;
+  border-left: 0 !important;
+  background: linear-gradient(180deg, rgb(42 141 102 / 0.1), rgb(42 141 102 / 0.025));
+  box-shadow: inset 0 0 0 1px var(--color-accent-line), 0 30px 60px -40px rgb(10 105 70 / 0.6);
+}
+@container (min-width: 56rem) { .onb-brief--action { margin: 0.75rem 0 0 0.75rem; } }
+.onb-brief--action::before { display: none; }
+.onb-brief--action .onb-brief__label { color: var(--color-accent-strong); }
+.onb-brief--action .onb-brief__mark { background: var(--color-accent-strong); box-shadow: 0 0 8px var(--core-glow); }
+
 /* Segmented control (permission modes) */
 .onb-segment { display: inline-flex; padding: 2px; border-radius: 999px; box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.08); }
 .onb-segment__item { cursor: pointer; padding: 0.35rem 0.8rem; border-radius: 999px; font-size: 12.5px; color: var(--color-fg-3); transition: color 250ms, background-color 250ms, box-shadow 250ms; white-space: nowrap; }
@@ -790,26 +1072,6 @@ html.lenis { scroll-behavior: auto; }
 .onb-segment__item--on { color: var(--color-fg); background: rgb(255 255 255 / 0.06); }
 .onb-segment__item--on[data-mode="auto"] { color: var(--color-accent-strong); background: var(--color-accent-soft); box-shadow: inset 0 0 0 1px var(--color-accent-line); }
 .onb-segment__item:has(input:focus-visible) { outline: 2px solid var(--color-fg); outline-offset: 2px; }
-
-/* Autonomy levels: the line fills to the chosen stop */
-.onb-levels__fill { width: calc(var(--at) * 33.333%); transition: width 600ms var(--ease-out-soft); }
-
-/* The understanding map */
-.onb-map__line { fill: none; stroke: rgb(255 255 255 / 0.07); stroke-width: 1; }
-.onb-map__flow { fill: none; stroke: var(--color-accent-strong); stroke-width: 1.4; stroke-linecap: round; stroke-dasharray: 0.015 0.11; animation: onb-flow 2.2s linear infinite; opacity: 0.85; transition: opacity 1.2s; }
-.onb-map__flow--out { stroke-width: 1.1; opacity: 0.6; animation-duration: 2.8s; }
-@keyframes onb-flow { to { stroke-dashoffset: -0.5; } }
-.onb-map--done .onb-map__flow { animation: none; opacity: 0; }
-.onb-map__draw { fill: none; stroke: rgb(255 255 255 / 0.1); stroke-width: 1; stroke-dasharray: 1; stroke-dashoffset: 1; transition: stroke-dashoffset 1.2s var(--ease-out-soft), stroke 1s; }
-.onb-map__branch--on .onb-map__draw { stroke-dashoffset: 0; stroke: rgb(79 174 134 / 0.32); }
-.onb-map__relation { fill: none; stroke: rgb(79 174 134 / 0.45); stroke-width: 1; stroke-dasharray: 1; stroke-dashoffset: 1; animation: onb-draw 1.4s var(--ease-out-soft) forwards; }
-@keyframes onb-draw { to { stroke-dashoffset: 0; } }
-.onb-map__halo { fill: rgb(42 141 102 / 0); stroke: rgb(255 255 255 / 0.05); stroke-dasharray: 2 4; transition: fill 1s, stroke 1s; }
-.onb-map__halo--on { fill: rgb(42 141 102 / 0.05); stroke: rgb(79 174 134 / 0.14); }
-.onb-map__missing { fill: none; stroke: rgb(255 255 255 / 0.12); stroke-dasharray: 2 3; }
-.onb-map__dot { fill: #9fe0c2; opacity: 0; transform-box: fill-box; transform-origin: center; scale: 0; transition: opacity 700ms var(--ease-out-soft), scale 700ms var(--ease-spring); }
-.onb-map__dot[data-on] { opacity: 0.8; scale: 1; }
-.onb-map--done .onb-map__dot[data-on] { opacity: 0.6; }
 
 /* The editorial voice inside the product (the briefing keeps the brand's type in the app) */
 .editorial-type {
@@ -827,12 +1089,16 @@ html.lenis { scroll-behavior: auto; }
   font-feature-settings: normal;
 }
 
-/* Shared elements between moments (View Transitions): the bar, the memory, the conversation, the briefing's title */
+/* Shared elements between moments (View Transitions): the bar, the memory, the conversation,
+   the briefing's title — and the Core, which travels between the bar and the stage */
 .onb-bar { view-transition-name: onb-bar; }
 .onb-memory { view-transition-name: onb-memory; }
 .onb-conversation { view-transition-name: onb-conversation; }
 .onb-briefing__title { view-transition-name: onb-briefing-title; }
 html[data-vt="onboarding"]::view-transition-group(*) { animation-duration: 650ms; animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1); }
+html[data-vt="onboarding"]::view-transition-group(syx-core) { animation-duration: 1000ms; animation-timing-function: cubic-bezier(0.65, 0, 0.2, 1); }
+html[data-vt="onboarding"]::view-transition-old(syx-core),
+html[data-vt="onboarding"]::view-transition-new(syx-core) { height: 100%; animation-duration: 1000ms; }
 /* snapshots keep their own size, pinned to the top, so text never stretches while a box changes height */
 html[data-vt="onboarding"]::view-transition-old(onb-conversation),
 html[data-vt="onboarding"]::view-transition-new(onb-conversation),
@@ -858,9 +1124,8 @@ html[data-vt="onboarding"]::view-transition-new(root) { animation-duration: 500m
 @keyframes arrive-top { from { transform: translate3d(0, -100%, 0); opacity: 0; } }
 
 @media (prefers-reduced-motion: reduce) {
-  .onb-rise, .onb-word, .onb-pop, [data-arrival] aside, [data-arrival] header, [data-arrival] .arrival-late { animation: none; }
-  .onb-map__flow { display: none; }
-  .onb-map__relation { animation: none; stroke-dashoffset: 0; }
+  .onb-rise, .onb-word, .onb-pop, .onb-verified, .onb-scenario__step, .onb-scenario__rail, [data-arrival] aside, [data-arrival] header, [data-arrival] .arrival-late { animation: none; }
+  .onb-flow__packet, .onb-connecting, .onb-btn__progress { display: none; }
+  .onb-hold::after { animation: none; }
+  .onb-brief, .onb-prelude__line { transition: none; }
 }
-
-

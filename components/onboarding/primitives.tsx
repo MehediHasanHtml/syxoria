@@ -21,10 +21,10 @@ export function StageHeading({ lead, accent, highlight, children, className }: {
   return (
     <div className={className}>
       <div ref={ref} tabIndex={-1} className="outline-none">
-        <Title as="h1" lead={lead} accent={accent} highlight={highlight} className="onb-rise text-[clamp(1.875rem,1.35rem+1.6vw,2.75rem)] leading-[1.1]" />
+        <Title as="h1" lead={lead} accent={accent} highlight={highlight} className="onb-rise text-[clamp(1.75rem,1.3rem+1.4vw,2.5rem)] leading-[1.1] tight:text-[clamp(1.6rem,1.1rem+1.2vw,2.1rem)]" />
       </div>
       {children && (
-        <p className="onb-rise mt-4 max-w-[34rem] text-[15px] leading-relaxed text-fg-2" style={rise(1)}>
+        <p className="onb-rise mt-3.5 max-w-[34rem] text-[15px] leading-relaxed text-fg-2 tight:mt-2.5 tight:text-[14px]" style={rise(1)}>
           {children}
         </p>
       )}
@@ -98,5 +98,26 @@ export function QuietButton({ className, ...props }: ComponentProps<"button">) {
       {...props}
       className={cn("inline-flex items-center gap-1.5 rounded-sm text-[13.5px] text-fg-3 underline decoration-white/15 underline-offset-4 transition-colors hover:text-fg hover:decoration-accent disabled:pointer-events-none disabled:opacity-40", className)}
     />
+  );
+}
+
+/**
+ * Demo-only help (test passwords, sample addresses). Kept out of the screens' design: a small
+ * note in the corner, removed in production by setting NEXT_PUBLIC_DEMO=off.
+ */
+export function DemoNote({ lines }: { lines: string[] }) {
+  if (process.env.NEXT_PUBLIC_DEMO === "off") return null;
+  return (
+    <details className="group fixed bottom-4 left-4 z-(--z-sticky) max-w-[17rem] text-[12px] text-fg-3">
+      <summary className="inline-flex cursor-pointer list-none items-center gap-2 rounded-full border border-white/[0.08] bg-canvas-2/90 px-3 py-1.5 backdrop-blur transition-colors hover:text-fg [&::-webkit-details-marker]:hidden">
+        <span aria-hidden="true" className="size-1 rounded-full bg-caution/80" />
+        Demo
+      </summary>
+      <ul className="mt-2 grid gap-1.5 rounded-lg border border-white/[0.08] bg-canvas-2/95 p-3 leading-snug backdrop-blur">
+        {lines.map((l) => (
+          <li key={l}>{l}</li>
+        ))}
+      </ul>
+    </details>
   );
 }

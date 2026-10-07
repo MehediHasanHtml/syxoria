@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Bell, LogOut, Menu as MenuIcon, Search, Settings, UserRound } from "lucide-react";
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { SyxoriaCore } from "@/components/brand/syxoria-core";
 import { Avatar } from "@/components/ui/avatar";
 import { Menu } from "@/components/ui/menu";
 import { cn } from "@/lib/cn";
@@ -67,6 +68,15 @@ export function Topbar({ user, notifications, onOpenMenu }: { user: User; notifi
         </form>
 
         <div className="ml-auto flex items-center gap-1.5">
+          {/* the same Core as everywhere: here, simply at work */}
+          <Link
+            href="/app/insights"
+            title="Syxoria is reading new activity"
+            className="mr-1 hidden items-center gap-2 rounded-md py-1 pl-1 pr-2.5 text-[12.5px] text-fg-2 transition-colors hover:bg-white/5 hover:text-fg sm:flex"
+          >
+            <SyxoriaCore state="active" detail="mark" label="Syxoria" vtName="syx-core" className="size-7" />
+            Active
+          </Link>
           <NotificationsMenu notifications={notifications} />
           <Menu
             header={

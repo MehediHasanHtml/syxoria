@@ -1,22 +1,23 @@
 "use client";
 
 import { useCallback, useReducer, useState } from "react";
-import { flushSync } from "react-dom";
 import type { ShellContext } from "@/components/dashboard/app-shell";
 import { stageNames } from "@/content/onboarding";
-import { connectedIds, emptySnapshot, onboardingReducer, systemProgress, type OnboardingAction } from "@/lib/onboarding/machine";
+import { autonomyShare } from "@/lib/onboarding/mandate";
+import { connectedIds, coreFor, emptySnapshot, knowsFor, learningProgress, milestonesFor, onboardingReducer, type OnboardingAction } from "@/lib/onboarding/machine";
 import { getFirstBriefing, saveMandate } from "@/services/onboarding";
-import type { AutonomyPolicy, DataSource, Mandate, OnboardingSnapshot, OnboardingStage } from "@/types";
+import type { AutonomyLevel, AutonomyPolicy, DataSource, Mandate, OnboardingSnapshot, OnboardingStage } from "@/types";
 import { AccountStep } from "./account-step";
-import { AnalysisReveal } from "./analysis-reveal";
-import { AutonomySettings } from "./autonomy-settings";
-import { CompanyIdentification } from "./company-identification";
+import { AutonomyStep } from "./autonomy-step";
+import { CompanyStep } from "./company-step";
+import { ConnectTools } from "./connect-tools";
 import { FirstBriefing } from "./first-briefing";
-import { IntegrationConnection } from "./integration-connection";
-import { MemoryPanel, MemoryStrip } from "./memory-panel";
 import { OnboardingShell, type ShellLayout } from "./onboarding-shell";
+import { PrioritiesStep } from "./priorities-step";
 import { TransitionToSaaS } from "./transition-to-saas";
-import { UnderstandingState } from "./understanding-state";
+import { UnderstandingVisualization } from "./understanding-visualization";
+import { transition } from "./view-transition";
+import { KnowsStrip, WhatSyxoriaKnows } from "./what-syxoria-knows";
 
 type Props = {
   sources: DataSource[];
@@ -39,52 +40,36 @@ const layouts: Record<Exclude<OnboardingStage, "complete">, ShellLayout> = {
 };
 
 /**
- * Moves from one moment to the next as one continuous change: where the browser supports
- * View Transitions, the old and new states morph (the memory panel, the conversation, the
- * briefing's title are shared elements — "ONBOARDING" in globals.css); elsewhere the new
- * moment simply rises in.
- */
-function transition(update: () => void) {
-  const doc = document as Document & { startViewTransition?: (cb: () => void) => { finished: Promise<void> } };
-  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const go = () => {
-    update();
-    window.scrollTo({ top: 0, behavior: "instant" });
-  };
-  if (!doc.startViewTransition || reduced) {
-    go();
-    return;
-  }
-  const root = document.documentElement;
-  root.dataset.vt = "onboarding";
-  doc.startViewTransition(() => flushSync(go)).finished.finally(() => delete root.dataset.vt);
-}
-
-/**
- * The onboarding: one environment that gets richer as the system learns the company —
- * account, company, sources, understanding, analysis, autonomy, briefing — and then becomes
- * the workspace. Every moment reads and writes one state (lib/onboarding/machine.ts).
+ * The onboarding: one environment that grows richer as Syxoria learns the company — sign in,
+ * identify, confirm, connect, understand, prioritise, mandate, brief — and then becomes the
+ * product. Every moment reads and writes one state (lib/onboarding/machine.ts); the Core is the
+ * same object throughout, moving between the bar and the stage as a shared element.
  */
 export function OnboardingExperience({ sources, policy, shell, resume, mode, plan }: Props) {
   const [state, dispatch] = useReducer(onboardingReducer, resume ?? emptySnapshot);
+  const [pulse, bump] = useReducer((n: number) => n + 1, 0);
+  const [level, setLevel] = useState<AutonomyLevel>(state.mandate?.level ?? policy.recommended);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
   /** stage changes go through a transition; everything else updates in place */
   const move = useCallback((action: OnboardingAction) => transition(() => dispatch(action)), []);
+  const onPulse = useCallback(() => bump(), []);
 
-  const progress = systemProgress(state);
-  const level = Math.min(7, (state.session ? 1 : 0) + progress.lit - 1);
   const connected = sources.filter((s) => connectedIds(state).includes(s.id));
+  const core = coreFor(state);
+  const knows = knowsFor(state);
+  const milestones = milestonesFor(state);
 
   async function confirmMandate(mandate: Mandate) {
+    if (!state.company) return;
     setSaving(true);
     setSaveError(null);
     try {
-      const [saved, briefing] = await Promise.all([saveMandate(mandate), getFirstBriefing(connected)]);
+      const [saved, briefing] = await Promise.all([saveMandate(mandate), getFirstBriefing(state.company, connected)]);
       move({ type: "mandated", mandate: saved, briefing });
     } catch {
-      setSaveError("Your choices couldn’t be saved just now. Nothing changed — please try again.");
+      setSaveError("Your mandate couldn’t be saved just now. Nothing changed — please try again.");
     } finally {
       setSaving(false);
     }
@@ -95,55 +80,71 @@ export function OnboardingExperience({ sources, policy, shell, resume, mode, pla
   }
 
   const stage = state.stage === "complete" ? "briefing" : state.stage;
-  const memoryProps = { snapshot: state, sources, policy };
+  const memoryProps = { snapshot: state, sources };
+  // the Core lives in the composition while signing in and while it understands; in the bar otherwise
+  const coreHere = stage !== "account" && stage !== "syncing";
+  const intensity = stage === "autonomy" ? 0.72 + 0.28 * autonomyShare[level] : 1;
+  const awake = milestones.filter((m) => m.on).length / milestones.length;
 
   return (
     <OnboardingShell
       layout={layouts[stage]}
-      awake={level / 7}
-      bar={{ states: progress.states, word: progress.word, level, working: stage === "syncing", email: state.session?.email ?? null }}
-      announcement={`${stageNames[stage]}. The system is ${progress.word.toLowerCase()}.`}
-      memory={<MemoryPanel {...memoryProps} />}
-      strip={<MemoryStrip {...memoryProps} />}
+      density={knows.density}
+      awake={awake}
+      bar={{ core: { ...core, intensity, pulse }, coreHere, milestones, email: state.session?.email ?? null }}
+      announcement={`${stageNames[stage]}.${core.word ? ` Syxoria: ${core.word.toLowerCase()}.` : ""}`}
+      memory={<WhatSyxoriaKnows {...memoryProps} />}
+      strip={<KnowsStrip {...memoryProps} />}
     >
       {stage === "account" && <AccountStep initialMode={mode} plan={plan} onAuthenticated={(session) => move({ type: "authenticated", session })} />}
 
       {stage === "company" && (
-        <CompanyIdentification
+        <CompanyStep
           welcome={state.session?.returning ? `Welcome back${state.session.firstName ? `, ${state.session.firstName}` : ""}` : null}
+          candidate={state.candidate}
+          onSearching={(on) => dispatch({ type: "activity", activity: on ? "searching" : null })}
+          onCandidate={(company) => dispatch({ type: "candidate", company })}
+          onPulse={onPulse}
           onConfirmed={(company) => move({ type: "companyConfirmed", company })}
         />
       )}
 
       {stage === "connections" && (
-        <IntegrationConnection
+        <ConnectTools
           company={state.company}
           sources={sources}
           connections={state.connections}
           onChange={(id, connection) => dispatch({ type: "connection", id, connection })}
+          onPulse={onPulse}
           onContinue={() => move({ type: "go", stage: "syncing" })}
           onBack={() => move({ type: "go", stage: "company" })}
         />
       )}
 
       {stage === "syncing" && state.company && (
-        <UnderstandingState
+        <UnderstandingVisualization
           company={state.company}
           sources={connected}
           found={state.found}
-          level={level}
+          progress={learningProgress(state)}
           onFound={(kind, count) => dispatch({ type: "found", kind, count })}
           onUnderstood={(knowledge) => dispatch({ type: "understood", knowledge })}
           onAnalysed={(analysis) => move({ type: "analysed", analysis })}
         />
       )}
 
-      {stage === "analysis" && state.analysis && (
-        <AnalysisReveal analysis={state.analysis} company={state.company?.name ?? "your company"} onContinue={() => move({ type: "go", stage: "autonomy" })} />
-      )}
+      {stage === "analysis" && state.analysis && <PrioritiesStep analysis={state.analysis} onContinue={() => move({ type: "go", stage: "autonomy" })} />}
 
       {stage === "autonomy" && (
-        <AutonomySettings policy={policy} initial={state.mandate} saving={saving} error={saveError} onConfirm={confirmMandate} onBack={() => move({ type: "go", stage: "analysis" })} />
+        <AutonomyStep
+          policy={policy}
+          initial={state.mandate}
+          saving={saving}
+          error={saveError}
+          onLevel={setLevel}
+          onConfirm={confirmMandate}
+          onBack={() => move({ type: "go", stage: "analysis" })}
+        />
       )}
 
       {stage === "briefing" && state.briefing && state.mandate && (
@@ -151,6 +152,7 @@ export function OnboardingExperience({ sources, policy, shell, resume, mode, pla
           briefing={state.briefing}
           mandate={state.mandate}
           policy={policy}
+          sources={connected}
           firstName={state.session?.firstName ?? null}
           variant="onboarding"
           onEnter={() => move({ type: "go", stage: "complete" })}

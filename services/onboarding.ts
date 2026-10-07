@@ -173,7 +173,7 @@ export async function* understandCompany(
 
 /* ---------- Analysis, autonomy, briefing ---------- */
 
-/** TODO(api): GET /analysis/initial */
+/** TODO(api): GET /analysis/initial — the priorities the system identified, with their evidence */
 export async function getInitialAnalysis(company: CompanyProfile, sources: DataSource[]): Promise<InitialAnalysis> {
   await simulateLatency(400);
   return buildAnalysis(company, sources);
@@ -191,9 +191,9 @@ export async function saveMandate(mandate: Mandate): Promise<Mandate> {
 }
 
 /** TODO(api): GET /briefings/today */
-export async function getFirstBriefing(sources: DataSource[]): Promise<Briefing> {
+export async function getFirstBriefing(company: CompanyProfile, sources: DataSource[]): Promise<Briefing> {
   await simulateLatency(300);
-  return buildBriefing(sources);
+  return buildBriefing(company, sources);
 }
 
 /* ---------- Resuming ---------- */
@@ -214,12 +214,14 @@ export async function getOnboardingProgress(stage: OnboardingStage): Promise<Onb
     stage,
     session: reached("account") ? { email: "mael@northfield.co", firstName: "Maël", returning: false } : null,
     company: reached("company") ? company : null,
+    candidate: null,
+    activity: null,
     connections: reached("connections") ? Object.fromEntries(sources.map((s) => [s.id, { status: "connected", note: sourceFindings[s.id] }])) : {},
     found: reached("syncing") ? Object.fromEntries(knowledge.map((k) => [k.kind, k.count])) : {},
     knowledge: reached("syncing") ? knowledge : null,
     analysis: reached("syncing") ? buildAnalysis(company, sources) : null,
     mandate: reached("autonomy") ? { level: mockAutonomyPolicy.recommended, overrides: {} } : null,
-    briefing: reached("autonomy") ? buildBriefing(sources) : null,
+    briefing: reached("autonomy") ? buildBriefing(company, sources) : null,
   };
 }
 

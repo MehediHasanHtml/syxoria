@@ -123,5 +123,11 @@ export const briefing = {
   lead: "Here’s what matters",
   accent: "today.",
   labels: { priority: "Priority", insight: "Insight", recommendation: "Recommendation", action: "Action" },
+  /** What each step's figure measures */
+  figures: {
+    stake: "at stake today",
+    days: (n: number) => `${n} days`,
+    silence: (company: string) => `without a word from ${company}`,
+  },
   enter: "Enter Syxoria",
 };

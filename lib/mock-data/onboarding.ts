@@ -463,12 +463,13 @@ export function buildBriefing(company: CompanyProfile, sources: DataSource[]): B
   return {
     priority: {
       title: "Three opportunities need your attention today.",
-      // the same finding as the conversion priority: here, deals quiet this long close half as often
-      detail: `Each has been quiet for more than ten days — and at ${company.name}, deals that go quiet this long close half as often.`,
+      detail: "Each has been quiet for more than ten days.",
     },
     insight: {
-      title: "Atelier Rive has been quiet for 12 days.",
-      detail: "It is your largest open deal. Their last email asked about timing for the spring launch.",
+      title: "Your largest open deal has gone quiet.",
+      detail: `${top[0].company}’s last email asked about timing for the spring launch — it is still unanswered.`,
+      // the same finding as the conversion priority: deals quiet this long close half as often
+      quiet: { draftId: "d_0", threshold: 10, note: "Past 10 quiet days, deals close half as often." },
     },
     recommendation: {
       title: "Follow up with all three this morning.",
@@ -479,7 +480,8 @@ export function buildBriefing(company: CompanyProfile, sources: DataSource[]): B
     },
     impact: {
       value: "2×",
-      label: `as likely to close when a quiet deal gets a reply within two weeks — on ${company.name}’s own history.`,
+      label: `as likely to close — on ${company.name}’s own history.`,
+      compare: { acted: "Answered within two weeks", left: "Left quiet", ratio: 2 },
     },
     drafts: top.map((d, i) => ({ id: `d_${i}`, ...d })),
     basedOn: `Based on ${sources.length} ${sources.length === 1 ? "source" : "sources"} and two years of activity`,

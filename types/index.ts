@@ -347,10 +347,18 @@ export type BriefingDraft = { id: string; contact: string; company: string; subj
 /** Priority → insight → recommendation → action: the briefing reads as one line of reasoning */
 export type Briefing = {
   priority: { title: string; detail: string };
-  insight: { title: string; detail: string };
+  insight: {
+    title: string;
+    detail: string;
+    /** The silence it is about: which deal, and after how many quiet days the company’s deals start to slip */
+    quiet?: { draftId: string; threshold: number; note: string };
+  };
   recommendation: { title: string; detail: string };
-  /** What acting on it can achieve, measured on the company’s own history ("2×" · "as likely to close …") */
-  impact?: { value: string; label: string };
+  /**
+   * What acting on it can achieve, measured on the company’s own history ("2×" · "as likely to close …"),
+   * and the two outcomes it compares — acting, and leaving it — drawn to scale
+   */
+  impact?: { value: string; label: string; compare?: { acted: string; left: string; ratio: number } };
   /** The follow-ups the action is about — what Syxoria may do with them depends on the mandate and the tools */
   drafts: BriefingDraft[];
   basedOn: string;

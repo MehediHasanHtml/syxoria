@@ -8,8 +8,29 @@ import { cn } from "@/lib/cn";
 import { formatCurrency } from "@/lib/format";
 import { resolveBriefingAction } from "@/lib/onboarding/mandate";
 import type { AutonomyPolicy, Briefing, DataSource, Mandate } from "@/types";
+import { OutcomeScale, SilenceLine, StakeStrip } from "./briefing-evidence";
 import { BriefingSection } from "./briefing-section";
 import { OnbButton } from "./onboarding-button";
+
+/** A step's figure — the briefing reads at a glance as three of them — and what it measures */
+function Lead({ value, caption, accent }: { value: ReactNode; caption: string; accent?: boolean }) {
+  return (
+    <div className="onb-brief__lead">
+      <p className={cn("onb-brief__figure tabular", accent ? "text-accent-strong" : "text-fg")}>{value}</p>
+      <p className="mt-2 text-[12px] leading-snug text-fg-3">{caption}</p>
+    </div>
+  );
+}
+
+/** What a step means: one statement in the brand's voice, and what supports it */
+function Words({ title, detail }: { title: string; detail: string }) {
+  return (
+    <div className="onb-brief__words onb-brief__then">
+      <p className="onb-brief__statement">{title}</p>
+      <p className="mt-2 text-[13px] leading-relaxed text-fg-2">{detail}</p>
+    </div>
+  );
+}
 
 const today = () => new Intl.DateTimeFormat("en-GB", { weekday: "long", day: "numeric", month: "long" }).format(new Date());
 const greeting = () => {
@@ -41,13 +62,15 @@ const PRELUDE_END = 2300;
  * The reasoning, step by step (ms after the prelude): priority → insight → recommendation, each
  * given time to be read; a longer breath before the action, the strongest moment; then the way in.
  */
-const STEPS = [300, 1100, 1900, 2900, 4000];
+const STEPS = [300, 1300, 2400, 3500, 4600];
 
 /**
  * The first briefing — the reward of the onboarding. A very short prelude says what Syxoria now
  * holds (the memory's final state, folding away: its job is done), then the briefing reveals
  * itself as one line of reasoning — priority → insight → recommendation → action — each step given
- * its own moment, the action last and strongest. Everything in it is the briefing the service
+ * its own moment, the action last and strongest. The first three each lead with one figure and
+ * its evidence drawn to scale (how much → how long → how much better), so the briefing reads at a
+ * glance as three numbers; this composition is the template for every briefing Syxoria writes. Everything in it is the briefing the service
  * returned; the action is worded by the mandate the user just gave and the tools connected
  * (resolveBriefingAction): it says what Syxoria will do or has prepared, never that it has done it.
  */
@@ -56,6 +79,8 @@ export function FirstBriefing({ briefing, mandate, policy, sources, firstName, v
   const [t, setT] = useState(onboarding ? 0 : Infinity);
   const [when, setWhen] = useState<{ hello: string; date: string } | null>(null);
   const headRef = useRef<HTMLHeadingElement>(null);
+  // a deal pointed at — in the stake or in the action — is shown as the same deal in both
+  const [hover, setHover] = useState<string | null>(null);
 
   useEffect(() => {
     // the time of day is the visitor's own, read once mounted (never at render on the server)
@@ -95,6 +120,10 @@ export function FirstBriefing({ briefing, mandate, policy, sources, firstName, v
   const action = resolveBriefingAction(briefing, mandate, policy, sources);
   const { priority, insight, recommendation, drafts } = briefing;
   const worth = drafts.reduce((s, d) => s + d.value, 0);
+  // the deal the reasoning turns to: it stands out in the stake, and its silence is the insight
+  const subject = insight.quiet?.draftId ?? drafts[0]?.id ?? "";
+  const subjectDraft = drafts.find((d) => d.id === subject);
+  const quiet = insight.quiet && subjectDraft ? { ...insight.quiet, days: subjectDraft.quietDays } : null;
 
   if (prelude)
     return (
@@ -126,32 +155,27 @@ export function FirstBriefing({ briefing, mandate, policy, sources, firstName, v
       </h1>
 
       <div className="onb-reasoning mt-9 grid gap-px tight:mt-6 @4xl:grid-cols-[1fr_1fr_1fr_1.35fr]" data-variant={variant} data-reading={(onboarding && reading) || undefined}>
-        {/* what deserves attention — led by what is at stake */}
+        {/* how much — what deserves attention: what is at stake, split to scale */}
         <BriefingSection label={copy.labels.priority} kind="priority" shown={shown(0)} current={current(0)}>
-          <p className="tabular font-display text-[clamp(2.1rem,1.6rem+1.2vw,2.75rem)] font-light leading-none tracking-[-0.025em] text-fg">{figure(formatCurrency(worth), 0)}</p>
-          <p className="mt-1.5 text-[12px] text-fg-3">at stake today</p>
-          <p className="onb-brief__then mt-4 font-display text-[1.2rem] font-light leading-snug tracking-[-0.015em] text-fg">{priority.title}</p>
-          <p className="onb-brief__then mt-2 text-[13.5px] leading-relaxed text-fg-2">{priority.detail}</p>
+          <Lead value={figure(formatCurrency(worth), 0)} caption={copy.figures.stake} />
+          <div className="onb-brief__evidence onb-brief__then">
+            <StakeStrip drafts={drafts} focus={hover ?? subject} onFocus={setHover} />
+          </div>
+          <Words title={priority.title} detail={priority.detail} />
         </BriefingSection>
 
-        {/* why — what Syxoria noticed */}
+        {/* how long — why: what Syxoria noticed, the silence counted out day by day */}
         <BriefingSection label={copy.labels.insight} kind="insight" shown={shown(1)} current={current(1)}>
-          <p className="text-[1.05rem] leading-snug text-fg">
-            <span className="onb-brief__key">{insight.title}</span>
-          </p>
-          <p className="onb-brief__then mt-2.5 text-[13.5px] leading-relaxed text-fg-2">{insight.detail}</p>
+          {quiet && subjectDraft ? <Lead value={figure(copy.figures.days(quiet.days), 1)} caption={copy.figures.silence(subjectDraft.company)} /> : <div />}
+          <div className="onb-brief__evidence onb-brief__then">{quiet && <SilenceLine days={quiet.days} threshold={quiet.threshold} note={quiet.note} />}</div>
+          <Words title={insight.title} detail={insight.detail} />
         </BriefingSection>
 
-        {/* what to do — and what it achieves, measured on the company's own history */}
+        {/* how much better — what to do, and what it achieves on the company’s own history */}
         <BriefingSection label={copy.labels.recommendation} kind="recommendation" shown={shown(2)} current={current(2)}>
-          <p className="text-[1.05rem] leading-snug text-fg">{recommendation.title}</p>
-          <p className="onb-brief__then mt-2.5 text-[13.5px] leading-relaxed text-fg-2">{recommendation.detail}</p>
-          {briefing.impact && (
-            <div className="onb-brief__then onb-brief__impact mt-4">
-              <span className="tabular block font-display text-[1.9rem] font-light leading-none tracking-[-0.02em] text-accent-strong">{figure(briefing.impact.value, 2)}</span>
-              <span className="mt-1.5 block text-[12.5px] leading-snug text-fg-2">{briefing.impact.label}</span>
-            </div>
-          )}
+          {briefing.impact ? <Lead value={figure(briefing.impact.value, 2)} caption={briefing.impact.label} accent /> : <div />}
+          <div className="onb-brief__evidence onb-brief__then">{briefing.impact?.compare && <OutcomeScale {...briefing.impact.compare} />}</div>
+          <Words title={recommendation.title} detail={recommendation.detail} />
         </BriefingSection>
 
         {/* what Syxoria has prepared — worded by the mandate and the tools, never more */}
@@ -159,7 +183,14 @@ export function FirstBriefing({ briefing, mandate, policy, sources, firstName, v
           <p className="text-[1.05rem] leading-snug text-fg">{action.title}</p>
           <ul className="mt-3.5 grid gap-px overflow-hidden rounded-lg border border-accent-line/60">
             {drafts.map((d, i) => (
-              <li key={d.id} className="onb-brief__item bg-canvas/60 px-3.5 py-2 text-[13px]" style={{ ["--i" as string]: i }}>
+              <li
+                key={d.id}
+                className="onb-brief__item bg-canvas/60 px-3.5 py-2 text-[13px]"
+                data-focus={hover === d.id || undefined}
+                style={{ ["--i" as string]: i }}
+                onPointerEnter={() => setHover(d.id)}
+                onPointerLeave={() => setHover(null)}
+              >
                 <span className="flex items-center justify-between gap-3">
                   <span className="min-w-0 truncate">
                     <span className="text-fg">{d.company}</span>

@@ -7,7 +7,7 @@ import { autonomy as copy } from "@/content/onboarding";
 import { effectiveMode } from "@/lib/onboarding/mandate";
 import type { AutonomyLevel, AutonomyPolicy, Mandate, PermissionMode } from "@/types";
 import { AutonomyScenario } from "./autonomy-scenario";
-import { AutonomySelector } from "./autonomy-selector";
+import { AutonomySelector, type LevelReach } from "./autonomy-selector";
 import { OnbButton } from "./onboarding-button";
 import { PermissionControl } from "./permission-control";
 import { Notice, QuietButton, rise, StageHeading } from "./primitives";
@@ -23,9 +23,10 @@ type Props = {
 };
 
 /**
- * The mandate. One choice — how much Syxoria does on its own — demonstrated rather than described,
- * with its consequence always in view: what it does by itself, what it asks first, what it never
- * does. Action-by-action control waits in a sheet for those who want it.
+ * The mandate, read in the order a decision is made: choose how much Syxoria does on its own →
+ * see exactly what that permits (what it does by itself, what it asks first, what it never does)
+ * → watch it play out on one real situation → give the mandate. Action-by-action control waits
+ * in a sheet for those who want it.
  */
 export function AutonomyStep({ policy, initial, saving, error, onLevel, onConfirm, onBack }: Props) {
   const [mandate, setMandate] = useState<Mandate>(initial ?? { level: policy.recommended, overrides: {} });
@@ -38,6 +39,15 @@ export function AutonomyStep({ policy, initial, saving, error, onLevel, onConfir
   const auto = acting.filter((r) => modeOf(r.id) === "auto");
   const ask = acting.filter((r) => modeOf(r.id) === "ask");
   const adjusted = Object.keys(mandate.overrides).length;
+
+  // each level's reach, from the same rules as the lists below (the chosen one with its adjustments)
+  const canBeAuto = acting.filter((r) => r.allowed.includes("auto")).length;
+  const reach = Object.fromEntries(
+    policy.levels.map((l) => {
+      const m: Mandate = l.id === mandate.level ? mandate : { level: l.id, overrides: {} };
+      return [l.id, { auto: acting.filter((r) => effectiveMode(r, m) === "auto").length, total: acting.length, boundary: canBeAuto } satisfies LevelReach];
+    }),
+  ) as Record<AutonomyLevel, LevelReach>;
 
   const setLevel = (l: AutonomyLevel) => {
     setMandate((m) => ({ ...m, level: l }));
@@ -59,28 +69,30 @@ export function AutonomyStep({ policy, initial, saving, error, onLevel, onConfir
         {copy.promise}
       </StageHeading>
 
+      {/* 1 — the choice */}
       <div className="onb-rise mt-8 tight:mt-5" style={rise(2)}>
-        <AutonomySelector policy={policy} level={mandate.level} onChange={setLevel} />
-        <p key={level.id} className="onb-word mt-5 max-w-[40rem] text-[14px] leading-relaxed text-fg-2 tight:mt-3" aria-live="polite">
+        <AutonomySelector policy={policy} level={mandate.level} reach={reach} onChange={setLevel} />
+        <p key={level.id} className="onb-word mt-5 max-w-[46rem] text-[14px] leading-relaxed text-fg-2 tight:mt-2.5 tight:text-[13.5px]" aria-live="polite">
           {level.summary}
         </p>
       </div>
 
-      <div className="onb-rise mt-6 rounded-xl border border-white/[0.06] bg-white/[0.012] px-5 py-5 sm:px-6 tight:mt-3.5 tight:py-3.5" style={rise(3)}>
-        <AutonomyScenario subject={policy.scenarioSubject} level={level} />
-      </div>
-
-      {/* its consequence, action by action */}
-      <div className="onb-rise mt-6 grid gap-x-10 gap-y-5 sm:grid-cols-2 tight:mt-4" style={rise(4)}>
+      {/* 2 — what it permits, action by action */}
+      <div className="onb-rise mt-6 grid gap-x-10 gap-y-5 sm:grid-cols-2 tight:mt-3.5" style={rise(3)}>
         <Consequence title={copy.auto} tone="auto" items={auto.map((r) => r.label)} />
         <Consequence title={copy.ask} tone="ask" items={ask.map((r) => r.label)} />
       </div>
-      <p className="onb-rise mt-4 flex items-start gap-2 text-[12.5px] leading-snug text-fg-3 tight:mt-3" style={rise(5)}>
+      <p className="onb-rise mt-4 flex items-start gap-2 text-[12.5px] leading-snug text-fg-3 tight:mt-2.5" style={rise(4)}>
         <Lock className="mt-px size-3.5 shrink-0" aria-hidden="true" />
         <span>
           <span className="text-fg-2">{copy.never}:</span> {policy.never.map((n) => n.toLowerCase()).join(", ")}.
         </span>
       </p>
+
+      {/* 3 — the chosen level, played out on one real situation */}
+      <div className="onb-rise mt-6 rounded-xl border border-white/[0.06] bg-white/[0.012] px-5 py-5 sm:px-6 tight:mt-3 tight:py-3" style={rise(5)}>
+        <AutonomyScenario subject={policy.scenarioSubject} level={level} />
+      </div>
 
       {error && (
         <Notice tone="error" className="mt-6">
@@ -88,6 +100,7 @@ export function AutonomyStep({ policy, initial, saving, error, onLevel, onConfir
         </Notice>
       )}
 
+      {/* 4 — the mandate */}
       <div className="onb-rise mt-7 flex flex-wrap items-center gap-x-6 gap-y-3 tight:mt-4" style={rise(6)}>
         <OnbButton onClick={() => onConfirm(mandate)} busy={saving}>
           {saving ? "Preparing your first briefing" : `Give Syxoria ${/^[aeiou]/i.test(level.name) ? "an" : "a"} ${level.name.toLowerCase()} mandate`}

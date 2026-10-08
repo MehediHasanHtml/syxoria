@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, type CSSProperties, type ReactNode } from "react";
-import { coreLooks, coreStateNames, type CoreState } from "@/lib/core/core-states";
+import { blendLook, coreLooks, coreStateNames, type CoreState } from "@/lib/core/core-states";
 import { cn } from "@/lib/cn";
 
 /*
@@ -106,6 +106,9 @@ type Props = {
   state: CoreState;
   /** Within learning: how far it has come (0–1) — more folds light as it reads */
   progress?: number;
+  /** The first awakening, by degrees (0–1): from `state` towards initializing — a button pointed at
+   *  and pressed, a form filled in. Its folds light one by one and its heart warms as it rises. */
+  wake?: number;
   /** Scales its light (e.g. with the autonomy it is given) */
   intensity?: number;
   /** Change this number to make the Core react once — something just reached it */
@@ -119,13 +122,14 @@ type Props = {
   className?: string;
 };
 
-export function SyxoriaCore({ state, progress, intensity = 1, pulse = 0, detail = "full", vtName, label, className }: Props) {
+export function SyxoriaCore({ state, progress, wake, intensity = 1, pulse = 0, detail = "full", vtName, label, className }: Props) {
   const id = useId().replace(/:/g, "");
-  const look = coreLooks[state];
+  const look = wake === undefined ? coreLooks[state] : blendLook(coreLooks[state], coreLooks.initializing, wake);
   const full = detail === "full";
   const folds = full ? FOLDS : FOLDS.filter((f) => !f.minor);
-  const share = state === "learning" && progress !== undefined ? 0.3 + 0.65 * Math.max(0, Math.min(1, progress)) : look.lit;
-  const lit = Math.round(share * folds.length);
+  const share = state === "learning" && progress !== undefined ? 0.55 + 0.4 * Math.max(0, Math.min(1, progress)) : look.lit;
+  // waking by degrees, every step counts: a fold lights as soon as its share is (nearly) reached
+  const lit = wake === undefined ? Math.round(share * folds.length) : Math.ceil(share * folds.length - 0.05);
   const light = Math.max(0, Math.min(1, look.light * intensity));
   const ref = (s: string) => `url(#${id}-${s})`;
   const sides = ["l", "r"] as const;
@@ -152,7 +156,7 @@ export function SyxoriaCore({ state, progress, intensity = 1, pulse = 0, detail 
       data-motion={look.motion}
       data-detail={detail}
       className={cn("syx-core", className)}
-      style={{ "--light": light.toFixed(3), "--open": look.open, viewTransitionName: vtName } as CSSProperties}
+      style={{ "--light": light.toFixed(3), "--open": look.open.toFixed(3), "--seen": share.toFixed(3), viewTransitionName: vtName } as CSSProperties}
     >
       {layer(
         "under",

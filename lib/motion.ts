@@ -17,3 +17,19 @@ export const motion = {
 
 /** easeInOutCubic, for programmatic smooth scrolling. */
 export const easeInOutCubic = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+
+/**
+ * The onboarding's transition language — how a primary action hands over to the next moment.
+ * CSS counterparts: --flow-* and --ease-awaken in globals.css ("FLOW"); keep the two in step.
+ *
+ *   commit   pressed → the next moment takes over: long enough to see the emerald start running
+ *            through the button, short enough that nobody waits for it (never with reduced motion)
+ *   arrive   the Core landing in its new place after travelling from the landing page
+ */
+export const flow = {
+  commit: 300,
+  arrive: 900,
+} as const;
+
+/** True when the visitor asked for reduced motion (client only; false on the server) */
+export const prefersReducedMotion = () => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;

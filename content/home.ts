@@ -13,7 +13,7 @@ export const hero = {
   titleLead: "Your company takes on a new",
   titleAccent: "dimension.",
   body: "Syxoria connects your tools, understands your business and turns every signal into progress.",
-  primaryCta: { label: "Start free", href: "/signup" },
+  primaryCta: { label: "Start free", href: "/onboarding" },
   filmCta: "Watch the live demo",
   coreHint: "Open the core",
   scrollHint: "Scroll to awaken",

@@ -25,7 +25,10 @@ type Props = {
   firstName: string | null;
   /** onboarding: a short prelude, then the briefing reveals itself · workspace: all there, as the first page */
   variant: "onboarding" | "workspace";
+  /** Into the product: called once the button's emerald has begun (see OnbButton onAdvance) */
   onEnter?: () => void;
+  /** The moment "Enter Syxoria" is pressed — the Core answers at once */
+  onEntering?: () => void;
 };
 
 /** The moments of the onboarding variant, in milliseconds from its start */
@@ -36,9 +39,12 @@ const REVEAL = 520;
 /**
  * The first briefing — the reward of the onboarding. A very short prelude says what Syxoria now
  * holds (the memory's final state, folding away: its job is done), then the briefing reveals
- * itself as one line of reasoning. The action is worded by the mandate the user just gave.
+ * itself as one line of reasoning — priority → insight → recommendation → action — each step given
+ * its own moment, the action last and strongest. Everything in it is the briefing the service
+ * returned; the action is worded by the mandate the user just gave and the tools connected
+ * (resolveBriefingAction): it says what Syxoria will do or has prepared, never that it has done it.
  */
-export function FirstBriefing({ briefing, mandate, policy, sources, firstName, variant, onEnter }: Props) {
+export function FirstBriefing({ briefing, mandate, policy, sources, firstName, variant, onEnter, onEntering }: Props) {
   const onboarding = variant === "onboarding";
   const [t, setT] = useState(onboarding ? 0 : Infinity);
   const [when, setWhen] = useState<{ hello: string; date: string } | null>(null);
@@ -60,6 +66,9 @@ export function FirstBriefing({ briefing, mandate, policy, sources, firstName, v
 
   const prelude = t < PRELUDE_END;
   const shown = (i: number) => t >= PRELUDE_END + 300 + i * REVEAL;
+  // while it unfolds, the step just reached holds the attention; once all is there, none does
+  const reading = !shown(4);
+  const current = (i: number) => reading && shown(i) && !shown(i + 1);
   useEffect(() => {
     if (onboarding && !prelude) headRef.current?.focus({ preventScroll: true });
   }, [onboarding, prelude]);
@@ -97,45 +106,49 @@ export function FirstBriefing({ briefing, mandate, policy, sources, firstName, v
         <em className="font-serif italic tracking-(--accent-tracking) [font-size:var(--accent-size)] [font-weight:var(--accent-weight)]">{copy.accent}</em>
       </h1>
 
-      <div className="onb-reasoning mt-9 grid gap-px @4xl:grid-cols-[1fr_1fr_1fr_1.35fr]">
-        <BriefingSection label={copy.labels.priority} kind="priority" shown={shown(0)}>
+      <div className="onb-reasoning mt-9 grid gap-px @4xl:grid-cols-[1fr_1fr_1fr_1.35fr]" data-variant={variant} data-reading={(onboarding && reading) || undefined}>
+        <BriefingSection label={copy.labels.priority} kind="priority" shown={shown(0)} current={current(0)}>
           <p className="font-display text-[1.3rem] font-light leading-snug tracking-[-0.015em] text-fg">{priority.title}</p>
           <p className="mt-2.5 text-[13.5px] leading-relaxed text-fg-2">{priority.detail}</p>
-          <p className="tabular mt-4 font-display text-[1.9rem] font-light leading-none tracking-[-0.02em] text-fg">{formatCurrency(worth)}</p>
-          <p className="mt-1 text-[12px] text-fg-3">at stake today</p>
+          <div className="onb-brief__then">
+            <p className="tabular mt-4 font-display text-[1.9rem] font-light leading-none tracking-[-0.02em] text-fg">{formatCurrency(worth)}</p>
+            <p className="mt-1 text-[12px] text-fg-3">at stake today</p>
+          </div>
         </BriefingSection>
 
-        <BriefingSection label={copy.labels.insight} kind="insight" shown={shown(1)}>
-          <p className="text-[1.05rem] leading-snug text-fg">{insight.title}</p>
-          <p className="mt-2.5 text-[13.5px] leading-relaxed text-fg-2">{insight.detail}</p>
+        <BriefingSection label={copy.labels.insight} kind="insight" shown={shown(1)} current={current(1)}>
+          <p className="text-[1.05rem] leading-snug text-fg">
+            <span className="onb-brief__key">{insight.title}</span>
+          </p>
+          <p className="onb-brief__then mt-2.5 text-[13.5px] leading-relaxed text-fg-2">{insight.detail}</p>
         </BriefingSection>
 
-        <BriefingSection label={copy.labels.recommendation} kind="recommendation" shown={shown(2)}>
+        <BriefingSection label={copy.labels.recommendation} kind="recommendation" shown={shown(2)} current={current(2)}>
           <p className="text-[1.05rem] leading-snug text-fg">{recommendation.title}</p>
-          <p className="mt-2.5 text-[13.5px] leading-relaxed text-fg-2">{recommendation.detail}</p>
+          <p className="onb-brief__then mt-2.5 text-[13.5px] leading-relaxed text-fg-2">{recommendation.detail}</p>
         </BriefingSection>
 
-        <BriefingSection label={copy.labels.action} kind="action" shown={shown(3)}>
+        <BriefingSection label={copy.labels.action} kind="action" shown={shown(3)} current={current(3)}>
           <p className="text-[1.05rem] leading-snug text-fg">{action.title}</p>
           <ul className="mt-3.5 grid gap-px overflow-hidden rounded-lg border border-accent-line/60">
-            {drafts.map((d) => (
-              <li key={d.id} className="flex items-center justify-between gap-3 bg-canvas/60 px-3.5 py-2.5 text-[13px]">
+            {drafts.map((d, i) => (
+              <li key={d.id} className="onb-brief__item flex items-center justify-between gap-3 bg-canvas/60 px-3.5 py-2.5 text-[13px]" style={{ ["--i" as string]: i }}>
                 <span className="min-w-0 truncate">
                   <span className="text-fg">{d.company}</span>
                   <span className="text-fg-3"> · {formatCurrency(d.value)}</span>
                 </span>
-                <span className={cn("shrink-0 text-[11.5px]", action.status === "listed" ? "text-fg-3" : "text-accent-strong")}>{action.statusLabel}</span>
+                <span className={cn("onb-brief__status shrink-0 text-[11.5px]", action.status === "listed" ? "text-fg-3" : "text-accent-strong")}>{action.statusLabel}</span>
               </li>
             ))}
           </ul>
-          <p className="mt-3 text-[12.5px] leading-relaxed text-fg-2">{action.detail}</p>
+          <p className="onb-brief__then mt-3 text-[12.5px] leading-relaxed text-fg-2">{action.detail}</p>
         </BriefingSection>
       </div>
 
       <div className={cn("mt-7 flex flex-wrap items-center justify-between gap-x-8 gap-y-4 transition-opacity duration-700", shown(4) ? "opacity-100" : "pointer-events-none opacity-0")}>
         <p className="text-[12.5px] text-fg-3">{briefing.basedOn}.</p>
         {onboarding && (
-          <OnbButton tone="emerald" onClick={onEnter} disabled={!shown(4)} aria-hidden={!shown(4) || undefined}>
+          <OnbButton tone="emerald" onClick={onEntering} onAdvance={onEnter} disabled={!shown(4)} aria-hidden={!shown(4) || undefined}>
             {copy.enter}
           </OnbButton>
         )}

@@ -25,10 +25,10 @@ export type CoreLook = { lit: number; light: number; open: number; motion: CoreM
 
 export const coreLooks: Record<CoreState, CoreLook> = {
   dormant: { lit: 0, light: 0.1, open: 0, motion: "still" },
-  initializing: { lit: 0.1, light: 0.22, open: 0, motion: "breathe" },
-  searching: { lit: 0.2, light: 0.34, open: 0.04, motion: "scan" },
-  identifying: { lit: 0.3, light: 0.42, open: 0.06, motion: "still" },
-  receiving: { lit: 0.45, light: 0.52, open: 0.1, motion: "flow" },
+  initializing: { lit: 0.5, light: 0.36, open: 0.03, motion: "breathe" },
+  searching: { lit: 0.5, light: 0.4, open: 0.05, motion: "scan" },
+  identifying: { lit: 0.5, light: 0.46, open: 0.06, motion: "still" },
+  receiving: { lit: 0.55, light: 0.52, open: 0.1, motion: "flow" },
   learning: { lit: 0.7, light: 0.68, open: 0.4, motion: "flow" },
   understanding: { lit: 1, light: 0.86, open: 0.7, motion: "breathe" },
   active: { lit: 1, light: 0.74, open: 0.22, motion: "still" },
@@ -49,3 +49,22 @@ export const coreStateNames: Record<CoreState, string> = {
   ready: "Ready",
   executing: "Executing",
 };
+
+/** A look part-way from one state to the next, for a Core waking by degrees (0 = `from`, 1 = `to`) */
+export function blendLook(from: CoreLook, to: CoreLook, t: number): CoreLook {
+  const k = Math.max(0, Math.min(1, t));
+  const mix = (a: number, b: number) => a + (b - a) * k;
+  return { lit: mix(from.lit, to.lit), light: mix(from.light, to.light), open: mix(from.open, to.open), motion: k >= 1 ? to.motion : from.motion };
+}
+
+/**
+ * The first awakening — dormant → initializing — which begins on the landing page's "Start free"
+ * and continues on the first onboarding moment, so the Core the visitor presses is the Core that
+ * greets them. How far it has woken at each point of that journey:
+ *
+ *   rest      the button at rest: quiet, its folds barely there
+ *   stirring  pointed at: the first folds catch the light
+ *   pressed   pressed: the light runs in — exactly how the onboarding's Core arrives
+ *   ready     the account form complete and valid: initializing in full (then it goes to work)
+ */
+export const awakening = { rest: 0.08, stirring: 0.35, pressed: 0.55, ready: 1 } as const;

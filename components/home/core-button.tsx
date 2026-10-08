@@ -1,17 +1,24 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ArrowRight, Play } from "lucide-react";
-import { useEffect, useRef, type ReactNode, type Ref } from "react";
+import { useEffect, useRef, useState, type ComponentProps, type DOMAttributes, type ReactNode, type Ref } from "react";
+import { SyxoriaCore } from "@/components/brand/syxoria-core";
+import { awakening } from "@/lib/core/core-states";
+import { handOffCore } from "@/lib/core/handoff";
 import { cn } from "@/lib/cn";
+import { useAwaken } from "@/lib/hooks/use-awaken";
 
 /**
  * The page's calls to action, made of the Core's own materials (styles in
  * globals.css, "CORE BUTTONS"):
  *
- *   CoreButton  dark stone with a line of the Core's light running around its edge; a small core
- *               on the left whose two halves part on hover to show its light. The line follows the
- *               cursor, a soft light travels inside, and the button leans towards the pointer.
+ *   CoreButton  dark stone with a line of the Core's light running around its edge, and the Core
+ *               itself on the left — the same SyxoriaCore the onboarding greets you with. Pointed
+ *               at, its first folds catch the light; pressed, the light runs in, the Core's emerald
+ *               fills the button ("AWAKEN"), and the Core travels on to the onboarding
+ *               (lib/core/handoff.ts). The line follows the cursor; the button leans towards it.
  *   LensButton  the quiet one — a lens whose ring of light draws itself on hover (compact: a smaller one).
  */
 
@@ -89,9 +96,27 @@ function useMagnet<T extends HTMLElement>(strength = 0.22, max = 6) {
   return ref;
 }
 
+const external = (href?: string) => Boolean(href && /^(mailto:|https?:)/.test(href));
+
 /** A link (internal or not) or a button, with the same look. */
-function Action({ href, onClick, className, children, innerRef, type = "button", disabled, busy, ...rest }: Action & { innerRef: Ref<HTMLAnchorElement & HTMLButtonElement> }) {
-  if (href && /^(mailto:|https?:)/.test(href))
+function Action({
+  href,
+  onClick,
+  onNavigate,
+  className,
+  children,
+  innerRef,
+  type = "button",
+  disabled,
+  busy,
+  ...rest
+}: Action &
+  Pick<DOMAttributes<HTMLElement>, "onPointerEnter" | "onPointerLeave" | "onFocus" | "onBlur"> & {
+    innerRef: Ref<HTMLAnchorElement & HTMLButtonElement>;
+    onNavigate?: ComponentProps<typeof Link>["onNavigate"];
+    "data-fill"?: string;
+  }) {
+  if (external(href))
     return (
       <a ref={innerRef} href={href} className={className} {...rest}>
         {children}
@@ -99,7 +124,7 @@ function Action({ href, onClick, className, children, innerRef, type = "button",
     );
   if (href)
     return (
-      <Link ref={innerRef} href={href} className={className} {...rest}>
+      <Link ref={innerRef} href={href} onNavigate={onNavigate} className={className} {...rest}>
         {children}
       </Link>
     );
@@ -112,14 +137,48 @@ function Action({ href, onClick, className, children, innerRef, type = "button",
 
 export function CoreButton({ className, children, ...rest }: Action) {
   const ref = useMagnet<HTMLAnchorElement & HTMLButtonElement>();
+  const core = useRef<HTMLSpanElement>(null);
+  const router = useRouter();
+  const { awake, run, reset } = useAwaken();
+  const [stirred, setStirred] = useState(false);
+  const travels = Boolean(rest.href) && !external(rest.href);
+
+  // if the page is shown again (back, or a navigation that never happened), the button is ready again
+  useEffect(() => {
+    if (!awake) return;
+    const t = window.setTimeout(reset, 4000);
+    return () => window.clearTimeout(t);
+  }, [awake, reset]);
+
+  const stir = (on: boolean) => () => setStirred(on);
+  const wake = awake ? awakening.pressed : stirred || rest.busy ? awakening.stirring : awakening.rest;
+
   return (
-    <Action {...rest} innerRef={ref} className={cn("core-btn", className)}>
+    <Action
+      {...rest}
+      innerRef={ref}
+      className={cn("core-btn", className)}
+      data-fill={awake ? "run" : undefined}
+      onPointerEnter={stir(true)}
+      onPointerLeave={stir(false)}
+      onFocus={stir(true)}
+      onBlur={stir(false)}
+      // a plain click inside the site: the Core wakes, then travels on (new tabs open as usual)
+      onNavigate={
+        travels
+          ? (e) => {
+              e.preventDefault();
+              handOffCore(core.current);
+              run(() => router.push(rest.href!));
+            }
+          : undefined
+      }
+    >
       <span aria-hidden="true" className="core-btn__ring" />
       <span aria-hidden="true" className="core-btn__glow" />
-      <span aria-hidden="true" className="core-btn__seed">
-        <span className="core-btn__half" />
-        <span className="core-btn__seam" />
-        <span className="core-btn__half" />
+      <span aria-hidden="true" className="awaken-fill" />
+      <span ref={core} aria-hidden="true" className="core-btn__core">
+        <SyxoriaCore state="dormant" wake={wake} detail="mark" intensity={1.7} pulse={awake ? 1 : 0} className="size-full" />
       </span>
       <span>{children}</span>
       <span aria-hidden="true" className="core-btn__arrow">

@@ -141,7 +141,11 @@ export function OnboardingExperience({ sources, policy, shell, resume, mode, pla
           initial={state.mandate}
           saving={saving}
           error={saveError}
-          onLevel={setLevel}
+          onLevel={(l) => {
+            setLevel(l);
+            // the Core answers the mandate it is being offered: its light follows the level, and it stirs once
+            bump();
+          }}
           onConfirm={confirmMandate}
           onBack={() => move({ type: "go", stage: "analysis" })}
         />
@@ -155,6 +159,7 @@ export function OnboardingExperience({ sources, policy, shell, resume, mode, pla
           sources={connected}
           firstName={state.session?.firstName ?? null}
           variant="onboarding"
+          onEntering={onPulse}
           onEnter={() => move({ type: "go", stage: "complete" })}
         />
       )}

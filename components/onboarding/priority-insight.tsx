@@ -3,58 +3,82 @@ import { cn } from "@/lib/cn";
 import type { Priority } from "@/types";
 
 /**
- * One priority, in the order the brief reads it: PRIORITY (what deserves attention) → INSIGHT
- * (what Syxoria discovered) → KPI (the evidence). Selected, it opens; the graph follows it.
- * A tab of a vertical tablist — arrows move between priorities.
+ * One priority, read as a discovery rather than a report line: what deserves attention, in the
+ * brand's serif. Selected, it opens — a thread of the Core's emerald runs down beside it, its
+ * evidence arrives as the graph's curve reaches it, then what Syxoria concluded from it — all of
+ * it from the same priority the graph draws. No numbering: their order already says which comes
+ * first. A tab of a vertical tablist — arrows move between priorities. Styles: "Priorities".
  */
 export function PriorityInsight({
   priority,
   rank,
+  of,
   selected,
   onSelect,
   onKey,
-  graphId,
+  panelId,
 }: {
   priority: Priority;
   rank: number;
+  of: number;
   selected: boolean;
   onSelect: () => void;
   onKey: (e: KeyboardEvent<HTMLButtonElement>) => void;
-  graphId: string;
+  panelId: string;
 }) {
+  const id = `priority-${priority.id}`;
+  const lead = priority.kpis[0];
   return (
     <button
       type="button"
       role="tab"
+      id={`${id}-tab`}
       aria-selected={selected}
-      aria-controls={graphId}
+      aria-controls={panelId}
+      aria-labelledby={`${id}-rank ${id}-title`}
+      aria-describedby={selected ? `${id}-more` : undefined}
       tabIndex={selected ? 0 : -1}
       onClick={onSelect}
-      onMouseEnter={onSelect}
       onKeyDown={onKey}
-      className={cn("onb-priority onb-rise group block w-full py-4 text-left outline-none tight:py-3", selected && "onb-priority--on")}
+      className={cn("onb-priority onb-rise group block w-full text-left outline-none", selected && "onb-priority--on")}
     >
-      <span className="flex items-center gap-2.5 font-label text-label uppercase text-fg-3">
-        <span aria-hidden="true" className="onb-priority__mark h-px w-3" />
-        Priority {String(rank).padStart(2, "0")}
+      <span id={`${id}-rank`} className="sr-only">
+        Priority {rank} of {of}:
       </span>
-      <span className={cn("mt-2 block font-display font-light leading-snug tracking-[-0.015em] transition-colors duration-300", selected ? "text-[1.35rem] text-fg" : "text-[1.15rem] text-fg-2 group-hover:text-fg")}>
+      <span id={`${id}-title`} className="onb-priority__title block font-display font-light leading-snug tracking-[-0.015em]">
         {priority.title}
       </span>
-      <span className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-[13px]">
-        {priority.kpis.map((k, i) => (
-          <span key={k.id}>
-            {i > 0 && <span aria-hidden="true" className="mr-3 text-fg-3">·</span>}
-            <span className={selected ? "text-accent-strong" : "text-fg-2"}>{k.value}</span> <span className="text-fg-3">{k.label}</span>
-          </span>
-        ))}
-      </span>
-      {selected && (
-        <span className="onb-word mt-3 block">
-          <span className="block text-[13.5px] leading-relaxed text-fg-2">{priority.insight}</span>
-          <span className="mt-2 block text-[12px] text-fg-3">From {priority.basedOn}</span>
+
+      {/* closed: the one figure that says why it is here */}
+      <span aria-hidden="true" className="onb-priority__hint">
+        <span className="block min-h-0 overflow-hidden text-[12.5px] text-fg-3">
+          {lead && (
+            <span className="block pt-1">
+              <span className="tabular text-fg-2">{lead.value}</span> {lead.label}
+            </span>
+          )}
         </span>
-      )}
+      </span>
+
+      {/* open: the evidence, then the conclusion — remounted on each selection, so it plays again */}
+      <span className="onb-priority__more">
+        <span key={selected ? "on" : "off"} id={`${id}-more`} className="min-h-0 overflow-hidden">
+          <span className="block pt-3">
+            <span className="flex flex-wrap gap-x-6 gap-y-2">
+              {priority.kpis.map((k, i) => (
+                <span key={k.id} className="onb-priority__figure block" style={{ ["--i" as string]: i }}>
+                  <span className="tabular block font-display text-[1.3rem] font-light leading-none tracking-[-0.02em] text-fg">{k.value}</span>
+                  <span className="mt-1 block text-[12px] text-fg-3">{k.label}</span>
+                </span>
+              ))}
+            </span>
+            <span className="onb-priority__observation mt-3.5 block">
+              <span className="block text-[13.5px] leading-relaxed text-fg-2">{priority.insight}</span>
+              <span className="mt-2 block text-[12px] text-fg-3">From {priority.basedOn}</span>
+            </span>
+          </span>
+        </span>
+      </span>
     </button>
   );
 }

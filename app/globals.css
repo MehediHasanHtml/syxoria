@@ -118,6 +118,24 @@
   --dur-base: 320ms;
   --dur-slow: 700ms;
 
+  /* FLOW — how one moment hands over to the next (the onboarding, and the landing page's way in).
+     lib/motion.ts "flow" mirrors the two JS needs (commit, arrive): keep them in step. */
+  --flow-press: 140ms;    /* a button answering the press */
+  --flow-commit: 300ms;   /* pressed → the next moment takes over (the emerald is running by then) */
+  --flow-awaken: 620ms;   /* the emerald running through a pressed button */
+  --flow-exit: 260ms;     /* a moment leaving */
+  --flow-enter: 520ms;    /* the next one arriving */
+  --flow-draw: 950ms;     /* a curve drawing itself */
+  --flow-reveal: 700ms;   /* a section of the briefing arriving */
+  --flow-arrive: 900ms;   /* the Core landing after travelling between pages */
+  --ease-awaken: cubic-bezier(0.5, 0, 0.15, 1);
+  /* the Core's emerald, from deep to lit — the steps its light passes through as it wakes */
+  --emerald-deep: #14694a;
+  --emerald-core: #1d7a55;
+  --emerald-mid: #2a8d66;
+  --emerald-bright: #4fae86;
+  --emerald-lit: #a8dcc4;
+
   /* Layers */
   --z-base: 1;
   --z-sticky: 20;
@@ -604,32 +622,10 @@ body:has([data-opening]) :is(header, [data-rail]) { opacity: 0; visibility: hidd
   pointer-events: none;
 }
 .core-btn[data-hover] .core-btn__glow { opacity: 1; }
-/* a small core: two halves of dark stone over a point of light — they part on hover */
-.core-btn__seed { position: relative; width: 2.1rem; height: 2.1rem; flex: none; border-radius: 999px; }
-.core-btn__seed::before {
-  content: "";
-  position: absolute;
-  inset: 22%;
-  border-radius: inherit;
-  background: radial-gradient(circle, #fff 0%, var(--core-light) 35%, transparent 72%);
-  opacity: 0.55;
-  transition: opacity 500ms var(--ease-out-soft), inset 500ms var(--ease-out-soft);
-}
-.core-btn__half {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 50%;
-  background: radial-gradient(circle at 70% 30%, #3a3836, #141312 60%);
-  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.06);
-  transition: translate 550ms var(--ease-out-soft), rotate 550ms var(--ease-out-soft);
-}
-.core-btn__half:first-child { left: 0; border-radius: 999px 0 0 999px; transform-origin: 100% 50%; }
-.core-btn__half:last-child { right: 0; border-radius: 0 999px 999px 0; transform-origin: 0 50%; }
-.core-btn__seam { position: absolute; left: 50%; top: 18%; bottom: 18%; width: 1px; translate: -50% 0; background: var(--core-light); box-shadow: 0 0 6px 1px var(--core-glow); opacity: 0.8; }
-.core-btn[data-hover] .core-btn__seed::before { opacity: 1; inset: 8%; }
-.core-btn[data-hover] .core-btn__half:first-child { translate: -3px 0; rotate: -14deg; }
-.core-btn[data-hover] .core-btn__half:last-child { translate: 3px 0; rotate: 14deg; }
+/* the Core itself (SyxoriaCore, as the onboarding draws it) on a faint lens of its own light */
+.core-btn__core { position: relative; display: grid; place-items: center; width: 2.25rem; height: 2.25rem; flex: none; border-radius: 999px; background: radial-gradient(circle at 50% 45%, rgb(255 255 255 / 0.07), transparent 70%); transition: scale 500ms var(--ease-out-soft); }
+.core-btn[data-hover] .core-btn__core { scale: 1.06; }
+.core-btn[data-fill] .core-btn__core { scale: 1.1; }
 .core-btn__arrow { display: grid; place-items: center; width: 1rem; transition: translate 450ms var(--ease-out-soft); }
 .core-btn[data-hover] .core-btn__arrow { translate: 3px 0; }
 
@@ -710,16 +706,52 @@ html.lenis { scroll-behavior: auto; }
 .film-progress { animation: film-progress linear forwards; width: 0; }
 @keyframes film-progress { to { width: 100%; } }
 
-/* Core buttons that submit, wait or work (onboarding): unavailable = quiet stone; working = its core breathes */
+/* Core buttons that submit, wait or work: unavailable = quiet stone; working = its Core stirs, its line runs faster */
 .core-btn:disabled { cursor: not-allowed; }
 .core-btn:disabled:not([aria-busy]) { opacity: 0.42; box-shadow: none; }
 .core-btn:disabled:not([aria-busy]) .core-btn__ring { animation: none; }
 .core-btn[aria-busy] { cursor: progress; }
 .core-btn[aria-busy] .core-btn__ring { animation-duration: 2.4s; }
-.core-btn[aria-busy] .core-btn__seed::before { animation: seed-breathe 1.5s var(--ease-in-out-soft) infinite; }
-@keyframes seed-breathe {
-  0%, 100% { opacity: 0.35; inset: 24%; }
-  50% { opacity: 1; inset: 6%; }
+/* pressed: the emerald runs in (AWAKEN below) and the stone answers with the Core's glow */
+.core-btn[data-fill] { box-shadow: 0 10px 44px -10px var(--core-glow); }
+.core-btn[data-fill] .core-btn__arrow { translate: 5px 0; }
+
+/* ==========================================================================
+   AWAKEN — the one way a primary action answers, on the landing page and in
+   the onboarding (lib/hooks/use-awaken.ts): the Core's emerald runs into the
+   button from its left edge behind a rounded, lit front — like its folds
+   filling with light, not a hard wipe. data-fill on the button:
+     run   pressed — the next moment takes over a beat later (--flow-commit)
+     busy  real work under way — part-way in, then holding, until it is done
+     done  the work succeeded — filled
+   ========================================================================== */
+.awaken-fill { position: absolute; inset: 0; z-index: -1; border-radius: inherit; overflow: hidden; pointer-events: none; }
+.awaken-fill::before {
+  content: "";
+  position: absolute;
+  top: -35%;
+  bottom: -35%;
+  left: -8%;
+  width: 118%;
+  /* the front is a curve, so the light seems to well up rather than slide */
+  border-radius: 0 50% 50% 0 / 0 50% 50% 0;
+  background: linear-gradient(90deg, #0b3124, var(--emerald-deep) 58%, var(--emerald-core));
+  box-shadow: 4px 0 16px -1px rgb(168 220 196 / 0.5), 1px 0 0 0 rgb(168 220 196 / 0.55);
+  translate: -101% 0;
+  transition: translate var(--flow-awaken) var(--ease-awaken), box-shadow 600ms;
+}
+[data-fill="run"] > .awaken-fill::before,
+[data-fill="done"] > .awaken-fill::before { translate: 0 0; }
+[data-fill="done"] > .awaken-fill::before { box-shadow: none; transition-duration: 420ms; }
+[data-fill="busy"] > .awaken-fill::before { animation: awaken-busy 9s var(--ease-out-soft) forwards; }
+@keyframes awaken-busy {
+  0% { translate: -101% 0; }
+  8% { translate: -48% 0; }
+  100% { translate: -16% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .awaken-fill::before { transition: none; }
+  [data-fill="busy"] > .awaken-fill::before { animation: none; translate: -30% 0; }
 }
 
 /* ==========================================================================
@@ -745,7 +777,8 @@ html.lenis { scroll-behavior: auto; }
 .syx-core__rim { stroke-width: 0.7; }
 .syx-core__grain { mix-blend-mode: soft-light; opacity: 0.9; }
 .syx-core__groove { fill: none; stroke: rgb(0 0 0 / 0.6); stroke-width: 1.35; stroke-linecap: round; stroke-linejoin: round; }
-.syx-core__lip { fill: none; stroke: rgb(255 255 255 / 0.05); stroke-width: 1; stroke-linecap: round; translate: 0.3px 0.7px; }
+/* its folds' lips catch a little more light as it wakes (--seen: the share of its folds lit) */
+.syx-core__lip { fill: none; stroke: #fff; stroke-opacity: calc(0.04 + var(--seen, 0) * 0.07); stroke-width: 1; stroke-linecap: round; translate: 0.3px 0.7px; transition: stroke-opacity 1.4s var(--ease-out-soft); }
 .syx-core__edge { fill: none; stroke: #6fc79f; stroke-width: 1.2; opacity: calc(var(--open) * var(--light) * 0.7); transition: opacity 1.4s; }
 
 /* a fold's light: it arrives slowly, from inside the groove; its strength follows the Core's */
@@ -864,6 +897,7 @@ html.lenis { scroll-behavior: auto; }
 /* ---------- ONBOARDING BUTTON — a clean slab, not the landing page's stone ---------- */
 .onb-btn {
   position: relative;
+  isolation: isolate;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -886,14 +920,40 @@ html.lenis { scroll-behavior: auto; }
 .onb-btn:focus-visible { outline: 2px solid var(--color-accent-strong); outline-offset: 3px; }
 .onb-btn__arrow { flex: none; transition: translate 400ms var(--ease-out-soft), opacity 300ms; }
 .onb-btn:hover .onb-btn__arrow { translate: 3px 0; }
-.onb-btn:disabled:not([aria-busy]) { cursor: not-allowed; background: rgb(255 255 255 / 0.07); color: var(--color-fg-3); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.06); }
-.onb-btn:disabled:not([aria-busy]) .onb-btn__arrow { translate: 0 0; }
+.onb-btn:disabled:not([data-fill]) { cursor: not-allowed; background: rgb(255 255 255 / 0.07); color: var(--color-fg-3); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.06); }
+.onb-btn:disabled:not([data-fill]) .onb-btn__arrow { translate: 0 0; }
 .onb-btn[aria-busy] { cursor: progress; }
-.onb-btn[aria-busy] .onb-btn__arrow { opacity: 0.3; translate: 0 0; }
-.onb-btn__progress { position: absolute; inset: auto 0 0; height: 2px; background: linear-gradient(90deg, transparent, var(--color-accent), transparent) 0 0 / 40% 100% no-repeat; animation: onb-connecting 1.3s var(--ease-in-out-soft) infinite; }
+.onb-btn[aria-busy] .onb-btn__arrow { opacity: 0.45; translate: 0 0; }
+.onb-btn[data-fill="done"] { cursor: default; }
+/* not valid yet: a quiet slab — still pressable, so the form can say what is missing */
+.onb-btn[data-ready="false"]:not([data-fill]) { background: rgb(255 255 255 / 0.07); color: var(--color-fg-2); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.09); }
+.onb-btn[data-ready="false"]:not([data-fill]):hover { background: rgb(255 255 255 / 0.1); color: var(--color-fg); }
+/* valid: a fine line of the Core's emerald draws itself around it, once */
+@property --onb-draw { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+.onb-btn__ring {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: conic-gradient(from 250deg, var(--emerald-bright) var(--onb-draw), transparent 0);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 300ms;
+}
+.onb-btn[data-ready="true"] .onb-btn__ring { opacity: 1; animation: onb-draw 900ms var(--ease-awaken) forwards; }
+@keyframes onb-draw { from { --onb-draw: 0deg; } to { --onb-draw: 360deg; } }
+/* pressed or working: the slab turns to the Core's dark stone, and its emerald runs in (AWAKEN) */
+.onb-btn[data-fill] { background: #0f1112; color: #f2fbf6; box-shadow: inset 0 0 0 1px rgb(79 174 134 / 0.3), 0 14px 34px -14px rgb(10 105 70 / 0.65); transition: background-color var(--flow-press), color var(--flow-press), box-shadow 500ms var(--ease-out-soft); }
+.onb-btn[data-fill="run"] .onb-btn__arrow { translate: 5px 0; }
 /* the last step, into the product: the Core's own emerald, confident */
 .onb-btn[data-tone="emerald"] { background: linear-gradient(180deg, #23936a, #18704f); color: #f2fbf6; box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.18), 0 0 0 1px rgb(79 174 134 / 0.35), 0 14px 36px -12px rgb(29 122 85 / 0.7); }
 .onb-btn[data-tone="emerald"]:hover { background: linear-gradient(180deg, #28a075, #1a7a56); }
+/* …pressed, a brighter emerald wells up through it: the Core at full light */
+.onb-btn[data-tone="emerald"][data-fill] { background: linear-gradient(180deg, #17684a, #0f4b35); box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.14), 0 0 0 1px rgb(124 201 165 / 0.5), 0 16px 44px -10px rgb(29 122 85 / 0.85); }
+.onb-btn[data-tone="emerald"] > .awaken-fill::before { background: linear-gradient(90deg, #1f8a60, #2fa57a 65%, #45b88c); }
 
 /* ---------- Company: the search, and the identity it finds ---------- */
 .onb-search__line { position: absolute; left: 6px; right: 6px; bottom: 0; height: 1px; opacity: 0; transition: opacity 500ms; }
@@ -985,21 +1045,63 @@ html.lenis { scroll-behavior: auto; }
 .onb-hold::after { content: ""; position: absolute; inset: 0; background: var(--color-accent-strong); transform-origin: left; animation: onb-hold var(--hold) linear both; }
 @keyframes onb-hold { from { scale: 0 1; } }
 
-/* ---------- Priorities ---------- */
-.onb-priority { position: relative; border-bottom: 1px solid rgb(255 255 255 / 0.07); }
+/* ---------- Priorities: three discoveries, and the evidence each one draws ----------
+   No numbers, no cards, no dividers: a quiet rail, the titles in the brand's serif, and a thread
+   of the Core's emerald that runs down beside the one being read. Choosing one plays one sequence
+   (all keyed to the selection, so choosing again simply restarts it):
+     the curve draws (--flow-draw) → its emerald stretch lights as the pen reaches it (--at)
+     → the figures arrive as the curve does → then the observation. */
+.onb-priorities { position: relative; padding-left: 1.4rem; }
+.onb-priorities::before { content: ""; position: absolute; left: 0; top: 0.4rem; bottom: 0.4rem; width: 1px; background: rgb(255 255 255 / 0.07); }
+.onb-priority { position: relative; padding-block: 0.85rem; }
+@media (min-width: 1024px) and (max-height: 820px) { .onb-priority { padding-block: 0.6rem; } }
+.onb-priority::before {
+  content: "";
+  position: absolute;
+  left: calc(-1.4rem - 0.5px);
+  top: 0.95rem;
+  bottom: 0.85rem;
+  width: 2px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, var(--emerald-bright), rgb(42 141 102 / 0.25));
+  box-shadow: 0 0 10px var(--core-glow);
+  transform-origin: top;
+  scale: 1 0;
+  transition: scale 600ms var(--ease-awaken);
+}
+.onb-priority--on::before { scale: 1 1; }
 .onb-priority:focus-visible { outline: 2px solid var(--color-fg); outline-offset: 4px; border-radius: 4px; }
-.onb-priority__mark { background: rgb(255 255 255 / 0.2); transition: background-color 400ms, width 400ms var(--ease-out-soft); }
-.onb-priority--on .onb-priority__mark { width: 1.25rem; background: var(--color-accent-strong); }
-.onb-graph-panel { background: linear-gradient(180deg, rgb(255 255 255 / 0.022), transparent 70%); }
-.onb-graph__line { fill: none; stroke: rgb(255 255 255 / 0.5); stroke-width: 1.6; stroke-linejoin: round; stroke-linecap: round; transition: d 800ms var(--ease-out-soft); }
+.onb-priority__title { font-size: 1.12rem; color: var(--color-fg-2); transform-origin: left; transition: color 400ms, font-size 500ms var(--ease-out-soft); }
+.onb-priority:hover .onb-priority__title { color: var(--color-fg); }
+.onb-priority--on .onb-priority__title { font-size: 1.4rem; color: var(--color-fg); }
+/* closed: one figure · open: the evidence and the conclusion (rows collapse, so nothing jumps) */
+.onb-priority__hint,
+.onb-priority__more { display: grid; transition: grid-template-rows 550ms var(--ease-out-soft), opacity 300ms; }
+.onb-priority__hint { grid-template-rows: 1fr; }
+.onb-priority--on .onb-priority__hint { grid-template-rows: 0fr; opacity: 0; }
+.onb-priority__more { grid-template-rows: 0fr; opacity: 0; }
+.onb-priority--on .onb-priority__more { grid-template-rows: 1fr; opacity: 1; }
+.onb-priority--on .onb-priority__figure { animation: onb-rise 600ms var(--ease-out-soft) both; animation-delay: calc(var(--flow-draw) * 0.55 + var(--i, 0) * 110ms); }
+.onb-priority--on .onb-priority__observation { animation: onb-word 650ms var(--ease-out-soft) both; animation-delay: calc(var(--flow-draw) * 0.9); }
+
+.onb-graph-panel { background: linear-gradient(180deg, rgb(255 255 255 / 0.02), transparent 70%); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.045); }
+.onb-graph__line { fill: none; stroke: rgb(255 255 255 / 0.5); stroke-width: 1.6; stroke-linejoin: round; stroke-linecap: round; stroke-dasharray: 1 1; animation: onb-draw-line var(--flow-draw) var(--ease-in-out-soft) both; }
 .onb-graph__line--focus { stroke: var(--color-accent-strong); stroke-width: 2.4; filter: drop-shadow(0 0 6px rgb(29 122 85 / 0.6)); }
-.onb-graph__area { transition: d 800ms var(--ease-out-soft); }
-.onb-graph__band,
-.onb-graph__band-clip { transition: x 800ms var(--ease-out-soft), width 800ms var(--ease-out-soft); }
+@keyframes onb-draw-line { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+/* the area fills in behind the pen */
+.onb-graph__pen { transform-box: view-box; transform-origin: 0 0; animation: onb-pen var(--flow-draw) var(--ease-in-out-soft) both; }
+@keyframes onb-pen { from { scale: 0 1; } }
+.onb-graph__band { animation: onb-fade 700ms var(--ease-out-soft) both; animation-delay: calc(var(--flow-draw) * var(--at, 0.5) * 0.85); }
 .onb-graph__band-edge { stroke: var(--color-accent-line); stroke-dasharray: 2 3; }
-.onb-graph__dot { fill: var(--color-accent-strong); stroke: var(--color-canvas); stroke-width: 2; transition: cx 800ms var(--ease-out-soft), cy 800ms var(--ease-out-soft); }
-.onb-graph__ref line,
-.onb-graph__ref text { transition: transform 800ms var(--ease-out-soft); }
+.onb-graph__dot { fill: var(--color-accent-strong); stroke: var(--color-canvas); stroke-width: 2; transform-box: fill-box; transform-origin: center; animation: onb-pop 500ms var(--ease-out-soft) both; animation-delay: calc(var(--flow-draw) * 0.92); }
+.onb-graph__note { animation: onb-word 600ms var(--ease-out-soft) both; animation-delay: calc(var(--flow-draw) * 0.95); }
+.onb-graph__figure { animation: onb-word 600ms var(--ease-out-soft) both; animation-delay: calc(var(--flow-draw) * 0.75); }
+.onb-graph__ref { transition: transform 750ms var(--ease-out-soft), opacity 400ms; }
+/* the curve it replaces steps back while the new one draws */
+.onb-graph__drawing--out { animation: onb-fade-out 280ms var(--ease-out-soft) both; pointer-events: none; }
+.onb-graph__drawing--out * { animation: none !important; }
+@keyframes onb-fade { from { opacity: 0; } }
+@keyframes onb-fade-out { to { opacity: 0; } }
 
 /* ---------- Mandate: the autonomy track, and what it means ---------- */
 .onb-autonomy__track,
@@ -1011,6 +1113,24 @@ html.lenis { scroll-behavior: auto; }
 .onb-autonomy__knob--passed { background: var(--color-accent); box-shadow: inset 0 0 0 1.5px var(--color-accent-strong); }
 .onb-autonomy__knob--on { background: var(--color-accent-strong); box-shadow: 0 0 0 4px rgb(42 141 102 / 0.18), 0 0 18px 2px var(--core-glow); }
 .onb-autonomy__stop:has(input:focus-visible) .onb-autonomy__knob { outline: 2px solid var(--color-fg); outline-offset: 3px; }
+/* the more it may do, the stronger its light: guided — a point, you lead · assisted — the Core's
+   glow · autonomous — full light, inside a boundary that draws itself: it acts within the mandate */
+.onb-autonomy__stop--on[data-level="guided"] .onb-autonomy__knob--on { background: radial-gradient(circle, var(--color-accent-strong) 0 2.5px, var(--color-canvas) 3px); box-shadow: inset 0 0 0 1.5px var(--color-fg), 0 0 0 4px rgb(255 255 255 / 0.06); }
+.onb-autonomy__stop--on[data-level="autonomous"] .onb-autonomy__knob--on { background: #c6efdb; box-shadow: 0 0 0 4px rgb(42 141 102 / 0.3), 0 0 26px 6px var(--core-glow), 0 0 60px 10px rgb(10 105 70 / 0.25); }
+.onb-autonomy__boundary { position: absolute; inset: -9px; border-radius: 999px; opacity: 0; background: conic-gradient(from 0deg, var(--emerald-bright) var(--onb-draw), transparent 0); -webkit-mask: radial-gradient(closest-side, transparent calc(100% - 1.2px), #000 calc(100% - 1px)); mask: radial-gradient(closest-side, transparent calc(100% - 1.2px), #000 calc(100% - 1px)); transition: opacity 400ms; }
+.onb-autonomy__stop--on .onb-autonomy__boundary { opacity: 0.9; animation: onb-draw 900ms var(--ease-awaken) 150ms both; }
+.onb-autonomy__name { font-size: 1.15rem; transition: color 300ms, font-size 400ms var(--ease-out-soft); }
+.onb-autonomy__stop--on .onb-autonomy__name { font-size: 1.3rem; }
+.onb-autonomy__stop--on[data-level="autonomous"] .onb-autonomy__name { font-style: italic; }
+/* each level's reach: the actions it takes on its own, then — past a fine boundary — those that always ask */
+.onb-reach { display: inline-flex; align-items: center; gap: 3px; }
+.onb-reach__seg { width: 9px; height: 3px; border-radius: 2px; background: rgb(255 255 255 / 0.1); transition: background-color 500ms, box-shadow 500ms; transition-delay: calc(var(--k) * 40ms); }
+@media (max-width: 639.98px) { .onb-reach__seg { width: 6px; } }
+.onb-reach__seg--auto { background: rgb(255 255 255 / 0.42); }
+.onb-autonomy__stop--on .onb-reach__seg--auto { background: var(--color-accent-strong); box-shadow: 0 0 6px var(--core-glow); }
+.onb-reach__seg--held { background: transparent; box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.14); }
+.onb-reach__seg:not(.onb-reach__seg--held) + .onb-reach__seg--held { position: relative; margin-left: 7px; }
+.onb-reach__seg:not(.onb-reach__seg--held) + .onb-reach__seg--held::before { content: ""; position: absolute; left: -6px; top: -4px; bottom: -4px; width: 1px; background: rgb(255 255 255 / 0.35); }
 
 .onb-scenario__steps { padding-top: 1.1rem; }
 .onb-scenario__step { animation: onb-rise 600ms var(--ease-out-soft) both; animation-delay: calc(var(--i, 0) * 140ms); }
@@ -1035,6 +1155,7 @@ html.lenis { scroll-behavior: auto; }
   white-space: nowrap;
 }
 .onb-chip { padding: 0.3rem 0.65rem; border-radius: 999px; font-size: 12.5px; color: var(--color-fg-2); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.09); }
+@media (min-width: 1024px) and (max-height: 820px) { .onb-chip { padding: 0.22rem 0.6rem; font-size: 12px; } }
 .onb-chip--auto { color: var(--color-fg); background: rgb(42 141 102 / 0.1); box-shadow: inset 0 0 0 1px var(--color-accent-line); }
 
 /* ---------- The first briefing: one line of reasoning, ending in action ---------- */
@@ -1064,6 +1185,32 @@ html.lenis { scroll-behavior: auto; }
 .onb-brief--action::before { display: none; }
 .onb-brief--action .onb-brief__label { color: var(--color-accent-strong); }
 .onb-brief--action .onb-brief__mark { background: var(--color-accent-strong); box-shadow: 0 0 8px var(--core-glow); }
+
+/* Revealed in the onboarding (data-variant="onboarding"): each step gets its own moment —
+   the one just reached holds the attention while those before it settle back, its headline
+   first, then what supports it. The workspace shows the same briefing at rest. */
+.onb-reasoning[data-reading] .onb-brief[data-shown]:not([data-current]) { opacity: 0.55; }
+.onb-reasoning[data-reading] .onb-brief[data-current]::before { background: var(--color-accent-strong); }
+.onb-reasoning[data-variant="onboarding"] .onb-brief[data-shown] .onb-brief__then { animation: onb-rise 600ms var(--ease-out-soft) 280ms both; }
+/* the insight: what was discovered, underlined by a fine line of the Core's emerald as it is read */
+.onb-brief__key { padding-bottom: 2px; background: linear-gradient(var(--color-accent-line), var(--color-accent-line)) 0 100% / 100% 1px no-repeat; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+.onb-reasoning[data-variant="onboarding"] .onb-brief__key { background-size: 0% 1px; transition: background-size 900ms var(--ease-awaken) 380ms; }
+.onb-reasoning[data-variant="onboarding"] .onb-brief[data-shown] .onb-brief__key { background-size: 100% 1px; }
+/* the action, last and strongest: the Core's emerald wells up through it once, its edge lights,
+   then what it is about arrives item by item — and only then their state */
+.onb-brief--action > :not(.onb-brief__fill) { position: relative; }
+.onb-brief__fill { position: absolute; inset: 0; border-radius: inherit; overflow: hidden; pointer-events: none; }
+.onb-brief__fill::before { content: ""; position: absolute; top: -10%; bottom: -10%; left: -10%; width: 120%; border-radius: 0 50% 50% 0 / 0 50% 50% 0; background: linear-gradient(90deg, rgb(42 141 102 / 0), rgb(42 141 102 / 0.2) 72%, rgb(124 201 165 / 0.26)); translate: -101% 0; opacity: 0; }
+.onb-reasoning[data-variant="onboarding"] .onb-brief--action[data-shown] .onb-brief__fill::before { animation: onb-well 1500ms var(--ease-awaken) 150ms both; }
+@keyframes onb-well {
+  0% { translate: -101% 0; opacity: 1; }
+  55% { translate: 0 0; opacity: 1; }
+  100% { translate: 0 0; opacity: 0; }
+}
+.onb-reasoning[data-variant="onboarding"] .onb-brief--action { transition: opacity var(--flow-reveal) var(--ease-out-soft), translate var(--flow-reveal) var(--ease-out-soft), box-shadow 900ms var(--ease-out-soft) 450ms; }
+.onb-reasoning[data-variant="onboarding"] .onb-brief--action:not([data-shown]) { box-shadow: inset 0 0 0 1px rgb(42 141 102 / 0.12); }
+.onb-reasoning[data-variant="onboarding"] .onb-brief--action[data-shown] .onb-brief__item { animation: onb-rise 500ms var(--ease-out-soft) both; animation-delay: calc(550ms + var(--i, 0) * 110ms); }
+.onb-reasoning[data-variant="onboarding"] .onb-brief--action[data-shown] .onb-brief__status { animation: onb-word 500ms var(--ease-out-soft) both; animation-delay: calc(950ms + var(--i, 0) * 110ms); }
 
 /* Segmented control (permission modes) */
 .onb-segment { display: inline-flex; padding: 2px; border-radius: 999px; box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.08); }
@@ -1125,7 +1272,14 @@ html[data-vt="onboarding"]::view-transition-new(root) { animation-duration: 500m
 
 @media (prefers-reduced-motion: reduce) {
   .onb-rise, .onb-word, .onb-pop, .onb-verified, .onb-scenario__step, .onb-scenario__rail, [data-arrival] aside, [data-arrival] header, [data-arrival] .arrival-late { animation: none; }
-  .onb-flow__packet, .onb-connecting, .onb-btn__progress { display: none; }
+  .onb-flow__packet, .onb-connecting { display: none; }
+  .onb-btn[data-ready="true"] .onb-btn__ring { animation: none; --onb-draw: 360deg; }
   .onb-hold::after { animation: none; }
   .onb-brief, .onb-prelude__line { transition: none; }
+  .onb-graph__line, .onb-graph__pen, .onb-graph__band, .onb-graph__dot, .onb-graph__note, .onb-graph__figure, .onb-priority__figure, .onb-priority__observation { animation: none !important; }
+  .onb-graph__drawing--out { display: none; }
+  .onb-autonomy__stop--on .onb-autonomy__boundary { animation: none; --onb-draw: 360deg; }
+  .onb-brief__then, .onb-brief__item, .onb-brief__status, .onb-brief__fill::before { animation: none !important; }
+  .onb-brief__key { transition: none !important; }
+  .onb-priority::before, .onb-priority__hint, .onb-priority__more, .onb-priority__title { transition: none; }
 }

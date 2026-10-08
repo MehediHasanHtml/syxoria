@@ -14,7 +14,7 @@ export const pricing: { title: string; body: string; plans: PricingPlan[] } = {
       description: "For founders and small teams getting organised.",
       price: { monthly: 29, yearly: 24 },
       highlighted: false,
-      cta: { label: "Start free", href: "/signup?plan=starter" },
+      cta: { label: "Start free", href: "/onboarding?plan=starter" },
       features: ["Up to 3 members", "5 integrations", "Core automations", "Weekly digest"],
     },
     {
@@ -23,7 +23,7 @@ export const pricing: { title: string; body: string; plans: PricingPlan[] } = {
       description: "For teams ready to run the company on Syxoria.",
       price: { monthly: 69.99, yearly: 58 },
       highlighted: true,
-      cta: { label: "Create my account", href: "/signup?plan=growth" },
+      cta: { label: "Create my account", href: "/onboarding?plan=growth" },
       features: ["Up to 10 members", "Unlimited integrations", "Nexo insights & recommendations", "Advanced automations with approvals", "Mobile app"],
     },
     {

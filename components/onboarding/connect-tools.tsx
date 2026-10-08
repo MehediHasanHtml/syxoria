@@ -161,7 +161,7 @@ export function ConnectTools({ company, sources, connections, onChange, onPulse,
       </p>
 
       <div className="onb-rise mt-7 flex flex-wrap items-center gap-x-6 gap-y-3 tight:mt-5" style={rise(10)}>
-        <OnbButton onClick={onContinue} disabled={connected === 0 || busy}>
+        <OnbButton onAdvance={onContinue} disabled={connected === 0 || busy}>
           {connected === 0 ? "Connect a tool to continue" : `Learn from ${connected === 1 ? "this tool" : `these ${connected} tools`}`}
         </OnbButton>
         <QuietButton onClick={onBack}>Back to your company</QuietButton>

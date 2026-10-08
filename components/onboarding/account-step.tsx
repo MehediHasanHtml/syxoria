@@ -3,11 +3,13 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Check } from "lucide-react";
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import { SyxoriaCore } from "@/components/brand/syxoria-core";
 import { Field } from "@/components/ui/field";
 import { account as copy } from "@/content/onboarding";
 import { cn } from "@/lib/cn";
+import { awakening } from "@/lib/core/core-states";
+import { useCoreArrival } from "@/lib/core/handoff";
 import { ServiceError } from "@/services/_client";
 import { createAccount, requestPasswordReset, signIn } from "@/services/onboarding";
 import type { AccountSession } from "@/types";
@@ -21,6 +23,10 @@ type Mode = "create" | "signin" | "reset" | "sent";
  * The first moment: the Core, closed and almost dark — Syxoria doesn't know the company yet — and
  * the two things it needs to begin. Creating an account, signing back in and resetting a password
  * all happen here, in place. Once in, the Core rises into the bar (a shared element, "syx-core").
+ *
+ * The Core arrives exactly as the landing page's "Start free" left it (lib/core/handoff.ts) and
+ * keeps waking as the form becomes valid — each requirement met lights a little more of it — so
+ * the button's emerald and the Core's light belong to one and the same awakening.
  */
 export function AccountStep({ initialMode, plan, onAuthenticated }: { initialMode: "create" | "signin"; plan: string | null; onAuthenticated: (s: AccountSession) => void }) {
   const router = useRouter();
@@ -32,8 +38,24 @@ export function AccountStep({ initialMode, plan, onAuthenticated }: { initialMod
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState<string | null>(null);
 
+  const core = useRef<HTMLSpanElement>(null);
+  useCoreArrival(core);
+
   const rules = copy.passwordRules.map((r) => ({ ...r, ok: r.test(password) }));
   const head = mode === "create" ? copy.create : mode === "signin" ? copy.signin : mode === "reset" ? copy.reset : copy.sent;
+
+  // how complete the form is, by the same rules the submission checks: 0 → 1 (= valid)
+  const emailOk = EMAIL.test(email.trim());
+  const complete =
+    mode === "create"
+      ? (emailOk ? 0.4 : 0) + rules.filter((r) => r.ok).length * 0.2
+      : mode === "signin"
+        ? (emailOk ? 0.5 : 0) + (password ? 0.5 : 0)
+        : emailOk
+          ? 1
+          : 0;
+  const valid = complete >= 0.999;
+  const wake = busy || done ? awakening.ready : awakening.pressed + (awakening.ready - awakening.pressed) * 0.85 * complete;
 
   function switchMode(next: Mode) {
     setMode(next);
@@ -44,7 +66,7 @@ export function AccountStep({ initialMode, plan, onAuthenticated }: { initialMod
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     const err: typeof errors = {};
-    if (!EMAIL.test(email.trim())) err.email = "Enter a valid email address.";
+    if (!emailOk) err.email = "Enter a valid email address.";
     if (mode === "create" && !rules.every((r) => r.ok)) err.password = "Your password doesn’t meet all three requirements yet.";
     if (mode === "signin" && !password) err.password = "Enter your password.";
     setErrors(err);
@@ -83,9 +105,17 @@ export function AccountStep({ initialMode, plan, onAuthenticated }: { initialMod
 
   return (
     <div className="mx-auto w-full max-w-[26rem]">
-      {/* the Core, closed: it doesn't know the company yet */}
-      <span className="onb-rise onb-core-rest mb-8 block w-fit">
-        <SyxoriaCore state={busy || done ? "initializing" : "dormant"} intensity={1.6} vtName="syx-core" label="Syxoria" className="w-[clamp(4.75rem,2.5rem+5vh,6.75rem)]" />
+      {/* the Core, closed: it doesn't know the company yet — it wakes as the form comes together */}
+      <span ref={core} className="onb-rise mx-auto mb-7 block w-fit tight:mb-5">
+        <SyxoriaCore
+          state="dormant"
+          wake={wake}
+          intensity={1.6}
+          pulse={done ? 1 : 0}
+          vtName="syx-core"
+          label="Syxoria"
+          className="w-[clamp(5.75rem,3rem+7vh,8.25rem)] tight:w-[clamp(5rem,2rem+7vh,7rem)]"
+        />
       </span>
       <div>
         <StageHeading key={mode} lead={head.lead} accent={head.accent}>
@@ -158,11 +188,9 @@ export function AccountStep({ initialMode, plan, onAuthenticated }: { initialMod
             )}
 
             <div className="onb-rise mt-2 grid gap-5" style={rise(4)}>
-              {done ? (
-                <Notice tone="success">{done}</Notice>
-              ) : (
-                <OnbButton type="submit" busy={busy} className="w-full">
-                  {busy
+              <OnbButton type="submit" ready={valid} busy={busy && !done} done={Boolean(done)} className="w-full">
+                {done ??
+                  (busy
                     ? mode === "create"
                       ? "Creating your workspace"
                       : mode === "signin"
@@ -172,8 +200,12 @@ export function AccountStep({ initialMode, plan, onAuthenticated }: { initialMod
                       ? "Create my workspace"
                       : mode === "signin"
                         ? "Sign in"
-                        : "Send me a link"}
-                </OnbButton>
+                        : "Send me a link")}
+              </OnbButton>
+              {done && (
+                <p role="status" className="sr-only">
+                  {done}
+                </p>
               )}
               <p className="text-[13.5px] text-fg-3">
                 {mode === "create" ? (

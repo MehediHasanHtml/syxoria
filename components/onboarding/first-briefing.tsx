@@ -1,7 +1,8 @@
 "use client";
 
 import { Check } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { DecodeText } from "@/components/shared/decode-text";
 import { briefing as copy } from "@/content/onboarding";
 import { cn } from "@/lib/cn";
 import { formatCurrency } from "@/lib/format";
@@ -29,12 +30,18 @@ type Props = {
   onEnter?: () => void;
   /** The moment "Enter Syxoria" is pressed — the Core answers at once */
   onEntering?: () => void;
+  /** Each step of the reasoning as it is reached — the Core answers as it presents it */
+  onBeat?: () => void;
 };
 
 /** The moments of the onboarding variant, in milliseconds from its start */
 const PRELUDE = [250, 650, 1050, 1500];
 const PRELUDE_END = 2300;
-const REVEAL = 520;
+/**
+ * The reasoning, step by step (ms after the prelude): priority → insight → recommendation, each
+ * given time to be read; a longer breath before the action, the strongest moment; then the way in.
+ */
+const STEPS = [300, 1100, 1900, 2900, 4000];
 
 /**
  * The first briefing — the reward of the onboarding. A very short prelude says what Syxoria now
@@ -44,7 +51,7 @@ const REVEAL = 520;
  * returned; the action is worded by the mandate the user just gave and the tools connected
  * (resolveBriefingAction): it says what Syxoria will do or has prepared, never that it has done it.
  */
-export function FirstBriefing({ briefing, mandate, policy, sources, firstName, variant, onEnter, onEntering }: Props) {
+export function FirstBriefing({ briefing, mandate, policy, sources, firstName, variant, onEnter, onEntering, onBeat }: Props) {
   const onboarding = variant === "onboarding";
   const [t, setT] = useState(onboarding ? 0 : Infinity);
   const [when, setWhen] = useState<{ hello: string; date: string } | null>(null);
@@ -56,7 +63,7 @@ export function FirstBriefing({ briefing, mandate, policy, sources, firstName, v
     if (!onboarding) return () => clearTimeout(w);
     const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     // with reduced motion, everything is there at once
-    const marks = still ? [Infinity] : [...PRELUDE, PRELUDE_END, ...[0, 1, 2, 3, 4].map((i) => PRELUDE_END + 300 + i * REVEAL)];
+    const marks = still ? [Infinity] : [...PRELUDE, PRELUDE_END, ...STEPS.map((at) => PRELUDE_END + at)];
     const timers = marks.map((m) => setTimeout(() => setT(m), Number.isFinite(m) ? m : 0));
     return () => {
       clearTimeout(w);
@@ -65,13 +72,25 @@ export function FirstBriefing({ briefing, mandate, policy, sources, firstName, v
   }, [onboarding]);
 
   const prelude = t < PRELUDE_END;
-  const shown = (i: number) => t >= PRELUDE_END + 300 + i * REVEAL;
+  const shown = (i: number) => t >= PRELUDE_END + STEPS[i];
   // while it unfolds, the step just reached holds the attention; once all is there, none does
   const reading = !shown(4);
   const current = (i: number) => reading && shown(i) && !shown(i + 1);
   useEffect(() => {
     if (onboarding && !prelude) headRef.current?.focus({ preventScroll: true });
   }, [onboarding, prelude]);
+  // the Core answers each step as it is presented
+  const beat = useRef(onBeat);
+  useEffect(() => {
+    beat.current = onBeat;
+  });
+  const step = STEPS.slice(0, 4).filter((at) => t >= PRELUDE_END + at).length;
+  useEffect(() => {
+    if (onboarding && step > 0) beat.current?.();
+  }, [onboarding, step]);
+
+  /** A figure read out as it is reached (decoded, like everything Syxoria reads); at rest in the workspace */
+  const figure = (text: string, i: number): ReactNode => (onboarding ? <DecodeText text={text} pending={!shown(i)} delay={260} /> : text);
 
   const action = resolveBriefingAction(briefing, mandate, policy, sources);
   const { priority, insight, recommendation, drafts } = briefing;
@@ -106,16 +125,16 @@ export function FirstBriefing({ briefing, mandate, policy, sources, firstName, v
         <em className="font-serif italic tracking-(--accent-tracking) [font-size:var(--accent-size)] [font-weight:var(--accent-weight)]">{copy.accent}</em>
       </h1>
 
-      <div className="onb-reasoning mt-9 grid gap-px @4xl:grid-cols-[1fr_1fr_1fr_1.35fr]" data-variant={variant} data-reading={(onboarding && reading) || undefined}>
+      <div className="onb-reasoning mt-9 grid gap-px tight:mt-6 @4xl:grid-cols-[1fr_1fr_1fr_1.35fr]" data-variant={variant} data-reading={(onboarding && reading) || undefined}>
+        {/* what deserves attention — led by what is at stake */}
         <BriefingSection label={copy.labels.priority} kind="priority" shown={shown(0)} current={current(0)}>
-          <p className="font-display text-[1.3rem] font-light leading-snug tracking-[-0.015em] text-fg">{priority.title}</p>
-          <p className="mt-2.5 text-[13.5px] leading-relaxed text-fg-2">{priority.detail}</p>
-          <div className="onb-brief__then">
-            <p className="tabular mt-4 font-display text-[1.9rem] font-light leading-none tracking-[-0.02em] text-fg">{formatCurrency(worth)}</p>
-            <p className="mt-1 text-[12px] text-fg-3">at stake today</p>
-          </div>
+          <p className="tabular font-display text-[clamp(2.1rem,1.6rem+1.2vw,2.75rem)] font-light leading-none tracking-[-0.025em] text-fg">{figure(formatCurrency(worth), 0)}</p>
+          <p className="mt-1.5 text-[12px] text-fg-3">at stake today</p>
+          <p className="onb-brief__then mt-4 font-display text-[1.2rem] font-light leading-snug tracking-[-0.015em] text-fg">{priority.title}</p>
+          <p className="onb-brief__then mt-2 text-[13.5px] leading-relaxed text-fg-2">{priority.detail}</p>
         </BriefingSection>
 
+        {/* why — what Syxoria noticed */}
         <BriefingSection label={copy.labels.insight} kind="insight" shown={shown(1)} current={current(1)}>
           <p className="text-[1.05rem] leading-snug text-fg">
             <span className="onb-brief__key">{insight.title}</span>
@@ -123,21 +142,34 @@ export function FirstBriefing({ briefing, mandate, policy, sources, firstName, v
           <p className="onb-brief__then mt-2.5 text-[13.5px] leading-relaxed text-fg-2">{insight.detail}</p>
         </BriefingSection>
 
+        {/* what to do — and what it achieves, measured on the company's own history */}
         <BriefingSection label={copy.labels.recommendation} kind="recommendation" shown={shown(2)} current={current(2)}>
           <p className="text-[1.05rem] leading-snug text-fg">{recommendation.title}</p>
           <p className="onb-brief__then mt-2.5 text-[13.5px] leading-relaxed text-fg-2">{recommendation.detail}</p>
+          {briefing.impact && (
+            <div className="onb-brief__then onb-brief__impact mt-4">
+              <span className="tabular block font-display text-[1.9rem] font-light leading-none tracking-[-0.02em] text-accent-strong">{figure(briefing.impact.value, 2)}</span>
+              <span className="mt-1.5 block text-[12.5px] leading-snug text-fg-2">{briefing.impact.label}</span>
+            </div>
+          )}
         </BriefingSection>
 
+        {/* what Syxoria has prepared — worded by the mandate and the tools, never more */}
         <BriefingSection label={copy.labels.action} kind="action" shown={shown(3)} current={current(3)}>
           <p className="text-[1.05rem] leading-snug text-fg">{action.title}</p>
           <ul className="mt-3.5 grid gap-px overflow-hidden rounded-lg border border-accent-line/60">
             {drafts.map((d, i) => (
-              <li key={d.id} className="onb-brief__item flex items-center justify-between gap-3 bg-canvas/60 px-3.5 py-2.5 text-[13px]" style={{ ["--i" as string]: i }}>
-                <span className="min-w-0 truncate">
-                  <span className="text-fg">{d.company}</span>
-                  <span className="text-fg-3"> · {formatCurrency(d.value)}</span>
+              <li key={d.id} className="onb-brief__item bg-canvas/60 px-3.5 py-2 text-[13px]" style={{ ["--i" as string]: i }}>
+                <span className="flex items-center justify-between gap-3">
+                  <span className="min-w-0 truncate">
+                    <span className="text-fg">{d.company}</span>
+                    <span className="text-fg-3"> · {formatCurrency(d.value)}</span>
+                  </span>
+                  <span className={cn("onb-brief__status shrink-0 text-[11.5px]", action.status === "listed" ? "text-fg-3" : "text-accent-strong")}>{action.statusLabel}</span>
                 </span>
-                <span className={cn("onb-brief__status shrink-0 text-[11.5px]", action.status === "listed" ? "text-fg-3" : "text-accent-strong")}>{action.statusLabel}</span>
+                <span className="mt-0.5 block truncate text-[11.5px] text-fg-3">
+                  {d.subject} · quiet {d.quietDays} days
+                </span>
               </li>
             ))}
           </ul>

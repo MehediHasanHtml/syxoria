@@ -27,7 +27,7 @@ export const easeInOutCubic = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math
  *   arrive   the Core landing in its new place after travelling from the landing page
  */
 export const flow = {
-  commit: 300,
+  commit: 240,
   arrive: 900,
 } as const;
 

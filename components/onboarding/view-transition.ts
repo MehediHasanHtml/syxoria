@@ -6,7 +6,7 @@ import { flushSync } from "react-dom";
  * elements ("ONBOARDING" in globals.css); elsewhere the new moment simply rises in.
  */
 export function transition(update: () => void) {
-  const doc = document as Document & { startViewTransition?: (cb: () => void) => { finished: Promise<void> } };
+  const doc = document as Document & { startViewTransition?: (cb: () => void) => { ready: Promise<void>; finished: Promise<void> } };
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const go = () => {
     update();
@@ -18,5 +18,9 @@ export function transition(update: () => void) {
   }
   const root = document.documentElement;
   root.dataset.vt = "onboarding";
-  doc.startViewTransition(() => flushSync(go)).finished.finally(() => delete root.dataset.vt);
+  const vt = doc.startViewTransition(() => flushSync(go));
+  // a transition can be skipped (the tab hidden, another one starting): the update still happens,
+  // only the animation is lost — nothing to report
+  vt.ready.catch(() => {});
+  vt.finished.catch(() => {}).finally(() => delete root.dataset.vt);
 }

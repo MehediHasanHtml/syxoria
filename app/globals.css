@@ -121,8 +121,8 @@
   /* FLOW — how one moment hands over to the next (the onboarding, and the landing page's way in).
      lib/motion.ts "flow" mirrors the two JS needs (commit, arrive): keep them in step. */
   --flow-press: 140ms;    /* a button answering the press */
-  --flow-commit: 300ms;   /* pressed → the next moment takes over (the emerald is running by then) */
-  --flow-awaken: 620ms;   /* the emerald running through a pressed button */
+  --flow-commit: 240ms;   /* pressed → the next moment takes over (the emerald is running by then) */
+  --flow-awaken: 480ms;   /* the emerald running through a pressed button */
   --flow-exit: 260ms;     /* a moment leaving */
   --flow-enter: 520ms;    /* the next one arriving */
   --flow-draw: 950ms;     /* a curve drawing itself */
@@ -713,7 +713,7 @@ html.lenis { scroll-behavior: auto; }
 .core-btn[aria-busy] { cursor: progress; }
 .core-btn[aria-busy] .core-btn__ring { animation-duration: 2.4s; }
 /* pressed: the emerald runs in (AWAKEN below) and the stone answers with the Core's glow */
-.core-btn[data-fill] { box-shadow: 0 10px 44px -10px var(--core-glow); }
+.core-btn[data-fill] { box-shadow: 0 10px 36px -12px var(--core-glow); }
 .core-btn[data-fill] .core-btn__arrow { translate: 5px 0; }
 
 /* ==========================================================================
@@ -735,8 +735,10 @@ html.lenis { scroll-behavior: auto; }
   width: 118%;
   /* the front is a curve, so the light seems to well up rather than slide */
   border-radius: 0 50% 50% 0 / 0 50% 50% 0;
-  background: linear-gradient(90deg, #0b3124, var(--emerald-deep) 58%, var(--emerald-core));
-  box-shadow: 4px 0 16px -1px rgb(168 220 196 / 0.5), 1px 0 0 0 rgb(168 220 196 / 0.55);
+  background: linear-gradient(90deg, #0b3124, var(--emerald-deep) 62%, #186b4b);
+  /* a soft lit front — present, not bright: the effect repeats on every screen */
+  box-shadow: 3px 0 12px -3px rgb(168 220 196 / 0.3), 1px 0 0 0 rgb(168 220 196 / 0.32);
+  opacity: 0.88;
   translate: -101% 0;
   transition: translate var(--flow-awaken) var(--ease-awaken), box-shadow 600ms;
 }
@@ -946,14 +948,14 @@ html.lenis { scroll-behavior: auto; }
 .onb-btn[data-ready="true"] .onb-btn__ring { opacity: 1; animation: onb-draw 900ms var(--ease-awaken) forwards; }
 @keyframes onb-draw { from { --onb-draw: 0deg; } to { --onb-draw: 360deg; } }
 /* pressed or working: the slab turns to the Core's dark stone, and its emerald runs in (AWAKEN) */
-.onb-btn[data-fill] { background: #0f1112; color: #f2fbf6; box-shadow: inset 0 0 0 1px rgb(79 174 134 / 0.3), 0 14px 34px -14px rgb(10 105 70 / 0.65); transition: background-color var(--flow-press), color var(--flow-press), box-shadow 500ms var(--ease-out-soft); }
+.onb-btn[data-fill] { background: #121416; color: #f2fbf6; box-shadow: inset 0 0 0 1px rgb(79 174 134 / 0.22), 0 12px 28px -16px rgb(10 105 70 / 0.45); transition: background-color var(--flow-press), color var(--flow-press), box-shadow 500ms var(--ease-out-soft); }
 .onb-btn[data-fill="run"] .onb-btn__arrow { translate: 5px 0; }
 /* the last step, into the product: the Core's own emerald, confident */
 .onb-btn[data-tone="emerald"] { background: linear-gradient(180deg, #23936a, #18704f); color: #f2fbf6; box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.18), 0 0 0 1px rgb(79 174 134 / 0.35), 0 14px 36px -12px rgb(29 122 85 / 0.7); }
 .onb-btn[data-tone="emerald"]:hover { background: linear-gradient(180deg, #28a075, #1a7a56); }
 /* …pressed, a brighter emerald wells up through it: the Core at full light */
-.onb-btn[data-tone="emerald"][data-fill] { background: linear-gradient(180deg, #17684a, #0f4b35); box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.14), 0 0 0 1px rgb(124 201 165 / 0.5), 0 16px 44px -10px rgb(29 122 85 / 0.85); }
-.onb-btn[data-tone="emerald"] > .awaken-fill::before { background: linear-gradient(90deg, #1f8a60, #2fa57a 65%, #45b88c); }
+.onb-btn[data-tone="emerald"][data-fill] { background: linear-gradient(180deg, #1a6f50, #13563d); box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.14), 0 0 0 1px rgb(124 201 165 / 0.4), 0 14px 36px -12px rgb(29 122 85 / 0.7); }
+.onb-btn[data-tone="emerald"] > .awaken-fill::before { background: linear-gradient(90deg, #1d8059, #279467 65%, #34a477); }
 
 /* ---------- Company: the search, and the identity it finds ---------- */
 .onb-search__line { position: absolute; left: 6px; right: 6px; bottom: 0; height: 1px; opacity: 0; transition: opacity 500ms; }
@@ -1024,6 +1026,16 @@ html.lenis { scroll-behavior: auto; }
 }
 .onb-see:hover .onb-connector__reads,
 .onb-see:focus-within .onb-connector__reads { opacity: 1; translate: 0 0; }
+
+/* ---------- DECODE (components/shared/decode-text.tsx): words read as they arrive ----------
+   An invisible copy holds the space; the decoding is drawn over it, so nothing moves. */
+.decode { position: relative; display: inline-block; }
+.decode__sizer { visibility: hidden; }
+.decode__layer { position: absolute; inset: 0; }
+/* the characters still being read: a few flickers in the Core's emerald before they settle */
+.decode__noise { color: var(--color-accent-strong); opacity: 0.7; }
+/* not read yet: a faint line keeps its place */
+.decode[data-pending]::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0.32em; height: 1px; background: rgb(255 255 255 / 0.12); }
 
 /* ---------- Understanding: the Core's moment ---------- */
 .onb-core-large { width: clamp(12rem, 44vh - 2rem, 25rem); }
@@ -1103,34 +1115,33 @@ html.lenis { scroll-behavior: auto; }
 @keyframes onb-fade { from { opacity: 0; } }
 @keyframes onb-fade-out { to { opacity: 0; } }
 
-/* ---------- Mandate: the autonomy track, and what it means ---------- */
-.onb-autonomy__track,
-.onb-autonomy__fill { position: absolute; left: 0; top: 7px; height: 2px; border-radius: 2px; }
-.onb-autonomy__track { right: 0; background: rgb(255 255 255 / 0.08); }
-.onb-autonomy__fill { width: calc(var(--at) * 50%); background: linear-gradient(90deg, rgb(42 141 102 / 0.45), var(--color-accent-strong)); box-shadow: 0 0 14px rgb(29 122 85 / calc(0.25 + var(--at) * 0.3)); transition: width 700ms var(--ease-out-soft), box-shadow 700ms; }
-.onb-autonomy__knob { position: relative; z-index: 1; width: 16px; height: 16px; border-radius: 999px; background: var(--color-canvas); box-shadow: inset 0 0 0 1.5px rgb(255 255 255 / 0.22); transition: box-shadow 500ms, background-color 500ms; }
-.onb-autonomy__stop:hover .onb-autonomy__knob { box-shadow: inset 0 0 0 1.5px rgb(255 255 255 / 0.45); }
-.onb-autonomy__knob--passed { background: var(--color-accent); box-shadow: inset 0 0 0 1.5px var(--color-accent-strong); }
-.onb-autonomy__knob--on { background: var(--color-accent-strong); box-shadow: 0 0 0 4px rgb(42 141 102 / 0.18), 0 0 18px 2px var(--core-glow); }
-.onb-autonomy__stop:has(input:focus-visible) .onb-autonomy__knob { outline: 2px solid var(--color-fg); outline-offset: 3px; }
-/* the more it may do, the stronger its light: guided — a point, you lead · assisted — the Core's
-   glow · autonomous — full light, inside a boundary that draws itself: it acts within the mandate */
-.onb-autonomy__stop--on[data-level="guided"] .onb-autonomy__knob--on { background: radial-gradient(circle, var(--color-accent-strong) 0 2.5px, var(--color-canvas) 3px); box-shadow: inset 0 0 0 1.5px var(--color-fg), 0 0 0 4px rgb(255 255 255 / 0.06); }
-.onb-autonomy__stop--on[data-level="autonomous"] .onb-autonomy__knob--on { background: #c6efdb; box-shadow: 0 0 0 4px rgb(42 141 102 / 0.3), 0 0 26px 6px var(--core-glow), 0 0 60px 10px rgb(10 105 70 / 0.25); }
-.onb-autonomy__boundary { position: absolute; inset: -9px; border-radius: 999px; opacity: 0; background: conic-gradient(from 0deg, var(--emerald-bright) var(--onb-draw), transparent 0); -webkit-mask: radial-gradient(closest-side, transparent calc(100% - 1.2px), #000 calc(100% - 1px)); mask: radial-gradient(closest-side, transparent calc(100% - 1.2px), #000 calc(100% - 1px)); transition: opacity 400ms; }
-.onb-autonomy__stop--on .onb-autonomy__boundary { opacity: 0.9; animation: onb-draw 900ms var(--ease-awaken) 150ms both; }
-.onb-autonomy__name { font-size: 1.15rem; transition: color 300ms, font-size 400ms var(--ease-out-soft); }
-.onb-autonomy__stop--on .onb-autonomy__name { font-size: 1.3rem; }
-.onb-autonomy__stop--on[data-level="autonomous"] .onb-autonomy__name { font-style: italic; }
-/* each level's reach: the actions it takes on its own, then — past a fine boundary — those that always ask */
-.onb-reach { display: inline-flex; align-items: center; gap: 3px; }
-.onb-reach__seg { width: 9px; height: 3px; border-radius: 2px; background: rgb(255 255 255 / 0.1); transition: background-color 500ms, box-shadow 500ms; transition-delay: calc(var(--k) * 40ms); }
-@media (max-width: 639.98px) { .onb-reach__seg { width: 6px; } }
-.onb-reach__seg--auto { background: rgb(255 255 255 / 0.42); }
-.onb-autonomy__stop--on .onb-reach__seg--auto { background: var(--color-accent-strong); box-shadow: 0 0 6px var(--core-glow); }
-.onb-reach__seg--held { background: transparent; box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.14); }
-.onb-reach__seg:not(.onb-reach__seg--held) + .onb-reach__seg--held { position: relative; margin-left: 7px; }
-.onb-reach__seg:not(.onb-reach__seg--held) + .onb-reach__seg--held::before { content: ""; position: absolute; left: -6px; top: -4px; bottom: -4px; width: 1px; background: rgb(255 255 255 / 0.35); }
+/* ---------- Mandate: three modes, each with its own identity ----------
+   Not one bar that gets greener: three distinct choices, each shown as the Core at the activity
+   the mode gives it (guided: half lit, at rest · assisted: fully lit, steady · autonomous: lit,
+   its light moving, inside a boundary drawn around it). The chosen one wakes; the others rest. */
+.onb-mode { position: relative; display: flex; align-items: center; gap: 1rem; padding: 0.95rem 1.1rem; border-radius: 14px; cursor: pointer; box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.06); transition: box-shadow 400ms, background-color 400ms; }
+.onb-mode:hover { box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.13); }
+.onb-mode--on { background: linear-gradient(180deg, rgb(42 141 102 / 0.08), rgb(42 141 102 / 0.012)); box-shadow: inset 0 0 0 1px var(--color-accent-line), 0 24px 50px -36px rgb(10 105 70 / 0.7); }
+.onb-mode--on:hover { box-shadow: inset 0 0 0 1px var(--color-accent-line), 0 24px 50px -36px rgb(10 105 70 / 0.7); }
+.onb-mode:has(input:focus-visible) { outline: 2px solid var(--color-fg); outline-offset: 3px; }
+/* chosen, each in its own register: guided stays with you (a neutral line — you lead) · assisted
+   carries the emerald · autonomous carries it most, the Core at full light */
+.onb-mode--on[data-level="guided"],
+.onb-mode--on[data-level="guided"]:hover { background: linear-gradient(180deg, rgb(255 255 255 / 0.045), rgb(255 255 255 / 0.01)); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.26); }
+.onb-mode--on[data-level="autonomous"],
+.onb-mode--on[data-level="autonomous"]:hover { background: linear-gradient(180deg, rgb(42 141 102 / 0.14), rgb(42 141 102 / 0.02)); box-shadow: inset 0 0 0 1px rgb(79 174 134 / 0.6), 0 26px 60px -30px rgb(10 105 70 / 0.85); }
+.onb-mode__emblem { position: relative; flex: none; width: 3.25rem; height: 3.25rem; opacity: 0.5; filter: saturate(0.35); transition: opacity 500ms, filter 500ms, scale 500ms var(--ease-out-soft); }
+.onb-mode:hover .onb-mode__emblem { opacity: 0.8; }
+.onb-mode--on .onb-mode__emblem { opacity: 1; filter: none; scale: 1.06; }
+.onb-mode__name { font-size: 1.3rem; color: var(--color-fg-2); transition: color 300ms; }
+.onb-mode:hover .onb-mode__name,
+.onb-mode--on .onb-mode__name { color: var(--color-fg); }
+.onb-mode__promise { color: var(--color-fg-3); transition: color 300ms; }
+.onb-mode--on .onb-mode__promise { color: var(--color-fg-2); }
+/* autonomous acts inside a boundary: a fine ring around its Core, drawn when it is chosen */
+.onb-mode__boundary { --onb-draw: 360deg; position: absolute; inset: -6px; border-radius: 999px; opacity: 0.3; background: conic-gradient(from 0deg, var(--emerald-bright) var(--onb-draw), transparent 0); -webkit-mask: radial-gradient(closest-side, transparent calc(100% - 1.2px), #000 calc(100% - 1px)); mask: radial-gradient(closest-side, transparent calc(100% - 1.2px), #000 calc(100% - 1px)); transition: opacity 400ms; }
+.onb-mode--on .onb-mode__boundary { opacity: 0.85; animation: onb-draw 900ms var(--ease-awaken) 100ms both; }
+@media (min-width: 1024px) and (max-height: 820px) { .onb-mode { padding-block: 0.75rem; } .onb-mode__emblem { width: 2.85rem; height: 2.85rem; } }
 
 .onb-scenario__steps { padding-top: 1.1rem; }
 .onb-scenario__step { animation: onb-rise 600ms var(--ease-out-soft) both; animation-delay: calc(var(--i, 0) * 140ms); }
@@ -1157,6 +1168,8 @@ html.lenis { scroll-behavior: auto; }
 .onb-chip { padding: 0.3rem 0.65rem; border-radius: 999px; font-size: 12.5px; color: var(--color-fg-2); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.09); }
 @media (min-width: 1024px) and (max-height: 820px) { .onb-chip { padding: 0.22rem 0.6rem; font-size: 12px; } }
 .onb-chip--auto { color: var(--color-fg); background: rgb(42 141 102 / 0.1); box-shadow: inset 0 0 0 1px var(--color-accent-line); }
+/* what this mode adds to the one before it */
+.onb-chip--gained { background: rgb(42 141 102 / 0.2); box-shadow: inset 0 0 0 1px var(--emerald-bright), 0 0 16px -6px var(--core-glow); }
 
 /* ---------- The first briefing: one line of reasoning, ending in action ---------- */
 .onb-prelude__line { opacity: 0; translate: 0 8px; filter: blur(3px); transition: opacity 600ms var(--ease-out-soft), translate 600ms var(--ease-out-soft), filter 600ms; }
@@ -1256,7 +1269,7 @@ html[data-vt="onboarding"]::view-transition-group(onb-conversation) { overflow: 
 html[data-vt="onboarding"]::view-transition-old(onb-memory) { animation: onb-vt-fade 240ms ease both; }
 html[data-vt="onboarding"]::view-transition-new(onb-memory) { animation: onb-vt-in 520ms var(--ease-out-soft) 120ms both; }
 html[data-vt="onboarding"]::view-transition-old(onb-conversation) { animation: onb-vt-out 260ms var(--ease-in-out-soft) both; }
-html[data-vt="onboarding"]::view-transition-new(onb-conversation) { animation: onb-vt-in 520ms var(--ease-out-soft) 140ms both; }
+html[data-vt="onboarding"]::view-transition-new(onb-conversation) { animation: onb-vt-in 460ms var(--ease-out-soft) 120ms both; }
 @keyframes onb-vt-fade { to { opacity: 0; } }
 html[data-vt="onboarding"]::view-transition-old(root),
 html[data-vt="onboarding"]::view-transition-new(root) { animation-duration: 500ms; }
@@ -1278,7 +1291,7 @@ html[data-vt="onboarding"]::view-transition-new(root) { animation-duration: 500m
   .onb-brief, .onb-prelude__line { transition: none; }
   .onb-graph__line, .onb-graph__pen, .onb-graph__band, .onb-graph__dot, .onb-graph__note, .onb-graph__figure, .onb-priority__figure, .onb-priority__observation { animation: none !important; }
   .onb-graph__drawing--out { display: none; }
-  .onb-autonomy__stop--on .onb-autonomy__boundary { animation: none; --onb-draw: 360deg; }
+  .onb-mode--on .onb-mode__boundary { animation: none; }
   .onb-brief__then, .onb-brief__item, .onb-brief__status, .onb-brief__fill::before { animation: none !important; }
   .onb-brief__key { transition: none !important; }
   .onb-priority::before, .onb-priority__hint, .onb-priority__more, .onb-priority__title { transition: none; }

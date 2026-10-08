@@ -349,6 +349,8 @@ export type Briefing = {
   priority: { title: string; detail: string };
   insight: { title: string; detail: string };
   recommendation: { title: string; detail: string };
+  /** What acting on it can achieve, measured on the company’s own history ("2×" · "as likely to close …") */
+  impact?: { value: string; label: string };
   /** The follow-ups the action is about — what Syxoria may do with them depends on the mandate and the tools */
   drafts: BriefingDraft[];
   basedOn: string;

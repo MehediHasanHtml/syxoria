@@ -2,6 +2,7 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { SyxoriaCore } from "@/components/brand/syxoria-core";
+import { DecodeText } from "@/components/shared/decode-text";
 import { IntegrationLogo } from "@/components/shared/integration-logo";
 import { knowledgeLabels, understanding as copy } from "@/content/onboarding";
 import { cn } from "@/lib/cn";
@@ -31,6 +32,8 @@ const HOLD = 3200;
  * Information leaves each connected source and flows into the Core, which opens and lights as it
  * reads; relationships form one by one (a client talks to you, the conversation leads to a quote,
  * the quote becomes an opportunity); and what it discovers is said plainly. Then it moves on.
+ * Everything it learns is decoded as it arrives — words letter by letter, counts digit by digit
+ * (DecodeText) — as if read in real time; the composition itself never moves.
  */
 export function UnderstandingVisualization({ company, sources, found, progress, onFound, onUnderstood, onAnalysed }: Props) {
   const [phase, setPhase] = useState({ id: "open", message: `Opening ${company.name}’s sources` });
@@ -134,8 +137,8 @@ export function UnderstandingVisualization({ company, sources, found, progress, 
             {copy.understood.lead} <em className="font-serif italic text-accent-strong">{copy.understood.accent}</em> {company.name}.
           </h1>
         ) : (
-          <h1 key={phase.id} className="onb-word mt-2.5 font-display text-[clamp(1.45rem,1.15rem+1vw,2rem)] font-light leading-[1.15] tracking-(--title-tracking) text-fg">
-            {phase.message}
+          <h1 className="mt-2.5 font-display text-[clamp(1.45rem,1.15rem+1vw,2rem)] font-light leading-[1.15] tracking-(--title-tracking) text-fg">
+            <DecodeText key={phase.id} text={phase.message} />
             <span className="onb-ellipsis" aria-hidden="true" />
           </h1>
         )}
@@ -194,13 +197,13 @@ export function UnderstandingVisualization({ company, sources, found, progress, 
               <li key={k} className="relative">
                 <div className={cn("flex items-baseline gap-3 transition-opacity duration-700", count ? "opacity-100" : "opacity-40")}>
                   <span data-geo="node" aria-hidden="true" className={cn("onb-chain__node relative top-[0.1em] size-2 shrink-0 self-center rounded-full", count && "onb-chain__node--on")} />
-                  <span className="text-[14px] text-fg">{knowledgeLabels[k]}</span>
-                  <span className="tabular ml-auto font-display text-[1.3rem] font-light leading-none text-fg">{count ? formatNumber(count) : "·"}</span>
+                  <DecodeText text={knowledgeLabels[k]} pending={!count} className="text-[14px] text-fg" />
+                  <DecodeText text={count ? formatNumber(count) : "·"} delay={count ? 120 : 0} className="tabular ml-auto font-display text-[1.3rem] font-light leading-none text-fg" />
                 </div>
                 {next && (
                   <div className="relative ml-[3.5px] flex h-[clamp(2.25rem,5vh,3.5rem)] items-center border-l border-white/[0.07] pl-[1.15rem]">
                     <span aria-hidden="true" className={cn("onb-chain__edge absolute -left-px top-0 w-px", linked(k, next) && "onb-chain__edge--on")} />
-                    {link && <span className="onb-word text-[11.5px] italic text-accent-strong">{link.label}</span>}
+                    {link && <DecodeText text={link.label} className="text-[11.5px] italic text-accent-strong" />}
                   </div>
                 )}
               </li>
@@ -250,8 +253,12 @@ export function UnderstandingVisualization({ company, sources, found, progress, 
 export function Discovery({ discovery }: { discovery: DiscoveryT }) {
   return (
     <li className="onb-discovery onb-rise" data-tone={discovery.tone}>
-      <p className="tabular font-display text-[clamp(1.5rem,1.2rem+0.8vw,2rem)] font-light leading-none tracking-[-0.02em] text-fg">{discovery.value}</p>
-      <p className="mt-1.5 text-[12.5px] leading-snug text-fg-2">{discovery.label}</p>
+      <p className="tabular font-display text-[clamp(1.5rem,1.2rem+0.8vw,2rem)] font-light leading-none tracking-[-0.02em] text-fg">
+        <DecodeText text={discovery.value} />
+      </p>
+      <p className="mt-1.5 text-[12.5px] leading-snug text-fg-2">
+        <DecodeText text={discovery.label} delay={140} />
+      </p>
     </li>
   );
 }

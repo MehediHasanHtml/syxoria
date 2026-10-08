@@ -160,6 +160,7 @@ export function OnboardingExperience({ sources, policy, shell, resume, mode, pla
           firstName={state.session?.firstName ?? null}
           variant="onboarding"
           onEntering={onPulse}
+          onBeat={onPulse}
           onEnter={() => move({ type: "go", stage: "complete" })}
         />
       )}

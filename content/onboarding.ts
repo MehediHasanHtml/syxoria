@@ -1,4 +1,4 @@
-import type { KnowledgeKind, OnboardingStage, PermissionMode, PermissionRule, SourceCategory } from "@/types";
+import type { AutonomyLevel, KnowledgeKind, OnboardingStage, PermissionMode, PermissionRule, SourceCategory } from "@/types";
 
 /**
  * Onboarding copy — the moment the system meets a company. The voice is the system's own:
@@ -101,8 +101,14 @@ export const analysis = {
 export const autonomy = {
   title: { lead: "How much should Syxoria", accent: "do on its own?" },
   promise: "You set the boundaries. Syxoria works within them.",
-  auto: "Does on its own",
-  ask: "Asks you first",
+  /** What each mode means for you, in one line */
+  promises: {
+    guided: "It prepares. You decide.",
+    assisted: "The routine, handled.",
+    autonomous: "Acts within your mandate.",
+  } satisfies Record<AutonomyLevel, string>,
+  auto: "On its own",
+  ask: "Always asks you first",
   never: "Never, whatever you choose",
   adjust: "Adjust action by action",
   boundary: "Your boundary",

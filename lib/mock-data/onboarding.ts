@@ -460,11 +460,11 @@ export const mockAutonomyPolicy: AutonomyPolicy = {
 
 export function buildBriefing(company: CompanyProfile, sources: DataSource[]): Briefing {
   const top = quietDeals.slice(0, 3);
-  const worth = top.reduce((s, d) => s + d.value, 0);
   return {
     priority: {
       title: "Three opportunities need your attention today.",
-      detail: `Together they are worth €${worth.toLocaleString("en-GB")}, and each has been quiet for more than ten days.`,
+      // the same finding as the conversion priority: here, deals quiet this long close half as often
+      detail: `Each has been quiet for more than ten days — and at ${company.name}, deals that go quiet this long close half as often.`,
     },
     insight: {
       title: "Atelier Rive has been quiet for 12 days.",
@@ -472,7 +472,14 @@ export function buildBriefing(company: CompanyProfile, sources: DataSource[]): B
     },
     recommendation: {
       title: "Follow up with all three this morning.",
-      detail: `At ${company.name}, deals that get a reply within two weeks of going quiet close twice as often.`,
+      detail: `Answer ${top[0].company}’s question on timing first, then pick up where you left off with ${top
+        .slice(1)
+        .map((d) => d.company)
+        .join(" and ")}.`,
+    },
+    impact: {
+      value: "2×",
+      label: `as likely to close when a quiet deal gets a reply within two weeks — on ${company.name}’s own history.`,
     },
     drafts: top.map((d, i) => ({ id: `d_${i}`, ...d })),
     basedOn: `Based on ${sources.length} ${sources.length === 1 ? "source" : "sources"} and two years of activity`,

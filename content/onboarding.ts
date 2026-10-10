@@ -108,10 +108,23 @@ export const autonomy = {
     autonomous: "Acts within your mandate.",
   } satisfies Record<AutonomyLevel, string>,
   auto: "On its own",
-  ask: "Always asks you first",
+  ask: "Asks you first",
+  /** Beside the boundary: what crossing it means */
+  beyond: "from here, it asks you first",
+  /** Actions no mode ever makes automatic */
+  always: "Always yours, in every mode",
+  off: "Off",
   never: "Never, whatever you choose",
   adjust: "Adjust action by action",
   boundary: "Your boundary",
+  example: "Example",
+  /** How far a mode reaches, counted */
+  reach: (auto: number, total: number) => `${auto} of ${total} actions on its own`,
+  compare: "Compare the three",
+  compareClose: "Back to one mode",
+  less: "Less on its own",
+  more: "More on its own",
+  change: "Every action is logged. You can change this at any time.",
   modes: { auto: "Automatic", ask: "Ask me", off: "Off" } satisfies Record<PermissionMode, string>,
   groups: { understand: "Understand", prepare: "Prepare", act: "Act" } satisfies Record<PermissionRule["group"], string>,
 };
@@ -125,9 +138,17 @@ export const briefing = {
   labels: { priority: "Priority", insight: "Insight", recommendation: "Recommendation", action: "Action" },
   /** What each step's figure measures */
   figures: {
-    stake: "at stake today",
+    stake: (n: number) => `at stake today, across ${n === 1 ? "one deal" : `${n} deals`}`,
     days: (n: number) => `${n} days`,
     silence: (company: string) => `without a word from ${company}`,
   },
+  /** The drawing's own words: what was said, the silence since, and where today is */
+  lanes: {
+    talk: "Emails exchanged",
+    quiet: (n: number) => `${n} days quiet`,
+    today: "Today",
+    next: "This morning",
+  },
+  mandate: (level: string) => `${level} mandate`,
   enter: "Enter Syxoria",
 };

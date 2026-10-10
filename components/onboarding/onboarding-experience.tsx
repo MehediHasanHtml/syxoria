@@ -3,10 +3,9 @@
 import { useCallback, useReducer, useState } from "react";
 import type { ShellContext } from "@/components/dashboard/app-shell";
 import { stageNames } from "@/content/onboarding";
-import { autonomyShare } from "@/lib/onboarding/mandate";
 import { connectedIds, coreFor, emptySnapshot, knowsFor, learningProgress, milestonesFor, onboardingReducer, type OnboardingAction } from "@/lib/onboarding/machine";
 import { getFirstBriefing, saveMandate } from "@/services/onboarding";
-import type { AutonomyLevel, AutonomyPolicy, DataSource, Mandate, OnboardingSnapshot, OnboardingStage } from "@/types";
+import type { AutonomyPolicy, DataSource, Mandate, OnboardingSnapshot, OnboardingStage } from "@/types";
 import { AccountStep } from "./account-step";
 import { AutonomyStep } from "./autonomy-step";
 import { CompanyStep } from "./company-step";
@@ -48,7 +47,6 @@ const layouts: Record<Exclude<OnboardingStage, "complete">, ShellLayout> = {
 export function OnboardingExperience({ sources, policy, shell, resume, mode, plan }: Props) {
   const [state, dispatch] = useReducer(onboardingReducer, resume ?? emptySnapshot);
   const [pulse, bump] = useReducer((n: number) => n + 1, 0);
-  const [level, setLevel] = useState<AutonomyLevel>(state.mandate?.level ?? policy.recommended);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
@@ -81,9 +79,9 @@ export function OnboardingExperience({ sources, policy, shell, resume, mode, pla
 
   const stage = state.stage === "complete" ? "briefing" : state.stage;
   const memoryProps = { snapshot: state, sources };
-  // the Core lives in the composition while signing in and while it understands; in the bar otherwise
-  const coreHere = stage !== "account" && stage !== "syncing";
-  const intensity = stage === "autonomy" ? 0.72 + 0.28 * autonomyShare[level] : 1;
+  // the Core lives in the composition while signing in, while it understands and while its mandate
+  // is being set (there it sits inside the boundary the user draws); in the bar otherwise
+  const coreHere = stage !== "account" && stage !== "syncing" && stage !== "autonomy";
   const awake = milestones.filter((m) => m.on).length / milestones.length;
 
   return (
@@ -91,7 +89,7 @@ export function OnboardingExperience({ sources, policy, shell, resume, mode, pla
       layout={layouts[stage]}
       density={knows.density}
       awake={awake}
-      bar={{ core: { ...core, intensity, pulse }, coreHere, milestones, email: state.session?.email ?? null }}
+      bar={{ core: { ...core, pulse }, coreHere, milestones, email: state.session?.email ?? null }}
       announcement={`${stageNames[stage]}.${core.word ? ` Syxoria: ${core.word.toLowerCase()}.` : ""}`}
       memory={<WhatSyxoriaKnows {...memoryProps} />}
       strip={<KnowsStrip {...memoryProps} />}
@@ -141,11 +139,9 @@ export function OnboardingExperience({ sources, policy, shell, resume, mode, pla
           initial={state.mandate}
           saving={saving}
           error={saveError}
-          onLevel={(l) => {
-            setLevel(l);
-            // the Core answers the mandate it is being offered: its light follows the level, and it stirs once
-            bump();
-          }}
+          pulse={pulse}
+          // the Core answers each mandate it is offered: it stirs once
+          onLevel={onPulse}
           onConfirm={confirmMandate}
           onBack={() => move({ type: "go", stage: "analysis" })}
         />

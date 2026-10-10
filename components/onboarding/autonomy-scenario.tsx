@@ -1,40 +1,36 @@
 import { autonomy as copy } from "@/content/onboarding";
-import { cn } from "@/lib/cn";
 import type { AutonomyPolicy } from "@/types";
 import { rise } from "./primitives";
 
 /**
- * What a level means, shown rather than described: one real situation, played out under the
- * chosen level. Syxoria's steps carry the emerald; then the boundary — always there, whatever
- * the level — where the decision comes back to the user. Autonomous ≠ no control.
+ * What a mode means, shown rather than described: one real situation, played out under it, in the
+ * same marks as the list beside it. Syxoria's steps carry the emerald; then the boundary — always
+ * there, whatever the mode — where the decision comes back to the user. Autonomous ≠ no control.
+ * Styles: "Mandate" in globals.css.
  */
 export function AutonomyScenario({ subject, level }: { subject: string; level: AutonomyPolicy["levels"][number] }) {
   const steps = level.scenario;
-  const mine = steps.filter((s) => s.by === "syxoria").length;
+  const mine = steps.findIndex((s) => s.by === "you");
   return (
     <section aria-label={`Example under ${level.name}`} className="onb-scenario">
-      <p className="text-[12.5px] text-fg-3">
-        <span className="font-label uppercase tracking-(--label-tracking) text-[0.6875rem]">Example</span>
-        <span className="mx-2 text-fg-3/60">—</span>
-        {subject}
-      </p>
-      <ol key={level.id} className="onb-scenario__steps mt-4 grid" style={{ gridTemplateColumns: `repeat(${steps.length}, minmax(0, 1fr))` }}>
-        {steps.map((s, i) => {
-          const you = s.by === "you";
-          return (
-            <li key={s.id} className={cn("onb-scenario__step relative pr-4", you && "onb-scenario__step--you")} style={rise(i)} data-boundary={i === mine || undefined}>
-              <span aria-hidden="true" className="onb-scenario__rail" />
-              <span aria-hidden="true" className="onb-scenario__node" />
-              {i === mine && (
-                <span className="onb-scenario__boundary" aria-hidden="true">
-                  {copy.boundary}
-                </span>
-              )}
-              <span className="mt-4 block font-label text-[0.625rem] uppercase tracking-(--label-tracking) text-fg-3">{you ? "You" : "Syxoria"}</span>
-              <span className={cn("mt-1 block text-[13px] leading-snug", you ? "text-fg" : "text-fg-2")}>{s.label}</span>
-            </li>
-          );
-        })}
+      <p className="onb-scenario__head font-label text-label uppercase">{copy.example}</p>
+      <p className="onb-scenario__subject">{subject}</p>
+      <ol className="onb-scenario__steps">
+        {steps.map((s, i) => (
+          <li key={s.id} className="onb-scenario__step" data-by={s.by} data-boundary={i === mine || undefined} style={rise(i)}>
+            {i === mine && (
+              <span className="onb-scenario__boundary" aria-hidden="true">
+                <span className="onb-boundary__name">{copy.boundary}</span>
+                <span className="onb-boundary__line" />
+              </span>
+            )}
+            <span aria-hidden="true" className="onb-mark" data-mode={s.by === "you" ? "ask" : "auto"} />
+            <span>
+              <span className="sr-only">{s.by === "you" ? "You: " : "Syxoria: "}</span>
+              {s.label}
+            </span>
+          </li>
+        ))}
       </ol>
     </section>
   );

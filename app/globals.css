@@ -1115,181 +1115,370 @@ html.lenis { scroll-behavior: auto; }
 @keyframes onb-fade { from { opacity: 0; } }
 @keyframes onb-fade-out { to { opacity: 0; } }
 
-/* ---------- Mandate: three modes, each with its own identity ----------
-   Not one bar that gets greener: three distinct choices, each shown as the Core at the activity
-   the mode gives it (guided: half lit, at rest · assisted: fully lit, steady · autonomous: lit,
-   its light moving, inside a boundary drawn around it). The chosen one wakes; the others rest. */
-.onb-mode { position: relative; display: flex; align-items: center; gap: 1rem; padding: 0.95rem 1.1rem; border-radius: 14px; cursor: pointer; box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.06); transition: box-shadow 400ms, background-color 400ms; }
-.onb-mode:hover { box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.13); }
-.onb-mode--on { background: linear-gradient(180deg, rgb(42 141 102 / 0.08), rgb(42 141 102 / 0.012)); box-shadow: inset 0 0 0 1px var(--color-accent-line), 0 24px 50px -36px rgb(10 105 70 / 0.7); }
-.onb-mode--on:hover { box-shadow: inset 0 0 0 1px var(--color-accent-line), 0 24px 50px -36px rgb(10 105 70 / 0.7); }
-.onb-mode:has(input:focus-visible) { outline: 2px solid var(--color-fg); outline-offset: 3px; }
-/* chosen, each in its own register: guided stays with you (a neutral line — you lead) · assisted
-   carries the emerald · autonomous carries it most, the Core at full light */
-.onb-mode--on[data-level="guided"],
-.onb-mode--on[data-level="guided"]:hover { background: linear-gradient(180deg, rgb(255 255 255 / 0.045), rgb(255 255 255 / 0.01)); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.26); }
-.onb-mode--on[data-level="autonomous"],
-.onb-mode--on[data-level="autonomous"]:hover { background: linear-gradient(180deg, rgb(42 141 102 / 0.14), rgb(42 141 102 / 0.02)); box-shadow: inset 0 0 0 1px rgb(79 174 134 / 0.6), 0 26px 60px -30px rgb(10 105 70 / 0.85); }
-.onb-mode__emblem { position: relative; flex: none; width: 3.25rem; height: 3.25rem; opacity: 0.5; filter: saturate(0.35); transition: opacity 500ms, filter 500ms, scale 500ms var(--ease-out-soft); }
-.onb-mode:hover .onb-mode__emblem { opacity: 0.8; }
-.onb-mode--on .onb-mode__emblem { opacity: 1; filter: none; scale: 1.06; }
-.onb-mode__name { font-size: 1.3rem; color: var(--color-fg-2); transition: color 300ms; }
-.onb-mode:hover .onb-mode__name,
-.onb-mode--on .onb-mode__name { color: var(--color-fg); }
-.onb-mode__promise { color: var(--color-fg-3); transition: color 300ms; }
-.onb-mode--on .onb-mode__promise { color: var(--color-fg-2); }
-/* autonomous acts inside a boundary: a fine ring around its Core, drawn when it is chosen */
-.onb-mode__boundary { --onb-draw: 360deg; position: absolute; inset: -6px; border-radius: 999px; opacity: 0.3; background: conic-gradient(from 0deg, var(--emerald-bright) var(--onb-draw), transparent 0); -webkit-mask: radial-gradient(closest-side, transparent calc(100% - 1.2px), #000 calc(100% - 1px)); mask: radial-gradient(closest-side, transparent calc(100% - 1.2px), #000 calc(100% - 1px)); transition: opacity 400ms; }
-.onb-mode--on .onb-mode__boundary { opacity: 0.85; animation: onb-draw 900ms var(--ease-awaken) 100ms both; }
-@media (min-width: 1024px) and (max-height: 820px) { .onb-mode { padding-block: 0.75rem; } .onb-mode__emblem { width: 2.85rem; height: 2.85rem; } }
-
-.onb-scenario__steps { padding-top: 1.1rem; }
-.onb-scenario__step { animation: onb-rise 600ms var(--ease-out-soft) both; animation-delay: calc(var(--i, 0) * 140ms); }
-.onb-scenario__rail { position: absolute; left: 6px; right: 0; top: 5px; height: 2px; background: var(--color-accent-strong); opacity: 0.75; transform-origin: left; animation: onb-rail 500ms var(--ease-out-soft) both; animation-delay: calc(var(--i, 0) * 140ms + 150ms); }
-@keyframes onb-rail { from { scale: 0 1; } }
-.onb-scenario__step:last-child .onb-scenario__rail { display: none; }
-.onb-scenario__step:has(+ .onb-scenario__step--you) .onb-scenario__rail { right: 1.4rem; }
-.onb-scenario__node { position: relative; display: block; width: 12px; height: 12px; border-radius: 999px; background: var(--color-accent-strong); box-shadow: 0 0 0 3px #0b0c0d, 0 0 10px var(--core-glow); }
-.onb-scenario__step--you .onb-scenario__node { background: #0b0c0d; box-shadow: inset 0 0 0 1.5px var(--color-fg), 0 0 0 3px #0b0c0d; }
-.onb-scenario__boundary {
-  position: absolute;
-  left: -0.9rem;
-  top: -1.15rem;
-  bottom: 0;
-  padding-left: 0.45rem;
-  border-left: 1px dashed rgb(255 255 255 / 0.3);
-  color: var(--color-fg-2);
-  font-size: 10.5px;
-  line-height: 1;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  white-space: nowrap;
+/* ---------- Mandate: one mode at a time ----------
+   The moment the user decides how much freedom Syxoria gets, so it stays calm: one panel, one
+   mode in it. The Core is on the screen once (it comes down from the bar) inside the ring — the
+   boundary being set: one arc per action, lit where Syxoria acts on its own. Beside it the same
+   actions as a list that never reorders: moving between modes only moves the line across it
+   ("Your boundary") and the marks it passes. Two marks say everything, here and in the example:
+   filled emerald = Syxoria, on its own · an open ring = it comes to you. */
+.onb-mandate {
+  --row: 1.72rem;
+  --gap: 1.95rem;
+  container: mandate / inline-size;
+  position: relative;
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.024), rgb(255 255 255 / 0.006));
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.065), 0 40px 80px -60px rgb(0 0 0 / 0.9);
 }
-.onb-chip { padding: 0.3rem 0.65rem; border-radius: 999px; font-size: 12.5px; color: var(--color-fg-2); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.09); }
-@media (min-width: 1024px) and (max-height: 820px) { .onb-chip { padding: 0.22rem 0.6rem; font-size: 12px; } }
-.onb-chip--auto { color: var(--color-fg); background: rgb(42 141 102 / 0.1); box-shadow: inset 0 0 0 1px var(--color-accent-line); }
-/* what this mode adds to the one before it */
-.onb-chip--gained { background: rgb(42 141 102 / 0.2); box-shadow: inset 0 0 0 1px var(--emerald-bright), 0 0 16px -6px var(--core-glow); }
+@media (min-width: 1024px) and (max-height: 820px) { .onb-mandate { --row: 1.5rem; --gap: 1.65rem; } }
 
-/* ---------- The first briefing: one line of reasoning, ending in action ---------- */
+/* the two marks (and "off": a short dash) */
+.onb-mark { flex: none; display: inline-block; width: 9px; height: 9px; border-radius: 999px; transition: background-color 450ms var(--ease-out-soft), box-shadow 450ms var(--ease-out-soft); }
+.onb-mark[data-mode="auto"] { background: var(--color-accent-strong); box-shadow: 0 0 9px var(--core-glow); }
+.onb-mark[data-mode="ask"] { box-shadow: inset 0 0 0 1.5px rgb(255 255 255 / 0.72); }
+.onb-mark[data-mode="off"] { height: 1.5px; border-radius: 1px; background: rgb(255 255 255 / 0.3); }
+
+/* a mode's own mark: the ring, reduced to the share of it that mode lights */
+.onb-glyph { flex: none; width: 0.95rem; height: 0.95rem; rotate: -90deg; }
+.onb-glyph circle { fill: none; stroke-width: 1.7; }
+.onb-glyph__track { stroke: rgb(255 255 255 / 0.16); }
+.onb-glyph__arc { stroke: currentColor; opacity: 0.6; transition: stroke 300ms, opacity 300ms; }
+
+/* THE WAY BETWEEN THE MODES — names on one line, the arrows, and the comparison */
+.onb-mandate__bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; column-gap: 1rem; padding: 0 1.5rem; border-bottom: 1px solid rgb(255 255 255 / 0.06); }
+.onb-modes { display: flex; min-width: 0; gap: clamp(1rem, 4cqi, 2rem); }
+.onb-modes__item { position: relative; display: flex; align-items: center; gap: 0.55rem; height: 3.15rem; cursor: pointer; color: var(--color-fg-3); transition: color 300ms; }
+.onb-modes__item:hover { color: var(--color-fg-2); }
+.onb-modes__item--on,
+.onb-modes__item--on:hover { color: var(--color-fg); }
+.onb-modes__item::after { content: ""; position: absolute; inset-inline: 0; bottom: -1px; height: 1px; background: var(--color-accent-strong); box-shadow: 0 0 10px var(--core-glow); transform-origin: left; scale: 0 1; transition: scale 550ms var(--ease-awaken); }
+.onb-modes__item--on::after { scale: 1 1; }
+.onb-modes__item--on .onb-glyph__arc { stroke: var(--color-accent-strong); opacity: 1; }
+.onb-modes__item:has(input:focus-visible) { outline: 2px solid var(--color-fg); outline-offset: 2px; border-radius: 4px; }
+.onb-modes__name { font-family: var(--font-display); font-size: 1.14rem; font-weight: 300; line-height: 1; letter-spacing: -0.01em; }
+.onb-modes__tag { display: none; font-size: 11.5px; color: var(--color-accent-strong); }
+.onb-mandate__tools { display: flex; align-items: center; gap: 0.35rem; padding-block: 0.6rem; }
+.onb-mandate__step { display: none; place-items: center; width: 1.75rem; height: 1.75rem; border-radius: 999px; color: var(--color-fg-2); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.09); transition: color 250ms, box-shadow 250ms, opacity 250ms; }
+.onb-mandate__step:hover:not(:disabled) { color: var(--color-fg); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.24); }
+.onb-mandate__step:disabled { opacity: 0.3; cursor: default; }
+.onb-mandate__compare { display: inline-flex; align-items: center; gap: 0.45rem; height: 1.75rem; padding: 0 0.8rem; border-radius: 999px; font-size: 12.5px; color: var(--color-fg-2); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.09); transition: color 250ms, box-shadow 250ms, background-color 250ms; }
+.onb-mandate__compare:hover { color: var(--color-fg); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.24); }
+.onb-mandate__compare[aria-pressed="true"] { color: var(--color-fg); background: rgb(255 255 255 / 0.06); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.22); }
+.onb-mandate__step:focus-visible,
+.onb-mandate__compare:focus-visible { outline: 2px solid var(--color-fg); outline-offset: 2px; }
+
+/* THE MODE — small screens: one column; then the list beside its example; wide: the figure too */
+.onb-mandate__view { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.4rem; padding: 1.4rem 1.5rem 1.35rem; touch-action: pan-y; }
+.onb-mandate__figure { display: flex; align-items: center; gap: 1.4rem; }
+.onb-mandate__promise { font-family: var(--font-serif); font-size: 1.28rem; font-style: italic; font-weight: 300; line-height: 1.18; letter-spacing: -0.012em; color: var(--color-fg); }
+.onb-mandate__summary { max-width: 40rem; font-size: 15px; line-height: 1.55; color: var(--color-fg); }
+@container mandate (max-width: 24rem) {
+  .onb-mandate__bar { padding-inline: 1.1rem; }
+  .onb-modes { gap: 0.8rem; }
+  .onb-modes__item { gap: 0.4rem; }
+  .onb-modes__name { font-size: 1rem; }
+  .onb-modes .onb-glyph { width: 0.8rem; height: 0.8rem; }
+}
+@container mandate (min-width: 36rem) {
+  .onb-modes__tag { display: inline; }
+  .onb-mandate__view { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 2rem; }
+  .onb-mandate__figure,
+  .onb-mandate__summary,
+  .onb-mandate__wide { grid-column: 1 / -1; }
+}
+@container mandate (min-width: 50rem) {
+  .onb-mandate__step { display: grid; }
+  .onb-mandate__compare { margin-left: 0.5rem; }
+  /* the same height whichever mode is shown, and when the three are compared: nothing jumps */
+  .onb-mandate__view { grid-template-columns: 11.5rem minmax(0, 1.08fr) minmax(0, 1fr); grid-template-rows: auto 1fr; column-gap: 2.4rem; row-gap: 1.05rem; padding: 1.5rem 1.75rem 1.4rem 1.5rem; min-height: calc(var(--rows) * var(--row) + var(--gap) + var(--view-rest, 8.45rem)); }
+  .onb-mandate__figure { grid-column: 1; grid-row: 1 / span 2; flex-direction: column; align-self: center; gap: 1.15rem; text-align: center; }
+  .onb-mandate__summary { grid-column: 2 / span 2; min-height: 3.1em; }
+  .onb-mandate__wide { grid-column: 2 / span 2; grid-row: 1 / span 2; }
+  .onb-mandate__bar,
+  .onb-mandate__never { padding-inline: 1.75rem; }
+}
+
+/* the Core inside the boundary being set */
+.onb-ring { position: relative; display: block; flex: none; width: 6.25rem; aspect-ratio: 1; }
+@container mandate (min-width: 50rem) { .onb-ring { width: 10.25rem; } }
+@media (min-width: 1024px) and (max-height: 820px) { .onb-ring { width: 8.75rem; } }
+.onb-ring__arcs { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.onb-ring__arc { fill: none; stroke: rgb(255 255 255 / 0.22); stroke-width: 1.2; stroke-linecap: round; transition: stroke 500ms var(--ease-out-soft), stroke-width 500ms var(--ease-out-soft), filter 500ms; transition-delay: calc(var(--i) * 45ms); }
+.onb-ring__arc[data-mode="auto"] { stroke: var(--emerald-bright); stroke-width: 2.4; filter: drop-shadow(0 0 3px rgb(29 122 85 / 0.95)); }
+.onb-ring__arc[data-mode="off"] { stroke: rgb(255 255 255 / 0.12); stroke-dasharray: 1.5 5; }
+.onb-ring__arc[data-focus] { stroke: var(--color-fg); stroke-width: 2.6; transition-delay: 0ms; }
+.onb-ring__arc[data-mode="auto"][data-focus] { stroke: var(--emerald-lit); }
+.onb-ring__edge { transform-box: view-box; transform-origin: 100px 100px; transition: rotate 750ms var(--ease-awaken); }
+.onb-ring__edge line { stroke: var(--color-fg); stroke-width: 1.5; stroke-linecap: round; }
+.onb-ring__core { position: absolute; inset: 9.5%; }
+
+/* what belongs to the mode arrives from the side it was reached from */
+.onb-turn { animation: onb-turn 520ms var(--ease-out-soft) both; }
+.onb-mandate[data-dir="less"] .onb-turn { --from: -14px; }
+@keyframes onb-turn { from { opacity: 0; transform: translate3d(var(--from, 14px), 0, 0); } }
+
+/* WHAT IT ALLOWS — every action, always in the same place; the line across them moves */
+.onb-reach__head,
+.onb-scenario__head { display: flex; align-items: center; gap: 0.7rem; height: 1.25rem; color: var(--color-fg-3); }
+.onb-reach__rows { position: relative; height: calc(var(--rows) * var(--row) + var(--gap)); margin-top: 0.3rem; }
+.onb-reach__row { position: absolute; inset-inline: 0; top: 0; display: flex; align-items: center; gap: 0.7rem; height: var(--row); font-size: 13.5px; color: var(--color-fg); translate: 0 calc(var(--pos) * var(--row) + var(--below) * var(--gap)); transition: translate 650ms var(--ease-awaken), color 450ms; }
+.onb-reach__row[data-mode="ask"] { color: var(--color-fg-2); }
+.onb-reach__row[data-mode="off"] { color: var(--color-fg-3); }
+.onb-reach__row:hover { color: var(--color-fg); }
+.onb-reach__lock { display: inline-flex; margin-left: auto; padding-left: 0.5rem; color: var(--color-fg-3); }
+.onb-reach__off { margin-left: auto; font-size: 11.5px; color: var(--color-fg-3); }
+.onb-reach__boundary { position: absolute; inset-inline: 0; top: 0; display: flex; align-items: center; gap: 0.65rem; height: var(--gap); translate: 0 calc(var(--auto) * var(--row)); transition: translate 650ms var(--ease-awaken); }
+.onb-boundary__name { font-family: var(--font-label); font-size: 0.625rem; letter-spacing: var(--label-tracking); text-transform: uppercase; white-space: nowrap; color: var(--color-fg); }
+.onb-boundary__line { flex: 1; min-width: 1rem; height: 1px; background: repeating-linear-gradient(90deg, rgb(255 255 255 / 0.42) 0 4px, transparent 4px 8px); }
+.onb-boundary__note { font-size: 11.5px; white-space: nowrap; color: var(--color-fg-3); }
+
+/* ONE REAL SITUATION — the same marks, the same boundary */
+.onb-scenario__subject { margin-top: 0.3rem; font-size: 13px; line-height: 1.45; color: var(--color-fg-2); text-wrap: pretty; }
+.onb-scenario__steps { display: grid; margin-top: 0.55rem; }
+.onb-scenario__step { position: relative; display: grid; grid-template-columns: 9px minmax(0, 1fr); column-gap: 0.7rem; align-items: start; padding-block: 0.3rem; font-size: 13.5px; line-height: 1.35; color: var(--color-fg); animation: onb-rise 600ms var(--ease-out-soft) both; animation-delay: calc(120ms + var(--i, 0) * 130ms); }
+.onb-scenario__step > .onb-mark { margin-top: 0.34em; }
+/* Syxoria's steps follow one another: a fine line of its light between them */
+.onb-scenario__step[data-by="syxoria"]:has(+ [data-by="syxoria"])::after { content: ""; position: absolute; left: 4px; top: calc(0.3rem + 0.34em + 12px); bottom: calc(-0.3rem - 0.34em + 3px); width: 1px; background: var(--color-accent-line); }
+.onb-scenario__boundary { grid-column: 1 / -1; display: flex; align-items: center; gap: 0.65rem; height: calc(var(--gap) - 0.3rem); margin-top: -0.1rem; }
+
+/* THE THREE, SIDE BY SIDE — the emerald steps down as the autonomy grows, and stops */
+.onb-compare table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.onb-compare thead th { width: clamp(4.25rem, 17cqi, 8rem); padding: 0; font-weight: 400; }
+.onb-compare__mode { display: flex; width: 100%; height: 2.7rem; align-items: center; justify-content: center; gap: 0.5rem; border-radius: 10px 10px 0 0; font-family: var(--font-display); font-size: 1.05rem; font-weight: 300; letter-spacing: -0.01em; color: var(--color-fg-3); transition: color 250ms; }
+.onb-compare__mode:hover { color: var(--color-fg); }
+.onb-compare__mode:focus-visible { outline: 2px solid var(--color-fg); outline-offset: -2px; }
+.onb-compare th[data-on] .onb-compare__mode { color: var(--color-fg); }
+.onb-compare th[data-on] .onb-glyph__arc { stroke: var(--color-accent-strong); opacity: 1; }
+.onb-compare thead th,
+.onb-compare tbody td { transition: background-color 400ms var(--ease-out-soft); }
+.onb-compare [data-on] { background: rgb(42 141 102 / 0.075); }
+.onb-compare thead th[data-on] { border-radius: 10px 10px 0 0; box-shadow: inset 0 1px 0 var(--color-accent-line); }
+.onb-compare tbody tr:last-child td[data-on] { border-radius: 0 0 10px 10px; }
+.onb-compare tbody tr { height: calc(var(--row) + 0.28rem); }
+.onb-compare tbody tr + tr > * { border-top: 1px solid rgb(255 255 255 / 0.045); }
+.onb-compare tbody th { padding: 0; font-size: 13.5px; font-weight: 400; text-align: left; color: var(--color-fg-2); }
+.onb-compare__label { display: flex; align-items: center; gap: 0.5rem; min-width: 0; padding-right: 0.75rem; }
+.onb-compare tbody td { padding: 0; text-align: center; line-height: 0; }
+.onb-compare__key { display: flex; flex-wrap: wrap; gap: 0.35rem 1.5rem; margin-top: 0.85rem; font-size: 11.5px; color: var(--color-fg-3); }
+.onb-compare__key > span { display: inline-flex; align-items: center; gap: 0.5rem; }
+@container mandate (max-width: 35.99rem) { .onb-compare__mode .onb-glyph { display: none; } .onb-compare__mode { font-size: 0.92rem; } }
+
+/* WHATEVER THE MODE */
+.onb-mandate__never { display: flex; align-items: flex-start; gap: 0.6rem; padding: 0.8rem 1.5rem 0.9rem; border-top: 1px solid rgb(255 255 255 / 0.06); font-size: 12px; line-height: 1.45; color: var(--color-fg-3); }
+@media (min-width: 1024px) and (max-height: 820px) {
+  .onb-modes__item { height: 2.8rem; }
+  .onb-mandate__tools { padding-block: 0.4rem; }
+  .onb-mandate { --view-rest: 7.2rem; }
+  .onb-mandate__view { padding-block: 1.1rem 1rem !important; row-gap: 0.8rem !important; }
+  .onb-mandate__summary { font-size: 14px; }
+  .onb-mandate__promise { font-size: 1.15rem; }
+  .onb-mandate__never { padding-block: 0.6rem 0.65rem; }
+}
+
+/* ---------- The first briefing: one drawing, read left to right ----------
+   The template for every briefing. Four steps — priority · insight · recommendation · action —
+   but one drawing: each step leads with one figure, and under the figures the same lanes (one per
+   deal) run through all four and cross THE LINE OF TODAY. Left of it, what Syxoria understood, in
+   white: who and how much, the exchange (a bar per day), then the silence (a mark per quiet day).
+   Right of it, what happens next, in the Core's emerald: the way forward, and what Syxoria does
+   with each. White = what is · emerald = what Syxoria does about it. */
 .onb-prelude__line { opacity: 0; translate: 0 8px; filter: blur(3px); transition: opacity 600ms var(--ease-out-soft), translate 600ms var(--ease-out-soft), filter 600ms; }
 .onb-prelude__line.is-on { opacity: 1; translate: 0 0; filter: none; }
-.onb-reasoning { border-top: 1px solid rgb(255 255 255 / 0.08); }
-.onb-brief { position: relative; padding: 1.4rem 1.5rem 1.5rem 0; opacity: 0; translate: 0 10px; transition: opacity 700ms var(--ease-out-soft), translate 700ms var(--ease-out-soft); }
+
+.onb-course { --lane-h: 3.6rem; --pad: 1.4rem; position: relative; display: grid; }
+.onb-brief { position: relative; padding-block: 1.6rem; opacity: 0; translate: 0 10px; transition: opacity var(--flow-reveal) var(--ease-out-soft), translate var(--flow-reveal) var(--ease-out-soft); }
 .onb-brief[data-shown] { opacity: 1; translate: 0 0; }
-@container (min-width: 56rem) {
-  .onb-brief + .onb-brief { padding-left: 1.5rem; border-left: 1px solid rgb(255 255 255 / 0.06); }
-  .onb-brief + .onb-brief:not(.onb-brief--action)::after { left: -3.5px; }
+.onb-brief + .onb-brief { border-top: 1px solid rgb(255 255 255 / 0.06); }
+.onb-brief__lanes { margin-block: 1.2rem 1.1rem; }
+
+/* a step's name, and beside the action's the mandate it acts under */
+.onb-brief__label { display: flex; align-items: center; gap: 0.65rem; color: var(--color-fg-3); }
+.onb-brief__mark { width: 0.75rem; height: 1px; background: rgb(255 255 255 / 0.3); transition: background-color 500ms, box-shadow 500ms; }
+.onb-brief[data-kind="recommendation"] .onb-brief__mark { background: var(--color-accent-line); }
+.onb-brief__aside { display: inline-flex; align-items: center; gap: 0.45rem; margin-left: auto; font-family: var(--font-sans); font-size: 11.5px; letter-spacing: 0; text-transform: none; color: var(--color-fg-2); }
+.onb-brief__aside .onb-glyph { width: 0.85rem; height: 0.85rem; }
+.onb-brief__aside .onb-glyph__arc { stroke: var(--color-accent-strong); opacity: 1; }
+
+/* its figure — the briefing reads at a glance as four of them — and what it measures */
+.onb-brief__lead { margin-top: 0.95rem; }
+.onb-brief__figure { font-family: var(--font-display); font-size: clamp(2.3rem, 1.7rem + 1.4vw, 3.15rem); font-weight: 200; line-height: 1; letter-spacing: -0.03em; white-space: nowrap; }
+.onb-brief__caption { margin-top: 0.55rem; font-size: 12px; line-height: 1.4; color: var(--color-fg-3); text-wrap: pretty; }
+/* what it means: one statement in the brand's editorial voice, and what supports it */
+.onb-brief__statement { font-family: var(--font-display); font-size: clamp(1.18rem, 1.02rem + 0.4vw, 1.4rem); font-weight: 300; line-height: 1.2; letter-spacing: -0.016em; color: var(--color-fg); text-wrap: pretty; }
+.onb-brief__detail { margin-top: 0.5rem; font-size: 13px; line-height: 1.55; color: var(--color-fg-2); text-wrap: pretty; }
+/* the drawing's key: what the lit marks past the dashed line mean */
+.onb-brief__key { display: inline-flex; align-items: center; gap: 0.55rem; color: var(--color-fg-2); }
+.onb-brief__key > span { flex: none; width: 15px; height: 9px; background: radial-gradient(circle, var(--color-fg) 1.6px, transparent 2px) 7px 50% / 8px 9px repeat-x, repeating-linear-gradient(180deg, rgb(255 255 255 / 0.55) 0 2px, transparent 2px 4px) 0 0 / 1px 100% no-repeat; }
+
+/* ---- the lanes: one per deal, the same height in every stretch, each read along its middle ---- */
+.onb-lanes__axis { display: flex; align-items: flex-start; justify-content: space-between; height: 1.15rem; font-size: 10.5px; line-height: 1; color: var(--color-fg-3); white-space: nowrap; }
+.onb-lanes__rows { position: relative; }
+.onb-lane { position: relative; display: flex; align-items: center; height: var(--lane-h); transition: opacity 300ms var(--ease-out-soft); }
+/* a deal pointed at, in any stretch, is the same deal in all of them */
+.onb-course[data-hover] .onb-lane:not([data-focus]) { opacity: 0.38; }
+
+/* who, and how much: its weight against the largest */
+.onb-lane__who { flex: 1; min-width: 0; }
+.onb-lane__name { font-size: 13.5px; color: var(--color-fg-2); transition: color 300ms; }
+.onb-lane__value { font-size: 13px; color: var(--color-fg-3); transition: color 300ms; }
+.onb-lane[data-subject] .onb-lane__name,
+.onb-lane[data-focus] .onb-lane__name { color: var(--color-fg); }
+.onb-lane[data-subject] .onb-lane__value,
+.onb-lane[data-focus] .onb-lane__value { color: var(--color-fg-2); }
+.onb-lane__weight { display: block; height: 2px; margin-top: 0.5rem; border-radius: 1px; background: rgb(255 255 255 / 0.055); }
+.onb-lane__weight > span { display: block; height: 100%; border-radius: inherit; background: rgb(255 255 255 / 0.42); transform-origin: left; }
+.onb-lane[data-subject] .onb-lane__weight > span { background: var(--color-fg); }
+
+/* what happened: a column per day, on one line of time that ends today */
+.onb-lane__tag { display: none; }
+.onb-lane__days { flex: 1; display: grid; grid-template-columns: repeat(var(--span), minmax(0, 1fr)); align-items: center; height: 100%; padding-right: 7px; }
+.onb-day { display: block; justify-self: center; border-radius: 1px; transform-origin: center; }
+/* a day without a word, while they were still talking */
+.onb-day[data-kind="rest"] { width: 2px; height: 2px; border-radius: 50%; background: rgb(255 255 255 / 0.12); }
+/* the exchange: as tall as the emails that day */
+.onb-day[data-kind="talk"],
+.onb-day[data-kind="last"] { width: 3px; height: calc(5px + var(--v) * (var(--lane-h) - 1.75rem)); border-radius: 1.5px; background: rgb(255 255 255 / 0.3); }
+.onb-lane[data-subject] .onb-day[data-kind="talk"],
+.onb-lane[data-focus] .onb-day[data-kind="talk"] { background: rgb(255 255 255 / 0.56); }
+/* the last email */
+.onb-day[data-kind="last"] { background: var(--color-fg); }
+/* …then nothing: a mark per quiet day; past the point where the company's deals slip, they are lit */
+.onb-day[data-kind="quiet"] { width: 3px; height: 3px; border-radius: 50%; background: rgb(255 255 255 / 0.2); }
+.onb-day[data-kind="past"] { width: 4px; height: 4px; border-radius: 50%; background: var(--color-fg); }
+.onb-lane__edge { position: absolute; top: 28%; bottom: 28%; border-left: 1px dashed rgb(255 255 255 / 0.5); pointer-events: none; }
+.onb-lane__quiet { position: absolute; top: calc(50% - 1.35rem); padding-left: 2px; font-size: 10.5px; line-height: 1; white-space: nowrap; color: var(--color-fg-3); pointer-events: none; transition: color 300ms; }
+.onb-lane[data-subject] .onb-lane__quiet,
+.onb-lane[data-focus] .onb-lane__quiet { color: var(--color-fg); }
+
+/* THE LINE OF TODAY — where understanding hands over to what happens next */
+.onb-lanes__today { color: var(--color-fg); }
+.onb-lanes[data-slice="silence"] .onb-lanes__rows::after { content: ""; position: absolute; right: 0; top: -0.45rem; bottom: -0.45rem; width: 1px; background: linear-gradient(180deg, var(--color-fg), var(--color-fg) 78%, rgb(255 255 255 / 0)); box-shadow: 6px 0 22px 2px rgb(29 122 85 / 0.5); transform-origin: top; }
+
+/* the way forward: each conversation picked up again */
+.onb-lanes[data-slice="next"] .onb-lanes__axis { padding-left: 0.6rem; color: var(--color-accent-strong); }
+.onb-lanes[data-slice="next"] .onb-lanes__rows { background: linear-gradient(90deg, rgb(42 141 102 / 0.13), rgb(42 141 102 / 0.03) 55%, rgb(42 141 102 / 0.07)); -webkit-mask-image: linear-gradient(180deg, transparent, #000 22%, #000 78%, transparent); mask-image: linear-gradient(180deg, transparent, #000 22%, #000 78%, transparent); }
+.onb-lane__go { position: relative; flex: 1; height: 1.5px; background: linear-gradient(90deg, rgb(79 174 134 / 0.4), var(--emerald-bright)); box-shadow: 0 0 8px rgb(29 122 85 / 0.7); transform-origin: left; }
+/* now and then a little light travels along it, towards what Syxoria does */
+.onb-lane__go::after { content: ""; position: absolute; top: -1px; bottom: -1px; left: 0; width: 22%; border-radius: 2px; background: linear-gradient(90deg, transparent, var(--emerald-lit)); opacity: 0; animation: onb-travel 5.2s var(--ease-in-out-soft) infinite; animation-delay: calc(2.4s + var(--i, 0) * 0.5s); }
+@keyframes onb-travel {
+  0% { translate: 0 0; opacity: 0; }
+  8% { opacity: 0.9; }
+  30% { translate: 355% 0; opacity: 0.9; }
+  36%, 100% { translate: 355% 0; opacity: 0; }
 }
-/* THE THREAD — the reasoning advancing: one line runs along the top and lights as each step is
-   reached, a node where each step meets it; it warms from grey into the Core's emerald on its way
-   to the action, where understanding becomes execution */
-.onb-brief::before { content: ""; position: absolute; left: 0; right: 0; top: -1px; height: 1px; background: var(--thread); transform-origin: left; scale: 0 1; transition: scale 700ms var(--ease-out-soft) 150ms; }
-.onb-brief[data-kind="priority"] { --thread: rgb(255 255 255 / 0.3); }
-.onb-brief[data-kind="insight"] { --thread: linear-gradient(90deg, rgb(255 255 255 / 0.3), rgb(255 255 255 / 0.38)); }
-.onb-brief[data-kind="recommendation"] { --thread: linear-gradient(90deg, rgb(255 255 255 / 0.38), var(--color-accent-line) 65%, var(--color-accent-strong)); }
-.onb-brief[data-shown]::before { scale: 1 1; }
-.onb-brief:not(.onb-brief--action)::after { content: ""; position: absolute; left: 0; top: -3.5px; width: 6px; height: 6px; border-radius: 50%; background: var(--color-canvas); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.18); transition: background-color 500ms 150ms, box-shadow 500ms 150ms; }
-.onb-brief[data-shown]::after { background: rgb(255 255 255 / 0.75); box-shadow: 0 0 0 3px var(--color-canvas); }
-.onb-reasoning[data-reading] .onb-brief[data-current]::after { background: var(--color-accent-strong); box-shadow: 0 0 0 3px var(--color-canvas), 0 0 10px 1px var(--core-glow); }
-.onb-brief__label { color: var(--color-fg-3); }
-.onb-brief__mark { width: 0.75rem; height: 1px; background: rgb(255 255 255 / 0.3); }
-/* The first three steps share one composition, their rows lined up across the briefing (subgrid):
-   a figure — the briefing reads at a glance as three of them, the last in emerald — its evidence,
-   then what it means: one statement in the brand's editorial voice (the action answers in the product's) */
-.onb-brief__lead { margin-top: 0.9rem; }
-.onb-brief__evidence { margin-top: 1.15rem; }
-.onb-brief__words { margin-top: 1.3rem; }
+
+/* what Syxoria does with each — the lane ends on its state under the mandate */
+.onb-lanes[data-slice="action"] .onb-lane { gap: 0.75rem; }
+.onb-lane__node { flex: none; width: 10px; height: 10px; border-radius: 50%; background: var(--color-canvas-2); box-shadow: inset 0 0 0 1.5px rgb(255 255 255 / 0.5); }
+.onb-lane__node[data-status="awaiting-approval"] { background: radial-gradient(circle, var(--emerald-bright) 0 2px, #0c1512 2.6px); box-shadow: inset 0 0 0 1.5px var(--emerald-bright), 0 0 10px rgb(29 122 85 / 0.6); }
+.onb-lane__node[data-status="scheduled"] { background: var(--emerald-bright); box-shadow: 0 0 0 3px rgb(79 174 134 / 0.18), 0 0 12px var(--core-glow); }
+.onb-lane__subject { font-size: 13px; line-height: 1.3; color: var(--color-fg); }
+.onb-lane__status { color: var(--color-accent-strong); }
+.onb-lane__status[data-status="listed"] { color: var(--color-fg-2); }
+.onb-lane__tag-inline { display: inline; }
+
+/* how much better: the two outcomes to scale, beside the figure */
+.onb-outcome { flex: 1; min-width: 0; display: grid; gap: 0.4rem; padding-bottom: 0.3rem; }
+.onb-outcome__row { display: grid; gap: 0.3rem; }
+.onb-outcome__bar { display: block; height: 3px; border-radius: 2px; background: rgb(255 255 255 / 0.22); transform-origin: left; }
+.onb-outcome__row[data-on] .onb-outcome__bar { background: linear-gradient(90deg, var(--color-accent-line), var(--color-accent-strong)); }
+.onb-outcome__label { font-size: 10.5px; line-height: 1; white-space: nowrap; color: var(--color-fg-3); }
+.onb-outcome__row[data-on] .onb-outcome__label { color: var(--color-fg-2); }
+
+/* the action: where understanding becomes execution — the drawing's destination */
+.onb-brief[data-kind="action"] {
+  margin-top: 0.75rem;
+  padding-inline: var(--pad);
+  border-top: 0;
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgb(42 141 102 / 0.11), rgb(42 141 102 / 0.03));
+  box-shadow: inset 0 0 0 1px var(--color-accent-line), 0 30px 60px -40px rgb(10 105 70 / 0.6);
+}
+.onb-brief[data-kind="action"] .onb-brief__label { color: var(--color-accent-strong); }
+.onb-brief[data-kind="action"] .onb-brief__mark { background: var(--color-accent-strong); box-shadow: 0 0 8px var(--core-glow); }
+.onb-brief[data-kind="action"] > :not(.onb-brief__fill) { position: relative; }
+.onb-brief__fill { position: absolute; inset: 0; border-radius: inherit; overflow: hidden; pointer-events: none; }
+.onb-brief__fill::before { content: ""; position: absolute; top: -10%; bottom: -10%; left: -10%; width: 120%; border-radius: 0 50% 50% 0 / 0 50% 50% 0; background: linear-gradient(90deg, rgb(42 141 102 / 0), rgb(42 141 102 / 0.2) 72%, rgb(124 201 165 / 0.26)); translate: -101% 0; opacity: 0; }
+
+/* WIDE — the four steps side by side, their rows lined up (subgrid) and their lanes edge to edge */
 @container (min-width: 56rem) {
-  .onb-reasoning { grid-template-rows: auto auto auto 1fr; row-gap: 0; }
-  .onb-brief:not(.onb-brief--action) { display: grid; grid-row: 1 / span 4; grid-template-rows: subgrid; align-content: start; }
-  .onb-brief--action { grid-row: 1 / span 4; }
+  .onb-course { --lane-h: 4.1rem; grid-template-columns: 1fr 1.5fr 1.12fr 1.32fr; grid-template-rows: auto auto 1fr; }
+  .onb-brief { display: grid; grid-row: 1 / span 3; grid-template-rows: subgrid; padding-block: 1.4rem 1.5rem; }
+  .onb-brief + .onb-brief { border-top: 0; }
+  .onb-brief__top,
+  .onb-brief__words { padding-right: 1.75rem; }
+  .onb-brief__lanes { margin-block: 1.35rem 1.25rem; }
+  .onb-lane__who { padding-right: 1.6rem; }
+  .onb-brief[data-kind="recommendation"] .onb-brief__top,
+  .onb-brief[data-kind="recommendation"] .onb-brief__words { padding-left: 0.6rem; }
+  .onb-brief[data-kind="action"] { margin-top: 0; }
+  .onb-brief[data-kind="action"] .onb-brief__top,
+  .onb-brief[data-kind="action"] .onb-brief__words { padding-right: 0; }
+  /* the lane arrives on the panel's edge: its state sits on it, like a seal */
+  .onb-lanes[data-slice="action"] .onb-lane { gap: 0; }
+  .onb-lane__node { position: absolute; left: calc(var(--pad) * -1 - 5px); }
+  .onb-lane__tag-inline { display: none; }
+}
+/* STACKED — each stretch stands under its step; the forward lines alone say nothing, so they rest */
+@container (max-width: 55.99rem) {
+  .onb-lanes[data-slice="next"] { display: none; }
+  .onb-brief[data-kind="recommendation"] .onb-brief__lanes { margin-block: 0.9rem 0; }
+  .onb-lane__tag { display: block; position: absolute; left: 0; top: 0.15rem; font-size: 10.5px; line-height: 1; color: var(--color-fg-3); }
+  .onb-lanes[data-slice="silence"] { --lane-h: 4rem; }
+  .onb-lanes[data-slice="silence"] .onb-lane__days { padding-top: 0.6rem; }
+  .onb-lane__quiet { top: calc(50% - 1.05rem); }
+  .onb-outcome { max-width: 14rem; }
 }
 /* short desktop screens (13" laptops): the same composition, a tighter rhythm, still one viewport */
 @media (min-width: 1024px) and (max-height: 820px) {
-  .onb-brief { padding-top: 1.1rem; padding-bottom: 1.1rem; }
+  .onb-course { --lane-h: 2.95rem !important; }
+  .onb-brief { padding-block: 1rem 1.1rem !important; }
   .onb-brief__lead { margin-top: 0.7rem; }
-  .onb-brief__evidence { margin-top: 0.85rem; }
-  .onb-brief__words { margin-top: 0.95rem; }
-  .onb-brief__figure { font-size: 2.2rem !important; }
-  .onb-brief__statement { font-size: 1.15rem !important; }
+  .onb-brief__lanes { margin-block: 0.85rem 0.8rem !important; }
+  .onb-brief__figure { font-size: 2.2rem; }
+  .onb-brief__statement { font-size: 1.14rem; }
+  .onb-brief__detail { margin-top: 0.4rem; font-size: 12.5px; line-height: 1.5; }
 }
-.onb-brief__figure { font-family: var(--font-display); font-size: clamp(2.3rem, 1.7rem + 1.4vw, 3.1rem); font-weight: 200; line-height: 1; letter-spacing: -0.03em; white-space: nowrap; }
-.onb-brief__statement { font-family: var(--font-display); font-size: clamp(1.2rem, 1.02rem + 0.4vw, 1.42rem); font-weight: 300; line-height: 1.2; letter-spacing: -0.016em; color: var(--color-fg); text-wrap: pretty; }
 
-/* THE EVIDENCE (components/onboarding/briefing-evidence.tsx) — one sign per step, to scale:
-   how much (the stake) → how long (the silence) → how much better (the outcome) */
-.onb-stake__bar { display: flex; gap: 3px; height: 6px; }
-.onb-stake__seg { position: relative; flex-basis: 0; min-width: 6px; border-radius: 2px; background: rgb(255 255 255 / 0.16); transform-origin: left; transition: background-color 300ms var(--ease-out-soft); }
-.onb-stake__seg::after { content: ""; position: absolute; inset: -8px 0; }
-.onb-stake__seg[data-focus] { background: rgb(255 255 255 / 0.8); }
-
-.onb-silence__track { display: flex; align-items: center; height: 16px; }
-/* the conversation: a line with its exchanges, then the last email */
-.onb-silence__talk { flex: 0 0 16%; height: 6px; background: radial-gradient(circle, rgb(255 255 255 / 0.55) 1.5px, transparent 2px) 3px 50% / 10px 6px repeat-x, linear-gradient(rgb(255 255 255 / 0.25), rgb(255 255 255 / 0.25)) 0 50% / 100% 1px no-repeat; }
-.onb-silence__last { flex: none; width: 7px; height: 7px; margin: 0 4px 0 2px; border-radius: 50%; background: var(--color-fg); }
-/* …then nothing: one mark per quiet day; past the company's threshold they are lit */
-.onb-silence__day { position: relative; flex: 1; height: 100%; background: linear-gradient(rgb(255 255 255 / 0.07), rgb(255 255 255 / 0.07)) 0 50% / 100% 1px no-repeat; }
-.onb-silence__day::before { content: ""; position: absolute; left: 50%; top: 3px; bottom: 3px; width: 1px; background: rgb(255 255 255 / 0.4); }
-.onb-silence__day[data-past]::before { top: 0; bottom: 0; width: 1.5px; background: var(--color-accent-strong); }
-.onb-silence__day[data-edge]::after { content: ""; position: absolute; left: 0; top: -4px; bottom: -4px; border-left: 1px dashed rgb(255 255 255 / 0.4); }
-.onb-silence__today { flex: none; width: 7px; height: 7px; margin-left: 4px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px var(--color-accent-strong); }
-.onb-silence__key { flex: none; width: 7px; height: 9px; background: linear-gradient(90deg, var(--color-accent-strong) 0 1px, transparent 1px 3px, var(--color-accent-strong) 3px 4px, transparent 4px 6px, var(--color-accent-strong) 6px 7px); }
-
-.onb-outcome__bar { height: 4px; border-radius: 2px; background: rgb(255 255 255 / 0.2); transform-origin: left; }
-.onb-outcome__row--on .onb-outcome__bar { background: linear-gradient(90deg, var(--color-accent-line), var(--color-accent-strong)); }
-
-/* a deal pointed at in the action is the same deal in the stake */
-.onb-brief__item { transition: background-color 250ms var(--ease-out-soft); }
-.onb-brief__item[data-focus] { background: rgb(255 255 255 / 0.045); }
-
-/* revealed in the onboarding: drawn as they are read — the stake splits, the quiet days count up to
-   today, the two outcomes stretch to their length */
-.onb-reasoning[data-variant="onboarding"] .onb-brief[data-shown] .onb-stake__seg { animation: onb-grow 800ms var(--ease-awaken) both; animation-delay: calc(380ms + var(--i, 0) * 110ms); }
-.onb-reasoning[data-variant="onboarding"] .onb-brief[data-shown] .onb-silence__day::before,
-.onb-reasoning[data-variant="onboarding"] .onb-brief[data-shown] .onb-silence__day::after { animation: onb-fade 260ms var(--ease-out-soft) both; animation-delay: calc(420ms + var(--i, 0) * 55ms); }
-.onb-reasoning[data-variant="onboarding"] .onb-brief[data-shown] .onb-silence__today { animation: onb-pop 450ms var(--ease-out-soft) both; animation-delay: calc(420ms + var(--days, 10) * 55ms); }
-.onb-reasoning[data-variant="onboarding"] .onb-brief[data-shown] .onb-silence__note { animation: onb-word 500ms var(--ease-out-soft) both; animation-delay: calc(520ms + var(--days, 10) * 55ms); }
-.onb-reasoning[data-variant="onboarding"] .onb-brief[data-shown] .onb-outcome__bar { animation: onb-grow 900ms var(--ease-awaken) both; animation-delay: calc(560ms + var(--i, 0) * 160ms); }
+/* REVEALED in the onboarding (data-variant="onboarding"): each step gets its own moment — the one
+   just reached holds the attention while those before it settle back — and its stretch of the
+   drawing draws itself as it is read: the weights stretch out · the exchange rises day by day, then
+   the silence is counted out mark by mark up to today, where the line drops · the emerald runs on
+   from it · and arrives at what Syxoria does. The workspace shows the same briefing at rest. */
+.onb-course[data-reading] .onb-brief[data-shown]:not([data-current]) { opacity: 0.55; }
+.onb-course[data-variant="onboarding"] .onb-brief[data-shown] .onb-brief__then { animation: onb-rise 600ms var(--ease-out-soft) 280ms both; }
+.onb-course[data-variant="onboarding"] .onb-brief[data-shown] .onb-lane__who { animation: onb-rise 600ms var(--ease-out-soft) both; animation-delay: calc(260ms + var(--i, 0) * 120ms); }
+.onb-course[data-variant="onboarding"] .onb-brief[data-shown] .onb-lane__weight > span { animation: onb-grow 800ms var(--ease-awaken) both; animation-delay: calc(480ms + var(--i, 0) * 120ms); }
+.onb-course[data-variant="onboarding"] .onb-brief[data-shown] .onb-day { animation: onb-day 380ms var(--ease-out-soft) both; animation-delay: calc(260ms + var(--d, 0ms)); }
+.onb-course[data-variant="onboarding"] .onb-brief[data-shown] .onb-lane__edge,
+.onb-course[data-variant="onboarding"] .onb-brief[data-shown] .onb-lane__quiet { animation: onb-fade 450ms var(--ease-out-soft) both; animation-delay: calc(260ms + var(--d, 0ms)); }
+.onb-course[data-variant="onboarding"] .onb-brief[data-shown] .onb-lanes[data-slice="silence"] .onb-lanes__rows::after { animation: onb-drop 800ms var(--ease-awaken) both; animation-delay: calc(360ms + var(--end, 0ms)); }
+.onb-course[data-variant="onboarding"] .onb-brief[data-shown] .onb-lanes__today { animation: onb-fade 500ms var(--ease-out-soft) both; animation-delay: calc(360ms + var(--end, 0ms)); }
+.onb-course[data-variant="onboarding"] .onb-brief[data-shown] .onb-lanes[data-slice="next"] .onb-lanes__rows { animation: onb-fade 900ms var(--ease-out-soft) 150ms both; }
+.onb-course[data-variant="onboarding"] .onb-brief[data-shown] .onb-lane__go { animation: onb-grow 850ms var(--ease-awaken) both; animation-delay: calc(300ms + var(--i, 0) * 130ms); }
+.onb-course[data-variant="onboarding"] .onb-brief[data-shown] .onb-outcome__bar { animation: onb-grow 900ms var(--ease-awaken) both; animation-delay: calc(560ms + var(--i, 0) * 160ms); }
+.onb-course[data-variant="onboarding"] .onb-brief[data-shown] .onb-outcome__label { animation: onb-fade 500ms var(--ease-out-soft) both; animation-delay: calc(760ms + var(--i, 0) * 160ms); }
 @keyframes onb-grow { from { scale: 0 1; } }
-/* the action: where understanding becomes execution — a little more emerald */
-.onb-brief--action {
-  margin-top: 0.75rem;
-  padding: 1.4rem 1.5rem 1.5rem !important;
-  border-radius: 14px;
-  border-left: 0 !important;
-  background: linear-gradient(180deg, rgb(42 141 102 / 0.1), rgb(42 141 102 / 0.025));
-  box-shadow: inset 0 0 0 1px var(--color-accent-line), 0 30px 60px -40px rgb(10 105 70 / 0.6);
-}
-@container (min-width: 56rem) { .onb-brief--action { margin: 0.75rem 0 0 0.75rem; } }
-.onb-brief--action::before { display: none; }
-.onb-brief--action .onb-brief__label { color: var(--color-accent-strong); }
-.onb-brief--action .onb-brief__mark { background: var(--color-accent-strong); box-shadow: 0 0 8px var(--core-glow); }
-
-/* Revealed in the onboarding (data-variant="onboarding"): each step gets its own moment —
-   the one just reached holds the attention while those before it settle back, its headline
-   first, then what supports it. The workspace shows the same briefing at rest. */
-.onb-reasoning[data-reading] .onb-brief[data-shown]:not([data-current]) { opacity: 0.55; }
-.onb-reasoning[data-variant="onboarding"] .onb-brief[data-shown] .onb-brief__then { animation: onb-rise 600ms var(--ease-out-soft) 280ms both; }
+@keyframes onb-drop { from { scale: 1 0; } }
+@keyframes onb-day { from { opacity: 0; scale: 1 0.15; } }
 /* the action, last and strongest: the Core's emerald wells up through it once, its edge lights,
-   then what it is about arrives item by item — and only then their state */
-.onb-brief--action > :not(.onb-brief__fill) { position: relative; }
-.onb-brief__fill { position: absolute; inset: 0; border-radius: inherit; overflow: hidden; pointer-events: none; }
-.onb-brief__fill::before { content: ""; position: absolute; top: -10%; bottom: -10%; left: -10%; width: 120%; border-radius: 0 50% 50% 0 / 0 50% 50% 0; background: linear-gradient(90deg, rgb(42 141 102 / 0), rgb(42 141 102 / 0.2) 72%, rgb(124 201 165 / 0.26)); translate: -101% 0; opacity: 0; }
-.onb-reasoning[data-variant="onboarding"] .onb-brief--action[data-shown] .onb-brief__fill::before { animation: onb-well 1500ms var(--ease-awaken) 150ms both; }
+   then each lane arrives on it — its seal, what it is, and only then its state */
+.onb-course[data-variant="onboarding"] .onb-brief[data-kind="action"][data-shown] .onb-brief__fill::before { animation: onb-well 1500ms var(--ease-awaken) 150ms both; }
 @keyframes onb-well {
   0% { translate: -101% 0; opacity: 1; }
   55% { translate: 0 0; opacity: 1; }
   100% { translate: 0 0; opacity: 0; }
 }
-.onb-reasoning[data-variant="onboarding"] .onb-brief--action { transition: opacity var(--flow-reveal) var(--ease-out-soft), translate var(--flow-reveal) var(--ease-out-soft), box-shadow 900ms var(--ease-out-soft) 450ms; }
-.onb-reasoning[data-variant="onboarding"] .onb-brief--action:not([data-shown]) { box-shadow: inset 0 0 0 1px rgb(42 141 102 / 0.12); }
-.onb-reasoning[data-variant="onboarding"] .onb-brief--action[data-shown] .onb-brief__item { animation: onb-rise 500ms var(--ease-out-soft) both; animation-delay: calc(550ms + var(--i, 0) * 110ms); }
-.onb-reasoning[data-variant="onboarding"] .onb-brief--action[data-shown] .onb-brief__status { animation: onb-word 500ms var(--ease-out-soft) both; animation-delay: calc(950ms + var(--i, 0) * 110ms); }
+.onb-course[data-variant="onboarding"] .onb-brief[data-kind="action"] { transition: opacity var(--flow-reveal) var(--ease-out-soft), translate var(--flow-reveal) var(--ease-out-soft), box-shadow 900ms var(--ease-out-soft) 450ms; }
+.onb-course[data-variant="onboarding"] .onb-brief[data-kind="action"]:not([data-shown]) { box-shadow: inset 0 0 0 1px rgb(42 141 102 / 0.12); }
+.onb-course[data-variant="onboarding"] .onb-brief[data-shown] .onb-lane__node { animation: onb-pop 500ms var(--ease-out-soft) both; animation-delay: calc(420ms + var(--i, 0) * 120ms); }
+.onb-course[data-variant="onboarding"] .onb-brief[data-shown] .onb-lanes[data-slice="action"] .onb-lane > :not(.onb-lane__node) { animation: onb-rise 500ms var(--ease-out-soft) both; animation-delay: calc(560ms + var(--i, 0) * 120ms); }
+.onb-course[data-variant="onboarding"] .onb-brief[data-shown] .onb-lane__status { animation: onb-word 500ms var(--ease-out-soft) both; animation-delay: calc(980ms + var(--i, 0) * 120ms); }
 
 /* Segmented control (permission modes) */
 .onb-segment { display: inline-flex; padding: 2px; border-radius: 999px; box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.08); }
-.onb-segment__item { cursor: pointer; padding: 0.35rem 0.8rem; border-radius: 999px; font-size: 12.5px; color: var(--color-fg-3); transition: color 250ms, background-color 250ms, box-shadow 250ms; white-space: nowrap; }
+.onb-segment__item { position: relative; cursor: pointer; padding: 0.35rem 0.8rem; border-radius: 999px; font-size: 12.5px; color: var(--color-fg-3); transition: color 250ms, background-color 250ms, box-shadow 250ms; white-space: nowrap; }
 .onb-segment__item:hover { color: var(--color-fg); }
 .onb-segment__item--on { color: var(--color-fg); background: rgb(255 255 255 / 0.06); }
 .onb-segment__item--on[data-mode="auto"] { color: var(--color-accent-strong); background: var(--color-accent-soft); box-shadow: inset 0 0 0 1px var(--color-accent-line); }
@@ -1346,15 +1535,16 @@ html[data-vt="onboarding"]::view-transition-new(root) { animation-duration: 500m
 @keyframes arrive-top { from { transform: translate3d(0, -100%, 0); opacity: 0; } }
 
 @media (prefers-reduced-motion: reduce) {
-  .onb-rise, .onb-word, .onb-pop, .onb-verified, .onb-scenario__step, .onb-scenario__rail, [data-arrival] aside, [data-arrival] header, [data-arrival] .arrival-late { animation: none; }
+  .onb-rise, .onb-word, .onb-pop, .onb-verified, .onb-scenario__step, .onb-turn, [data-arrival] aside, [data-arrival] header, [data-arrival] .arrival-late { animation: none; }
   .onb-flow__packet, .onb-connecting { display: none; }
   .onb-btn[data-ready="true"] .onb-btn__ring { animation: none; --onb-draw: 360deg; }
   .onb-hold::after { animation: none; }
   .onb-brief, .onb-prelude__line { transition: none; }
   .onb-graph__line, .onb-graph__pen, .onb-graph__band, .onb-graph__dot, .onb-graph__note, .onb-graph__figure, .onb-priority__figure, .onb-priority__observation { animation: none !important; }
   .onb-graph__drawing--out { display: none; }
-  .onb-mode--on .onb-mode__boundary { animation: none; }
-  .onb-brief__then, .onb-brief__item, .onb-brief__status, .onb-brief__fill::before { animation: none !important; }
-  .onb-stake__seg, .onb-silence__day::before, .onb-silence__day::after, .onb-silence__today, .onb-silence__note, .onb-outcome__bar { animation: none !important; }
+  .onb-reach__row, .onb-reach__boundary, .onb-ring__edge, .onb-ring__arc, .onb-modes__item::after { transition: none; }
+  .onb-brief__then, .onb-brief__fill::before { animation: none !important; }
+  .onb-lane__who, .onb-lane__weight > span, .onb-day, .onb-lane__edge, .onb-lane__quiet, .onb-lanes__today, .onb-lanes__rows, .onb-lanes__rows::after, .onb-lane__go, .onb-lane__node, .onb-lane > *, .onb-lane__status, .onb-outcome__bar, .onb-outcome__label { animation: none !important; }
+  .onb-lane__go::after { display: none; }
   .onb-priority::before, .onb-priority__hint, .onb-priority__more, .onb-priority__title { transition: none; }
 }

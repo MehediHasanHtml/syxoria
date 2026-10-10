@@ -1,4 +1,5 @@
 import { knowledgeLabels } from "@/content/onboarding";
+import { createRandom } from "@/lib/random";
 import type {
   AutonomyPolicy,
   Briefing,
@@ -458,6 +459,31 @@ export const mockAutonomyPolicy: AutonomyPolicy = {
 
 /* ---------- The first briefing ---------- */
 
+/** The days the briefing looks back over */
+const BRIEFING_WINDOW = 40;
+
+/**
+ * A conversation's rhythm before it went quiet: emails per day, oldest first, ending on the last
+ * one — exchanges come in short bursts with a day or two between them, as real threads do.
+ */
+function rhythmFor(seed: number, days: number): number[] {
+  const random = createRandom(seed);
+  const out: number[] = [];
+  let burst = 0;
+  for (let i = 0; i < days; i++) {
+    if (burst > 0) {
+      out.push(1 + Math.floor(random() * random() * 5));
+      burst--;
+    } else {
+      out.push(0);
+      if (random() < 0.55) burst = 1 + Math.floor(random() * 4);
+    }
+  }
+  // it ends on an email: the last word before the silence
+  out[days - 1] = 1 + Math.floor(random() * 2);
+  return out;
+}
+
 export function buildBriefing(company: CompanyProfile, sources: DataSource[]): Briefing {
   const top = quietDeals.slice(0, 3);
   return {
@@ -483,7 +509,7 @@ export function buildBriefing(company: CompanyProfile, sources: DataSource[]): B
       label: `as likely to close — on ${company.name}’s own history.`,
       compare: { acted: "Answered within two weeks", left: "Left quiet", ratio: 2 },
     },
-    drafts: top.map((d, i) => ({ id: `d_${i}`, ...d })),
+    drafts: top.map((d, i) => ({ id: `d_${i}`, ...d, rhythm: rhythmFor(71 + i * 13, BRIEFING_WINDOW - d.quietDays) })),
     basedOn: `Based on ${sources.length} ${sources.length === 1 ? "source" : "sources"} and two years of activity`,
   };
 }

@@ -28,7 +28,8 @@ export function Sheet({ open, onClose, label, header, children }: { open: boolea
         onClose();
       }}
       onClick={(e) => e.target === e.currentTarget && onClose()}
-      className="sheet-motion m-0 ml-auto h-dvh max-h-none w-full max-w-[30rem] bg-canvas-2 p-0 text-fg sm:border-l sm:border-line"
+      // the panel itself never scrolls — only its content does (a focused control inside can't drag the whole sheet)
+      className="sheet-motion m-0 ml-auto h-dvh max-h-none w-full max-w-[30rem] overflow-hidden bg-canvas-2 p-0 text-fg sm:border-l sm:border-line"
     >
       <div className="flex h-full flex-col">
         <div className="flex h-(--header-h) shrink-0 items-center justify-between gap-4 border-b border-line px-6">

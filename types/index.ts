@@ -342,7 +342,19 @@ export type AutonomyPolicy = {
 
 export type Mandate = { level: AutonomyLevel; overrides: Record<string, PermissionMode> };
 
-export type BriefingDraft = { id: string; contact: string; company: string; subject: string; value: number; quietDays: number };
+export type BriefingDraft = {
+  id: string;
+  contact: string;
+  company: string;
+  subject: string;
+  value: number;
+  quietDays: number;
+  /**
+   * The conversation before it went quiet: emails exchanged per day, oldest first, ending on the
+   * day of the last one. The briefing draws it to scale — the exchange, then the silence.
+   */
+  rhythm?: number[];
+};
 
 /** Priority → insight → recommendation → action: the briefing reads as one line of reasoning */
 export type Briefing = {

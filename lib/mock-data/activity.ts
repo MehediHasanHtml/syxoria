@@ -1,7 +1,7 @@
 import type { ActivityItem, Integration } from "@/types";
 
 export const mockActivity: ActivityItem[] = [
-  { id: "a_01", kind: "insight", actorId: "system", message: "Nexo surfaced a new insight", target: "4 invoices ready for follow-up", module: "nexo", createdAt: "2026-09-24T08:52:00.000Z", projectId: "p_collection" },
+  { id: "a_01", kind: "insight", actorId: "system", message: "Nexo surfaced a new insight", target: "4 invoices ready for a reminder", module: "nexo", createdAt: "2026-09-24T08:52:00.000Z", projectId: "p_collection" },
   { id: "a_02", kind: "project", actorId: "u_02", message: "completed a milestone in", target: "Client onboarding", module: "volt", createdAt: "2026-09-24T07:10:00.000Z", projectId: "p_onboarding" },
   { id: "a_03", kind: "automation", actorId: "system", message: "Volt sent 3 kickoff invitations for", target: "Atelier Rive, Monceau Partners", module: "volt", createdAt: "2026-09-24T06:45:00.000Z", projectId: "p_onboarding" },
   { id: "a_04", kind: "automation", actorId: "system", message: "Lume grouped 28 new messages into", target: "7 conversations", module: "lume", createdAt: "2026-09-24T06:00:00.000Z", projectId: null },

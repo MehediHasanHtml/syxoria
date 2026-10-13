@@ -60,7 +60,7 @@ export function ProfileSettings({ user }: { user: User }) {
         <div className="flex items-center gap-4">
           <Avatar initials={user.initials} name={values.name || user.name} size="lg" />
           <div className="text-[13px] text-fg-3">
-            <p className="text-fg">{values.name || "—"}</p>
+            <p className="text-fg">{values.name || "Not set"}</p>
             <p className="capitalize">{user.role}</p>
           </div>
         </div>

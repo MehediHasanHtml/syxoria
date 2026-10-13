@@ -16,7 +16,7 @@ export default function AppError({ error, reset }: { error: Error & { digest?: s
     <div className="rounded-xl border border-line bg-surface/40">
       <ErrorState
         title="This view could not be loaded"
-        description="Something went wrong while fetching your data. Your workspace is safe — try again in a moment."
+        description="Something went wrong while fetching your data. Your workspace is safe. Try again in a moment."
         action={
           <>
             <Button onClick={reset}>

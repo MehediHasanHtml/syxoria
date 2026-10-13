@@ -150,7 +150,7 @@ function ManualCompany({ number, saving, onSubmit, onBack }: { number: string; s
           </Field>
         </div>
         <div className="onb-rise" style={rise(4)}>
-          <Field label="What it does" optional hint="In a few words — “design studio”, “accounting firm”…">
+          <Field label="What it does" optional hint="In a few words: “design studio”, “accounting firm”…">
             <BigInput value={activity} onChange={(e) => setActivity(e.target.value)} />
           </Field>
         </div>

@@ -40,7 +40,7 @@ export const account = {
   passwordRules: [
     { id: "length", label: "10+ characters", test: (v: string) => v.length >= 10 },
     { id: "digit", label: "A number", test: (v: string) => /\d/.test(v) },
-    { id: "upper", label: "An upper-case letter", test: (v: string) => /[A-Z]/.test(v) },
+    { id: "upper", label: "An uppercase letter", test: (v: string) => /[A-Z]/.test(v) },
   ],
   /** Demo only — shown in the demo note, never part of the screen's design */
   demo: [
@@ -62,7 +62,7 @@ export const company = {
   verified: "Verified in the national register",
   notFound: "This number isn’t in the national register yet. Check the digits, or describe your company yourself.",
   manual: { lead: "Tell us about", accent: "your company." },
-  manualBody: "Just the essentials — Syxoria will learn the rest from your data.",
+  manualBody: "Just the essentials. Syxoria will learn the rest from your data.",
   correct: { lead: "What should", accent: "we correct?" },
   correctBody: "Only what the register can’t vouch for can be changed here.",
   headcountBands: ["1 to 5 employees", "6 to 9 employees", "10 to 19 employees", "20 to 49 employees", "50 to 99 employees", "100+ employees"],
@@ -70,12 +70,12 @@ export const company = {
 
 export const connections = {
   ask: { lead: "Where does your company’s", accent: "work live?" },
-  body: "Connect the tools you already use. Syxoria only reads — nothing is changed, nothing is sent.",
+  body: "Connect the tools you already use. Syxoria only reads: nothing is changed, nothing is sent.",
   recommended: "Recommended for",
   more: "Add another tool",
   moreTitle: "More integrations",
   empty: "Connect one tool so Syxoria has something to learn from.",
-  readOnly: "Read-only. Syxoria never changes or sends anything from your tools, and you can disconnect at any time.",
+  readOnly: "Read only. Syxoria never changes or sends anything from your tools, and you can disconnect at any time.",
   categories: { email: "Email", crm: "Clients & deals", documents: "Documents", finance: "Finance", files: "Files" } satisfies Record<SourceCategory, string>,
   states: { available: "Available", connecting: "Connecting", connected: "Connected", error: "Not connected", reconnect: "Needs reconnecting" },
 };
@@ -95,7 +95,7 @@ export const understanding = {
 
 export const analysis = {
   title: { lead: "What deserves", accent: "your attention." },
-  intro: "Nothing to configure — Syxoria identified these from your activity.",
+  intro: "Nothing to configure. Syxoria identified these from your activity.",
 };
 
 export const autonomy = {
@@ -136,18 +136,23 @@ export const briefing = {
   lead: "Here’s what matters",
   accent: "today.",
   labels: { priority: "Priority", insight: "Insight", recommendation: "Recommendation", action: "Action" },
+  /** The question each step answers, in plain words beside its name */
+  glosses: { priority: "What needs you", insight: "Why now", recommendation: "What I suggest", action: "What I’ll do" },
   /** What each step's figure measures */
   figures: {
-    stake: (n: number) => `at stake today, across ${n === 1 ? "one deal" : `${n} deals`}`,
-    days: (n: number) => `${n} days`,
-    silence: (company: string) => `without a word from ${company}`,
+    stake: (n: number) => `in open deals, across ${n === 1 ? "one client" : `${n} clients`}`,
+    days: (n: number) => `${n} ${n === 1 ? "day" : "days"}`,
+    silence: "without an answer",
   },
-  /** The drawing's own words: what was said, the silence since, and where today is */
-  lanes: {
-    talk: "Emails exchanged",
-    quiet: (n: number) => `${n} days quiet`,
+  /** Who wrote the message quoted, and when */
+  wrote: (contact: string, company: string, days: number) => `${contact}, ${company} · ${days} ${days === 1 ? "day" : "days"} ago`,
+  /** The exchange's own words: who wrote, where the company's deals start to slip, and where today is */
+  exchange: {
+    them: "Them",
+    you: "You",
+    edge: (n: number) => `${n} days`,
     today: "Today",
-    next: "This morning",
+    summary: (company: string, days: number) => `${company}: they wrote last, ${days} ${days === 1 ? "day" : "days"} ago. No reply since.`,
   },
   mandate: (level: string) => `${level} mandate`,
   enter: "Enter Syxoria",

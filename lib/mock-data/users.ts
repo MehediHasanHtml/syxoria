@@ -55,7 +55,7 @@ export const mockNotificationPreferences: NotificationPreferences = {
 export const mockPresence: Presence[] = [
   { userId: "u_01", state: "online", note: null },
   { userId: "u_02", state: "online", note: "Kickoff calls until 11:30" },
-  { userId: "u_03", state: "away", note: "Heads-down on month-end close" },
+  { userId: "u_03", state: "away", note: "Focused on the month end close" },
   { userId: "u_04", state: "online", note: "Chasing the Halden renewal" },
   { userId: "u_05", state: "offline", note: "Back Monday" },
 ];

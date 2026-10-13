@@ -1,166 +1,127 @@
-import type { CSSProperties, ReactNode } from "react";
+import type { CSSProperties } from "react";
 import { briefing as copy } from "@/content/onboarding";
 import { formatCurrency } from "@/lib/format";
 import type { ActionItemStatus } from "@/lib/onboarding/mandate";
 import type { BriefingDraft } from "@/types";
 
 /**
- * The briefing's drawing — its signature, and the template for every briefing Syxoria writes.
- * One lane per thing that matters today, read left to right through the four steps of the
- * reasoning, each step drawing its own stretch of the same lanes:
+ * The briefing's evidence — what each step of the reasoning shows for itself, drawn to scale from
+ * the briefing's own data and never decorative:
  *
- *   priority        who, and how much is at stake            (StakeLanes)
- *   insight         what happened: the exchange, then the    (SilenceLanes)
- *                   silence, one mark per day, up to today
- *   — the line of today: everything left of it is what Syxoria understood, in white;
- *     everything right of it is what happens next, in the Core's emerald —
- *   recommendation  the way forward                           (NextLanes)
- *   action          what Syxoria does with each, and its state (ActionLanes)
+ *   priority        who is waiting, and what each is worth        (StakeList)
+ *   insight         their conversation: both sides, their last     (Exchange)
+ *                   message, then the silence day by day to today
+ *   recommendation  what a reply changes, on the company's history (OutcomeScale)
+ *   action          the follow-ups, and where each stands          (DraftList)
  *
- * Everything is drawn to scale from the briefing's own data, never decorative. On wide screens
- * the four stretches meet edge to edge and read as one drawing; stacked, each stands under its
- * step. Revealed in the onboarding, at rest in the workspace. Styles: "The first briefing".
+ * One deal is in view at a time (the largest, until another is chosen): it is the same deal in
+ * every piece. Nothing changes on hover — only a click or a key chooses. White = what is · the Core's emerald = what Syxoria does about it.
+ * Revealed in the onboarding, at rest in the workspace. Styles: "The first briefing".
  */
 
-type Shared = {
+type View = {
   drafts: BriefingDraft[];
-  /** The deal the reasoning turns to: it stands out in every stretch */
-  subject: string;
-  /** A deal pointed at — in any stretch — answers in all of them */
-  focus: string | null;
-  onFocus: (id: string | null) => void;
+  /** The deal in view */
+  focus: string;
+  /** Chosen: in view until another is */
+  onChoose: (id: string) => void;
 };
 
-/** A stretch of the lanes: its line of small words above (what the marks are), then one lane per deal */
-function Lanes({ slice, drafts, subject, focus, onFocus, axis, decorative, style, children }: Shared & { slice: string; axis?: ReactNode; decorative?: boolean; style?: CSSProperties; children: (d: BriefingDraft, i: number) => ReactNode }) {
+/** Who is waiting, and what each is worth — its weight drawn against the largest. Choosing one shows its conversation. */
+export function StakeList({ drafts, focus, onChoose }: View) {
+  const most = Math.max(1, ...drafts.map((d) => d.value));
   return (
-    <div className="onb-lanes" data-slice={slice} style={style} aria-hidden={decorative || undefined}>
-      <p aria-hidden="true" className="onb-lanes__axis">
-        {axis}
-      </p>
-      <ol className="onb-lanes__rows" onPointerLeave={() => onFocus(null)}>
-        {drafts.map((d, i) => (
-          <li key={d.id} className="onb-lane" data-subject={d.id === subject || undefined} data-focus={focus === d.id || undefined} style={{ "--i": i } as CSSProperties} onPointerEnter={() => onFocus(d.id)}>
-            {children(d, i)}
-          </li>
+    <ol className="onb-stake">
+      {drafts.map((d, i) => (
+        <li key={d.id} style={{ "--i": i } as CSSProperties}>
+          <button type="button" className="onb-stake__row" aria-pressed={focus === d.id} onClick={() => onChoose(d.id)}>
+            <span className="onb-stake__name truncate">{d.company}</span>
+            <span aria-hidden="true" className="onb-stake__weight">
+              <span style={{ width: `${(d.value / most) * 100}%` }} />
+            </span>
+            <span className="onb-stake__value tabular">{formatCurrency(d.value)}</span>
+            <span className="onb-stake__quiet tabular">{copy.figures.days(d.quietDays)}</span>
+          </button>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+/** How fast the exchange is read out, in milliseconds: a day of conversation, the pause before the silence, a quiet day */
+const READ = { talk: 12, pause: 140, quiet: 45 };
+
+/**
+ * One conversation on a line of time that ends today, both sides drawn: what they wrote above the
+ * line, what the company wrote back below it (a bar per day, as tall as the emails that day). It
+ * ends on their side — the message nobody answered — then the silence, one mark per quiet day,
+ * lit past the point where the company's deals start to slip. Beyond today, in emerald: the reply,
+ * as far as the mandate lets Syxoria take it.
+ */
+export function Exchange({
+  draft,
+  span,
+  peak,
+  threshold,
+  reply,
+  quick,
+}: {
+  draft: BriefingDraft;
+  /** The days the line covers — the same for every deal, so they compare */
+  span: number;
+  /** The busiest day on either side, in any of the deals */
+  peak: number;
+  /** Quiet days after which deals start to slip */
+  threshold?: number;
+  /** Where the reply stands under the mandate — absent until the action is reached */
+  reply?: { status: ActionItemStatus; label: string };
+  /** Read out faster: a deal looked at again, not the first reading */
+  quick?: boolean;
+}) {
+  const talk = draft.rhythm?.length ? draft.rhythm : [{ them: 1, you: 0 }];
+  const lead = Math.max(0, span - talk.length - draft.quietDays);
+  const pace = quick ? 0.3 : 1;
+  const ms = (v: number) => `${Math.round(v * pace)}ms`;
+  const silent = talk.length * READ.talk + READ.pause;
+  const slips = threshold !== undefined && draft.quietDays > threshold;
+  // a single email must still read as one: heights follow the square root of the count
+  const height = (n: number) => Math.sqrt(n / Math.max(peak, 1)).toFixed(2);
+
+  return (
+    <div className="onb-exchange" style={{ "--span": span, "--end": ms(silent + draft.quietDays * READ.quiet) } as CSSProperties}>
+      <p className="sr-only">{copy.exchange.summary(draft.company, draft.quietDays)}</p>
+      <span aria-hidden="true" className="onb-exchange__sides">
+        <span>{copy.exchange.them}</span>
+        <span>{copy.exchange.you}</span>
+      </span>
+      <span aria-hidden="true" className="onb-exchange__days">
+        {talk.map((v, k) => (
+          <i key={k} className="onb-day" data-kind={k === talk.length - 1 ? "last" : v.them || v.you ? "talk" : "rest"} style={{ "--d": ms(k * READ.talk), gridColumnStart: k === 0 ? lead + 1 : undefined } as CSSProperties}>
+            {v.them > 0 && <b data-side="them" style={{ "--v": height(v.them) } as CSSProperties} />}
+            {v.you > 0 && <b data-side="you" style={{ "--v": height(v.you) } as CSSProperties} />}
+          </i>
         ))}
-      </ol>
+        {Array.from({ length: draft.quietDays }, (_, q) => (
+          <i key={`q${q}`} className="onb-day" data-kind={threshold !== undefined && q >= threshold ? "past" : "quiet"} style={{ "--d": ms(silent + q * READ.quiet) } as CSSProperties} />
+        ))}
+        {slips && (
+          <span className="onb-exchange__edge" style={{ left: `${((lead + talk.length + threshold) / span) * 100}%`, "--d": ms(silent + threshold * READ.quiet) } as CSSProperties}>
+            <span>{copy.exchange.edge(threshold)}</span>
+          </span>
+        )}
+        <span className="onb-exchange__today">
+          <span>{copy.exchange.today}</span>
+        </span>
+      </span>
+      <span aria-hidden="true" className="onb-exchange__reply" data-status={reply?.status} data-on={reply ? "" : undefined}>
+        <i />
+        <span>{reply?.label}</span>
+      </span>
     </div>
   );
 }
 
-/** How much: each deal and what it is worth, its weight drawn against the largest */
-export function StakeLanes(props: Shared) {
-  const most = Math.max(1, ...props.drafts.map((d) => d.value));
-  return (
-    <Lanes slice="stake" {...props}>
-      {(d) => (
-        <span className="onb-lane__who">
-          <span className="flex items-baseline justify-between gap-3">
-            <span className="onb-lane__name truncate">{d.company}</span>
-            <span className="onb-lane__value tabular">{formatCurrency(d.value)}</span>
-          </span>
-          <span aria-hidden="true" className="onb-lane__weight">
-            <span style={{ width: `${(d.value / most) * 100}%` }} />
-          </span>
-        </span>
-      )}
-    </Lanes>
-  );
-}
-
-/** How fast the drawing is read out, in milliseconds: a day of exchange, the pause before the silence, a quiet day */
-const READ = { talk: 12, pause: 140, quiet: 45 };
-
-/**
- * What happened, day by day, on one shared line of time that ends today: the exchange (a bar per
- * day, as tall as the emails that day), the last email, then the silence — one small mark per
- * quiet day. Past the point where the company's deals start to slip, the marks are lit.
- */
-export function SilenceLanes({ threshold, ...props }: Shared & { /** quiet days after which deals start to slip */ threshold?: number }) {
-  const talkOf = (d: BriefingDraft) => (d.rhythm?.length ? d.rhythm : [1]);
-  const span = Math.max(...props.drafts.map((d) => talkOf(d).length + d.quietDays));
-  const peak = Math.max(1, ...props.drafts.flatMap(talkOf));
-  const end = Math.max(...props.drafts.map((d) => talkOf(d).length * READ.talk + READ.pause + d.quietDays * READ.quiet));
-  const share = (days: number) => `${(days / span) * 100}%`;
-
-  return (
-    <Lanes
-      slice="silence"
-      {...props}
-      style={{ "--span": span, "--end": `${end}ms` } as CSSProperties}
-      axis={
-        <>
-          <span>{copy.lanes.talk}</span>
-          <span className="onb-lanes__today">{copy.lanes.today}</span>
-        </>
-      }
-    >
-      {(d) => {
-        const talk = talkOf(d);
-        const lead = span - talk.length - d.quietDays;
-        const silent = talk.length * READ.talk + READ.pause;
-        const slips = threshold !== undefined && d.quietDays > threshold;
-        return (
-          <>
-            <span className="sr-only">
-              {d.company}: {copy.lanes.quiet(d.quietDays)}
-            </span>
-            <span className="onb-lane__tag">{d.company}</span>
-            <span aria-hidden="true" className="onb-lane__days">
-              {talk.map((v, k) => (
-                <i key={k} className="onb-day" data-kind={k === talk.length - 1 ? "last" : v ? "talk" : "rest"} style={{ "--v": (v / peak).toFixed(2), "--d": `${k * READ.talk}ms`, gridColumnStart: k === 0 ? lead + 1 : undefined } as CSSProperties} />
-              ))}
-              {Array.from({ length: d.quietDays }, (_, q) => (
-                <i key={`q${q}`} className="onb-day" data-kind={threshold !== undefined && q >= threshold ? "past" : "quiet"} style={{ "--d": `${silent + q * READ.quiet}ms` } as CSSProperties} />
-              ))}
-            </span>
-            {slips && <span aria-hidden="true" className="onb-lane__edge" style={{ left: share(lead + talk.length + threshold), "--d": `${silent + threshold * READ.quiet}ms` } as CSSProperties} />}
-            <span aria-hidden="true" className="onb-lane__quiet tabular" style={{ left: share(lead + talk.length), "--d": `${silent + d.quietDays * READ.quiet}ms` } as CSSProperties}>
-              {copy.lanes.quiet(d.quietDays)}
-            </span>
-          </>
-        );
-      }}
-    </Lanes>
-  );
-}
-
-/** The way forward: from the line of today, each conversation picked up again — in the Core's emerald */
-export function NextLanes(props: Shared) {
-  return (
-    <Lanes slice="next" decorative {...props} axis={<span>{copy.lanes.next}</span>}>
-      {() => <span className="onb-lane__go" />}
-    </Lanes>
-  );
-}
-
-/** What Syxoria does with each: the follow-up itself, who it goes to, and where it stands under the mandate */
-export function ActionLanes({ status, statusLabel, ...props }: Shared & { status: ActionItemStatus; statusLabel: string }) {
-  return (
-    <Lanes slice="action" {...props}>
-      {(d) => (
-        <>
-          <span aria-hidden="true" className="onb-lane__node" data-status={status} />
-          <span className="min-w-0 flex-1">
-            <span className="onb-lane__subject block truncate">{d.subject}</span>
-            <span className="mt-0.5 flex items-baseline justify-between gap-3 text-[11.5px]">
-              <span className="truncate text-fg-3">
-                To {d.contact}
-                <span className="onb-lane__tag-inline"> · {d.company}</span>
-              </span>
-              <span className="onb-lane__status shrink-0" data-status={status}>
-                {statusLabel}
-              </span>
-            </span>
-          </span>
-        </>
-      )}
-    </Lanes>
-  );
-}
-
-/** How much better: the two outcomes, acting and leaving it, drawn to scale beside the figure */
+/** How much better: the two outcomes, replying and leaving it, named and drawn to scale one under the other */
 export function OutcomeScale({ acted, left, ratio }: { acted: string; left: string; ratio: number }) {
   const rows = [
     { label: acted, share: 1, on: true },
@@ -170,10 +131,34 @@ export function OutcomeScale({ acted, left, ratio }: { acted: string; left: stri
     <div aria-hidden="true" className="onb-outcome">
       {rows.map((r, i) => (
         <div key={r.label} className="onb-outcome__row" data-on={r.on || undefined} style={{ "--i": i } as CSSProperties}>
-          <span className="onb-outcome__bar" style={{ width: `${r.share * 100}%` }} />
           <span className="onb-outcome__label">{r.label}</span>
+          <span className="onb-outcome__bar" style={{ width: `${r.share * 100}%` }} />
         </div>
       ))}
     </div>
+  );
+}
+
+/** What Syxoria does with each: the follow-up itself, who it goes to, and where it stands under the mandate */
+export function DraftList({ drafts, focus, onChoose, status, statusLabel }: View & { status: ActionItemStatus; statusLabel: string }) {
+  return (
+    <ol className="onb-drafts">
+      {drafts.map((d, i) => (
+        <li key={d.id} className="onb-draft" data-focus={focus === d.id || undefined} style={{ "--i": i } as CSSProperties} onClick={() => onChoose(d.id)}>
+          <span aria-hidden="true" className="onb-draft__node" data-status={status} />
+          <span className="min-w-0 flex-1">
+            <span className="onb-draft__subject block truncate">{d.subject}</span>
+            <span className="onb-draft__to flex items-baseline justify-between gap-3">
+              <span className="truncate">
+                To {d.contact} · {d.company}
+              </span>
+              <span className="onb-draft__status shrink-0" data-status={status}>
+                {statusLabel}
+              </span>
+            </span>
+          </span>
+        </li>
+      ))}
+    </ol>
   );
 }

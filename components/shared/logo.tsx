@@ -19,7 +19,7 @@ export function Logo({ className, href = "/", compact = false }: { className?: s
   return (
     <Link
       href={href}
-      aria-label="Syxoria — home"
+      aria-label="Syxoria home"
       className={cn("group inline-flex items-center gap-3 text-fg transition-opacity hover:opacity-85", className)}
     >
       <LogoMark className="transition-transform duration-500 ease-out-soft group-hover:-translate-y-px" />

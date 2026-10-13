@@ -30,7 +30,7 @@ export const mockProjects: Project[] = [
   {
     id: "p_collection",
     name: "Cash collection",
-    description: "Detect late invoices, draft respectful follow-ups and reconcile payments with Stripe and the bank.",
+    description: "Detect late invoices, draft respectful reminders and reconcile payments with Stripe and the bank.",
     status: "on-track",
     stage: "growing",
     progress: 64,
@@ -43,8 +43,8 @@ export const mockProjects: Project[] = [
     impact: { value: 18420, hoursSaved: 12 },
     milestones: [
       { id: "m1", title: "Connect invoicing and bank feeds", done: true, dueDate: "2026-07-10T00:00:00.000Z" },
-      { id: "m2", title: "Late-payment detection", done: true, dueDate: "2026-08-05T00:00:00.000Z" },
-      { id: "m3", title: "Approval-first reminders", done: false, dueDate: "2026-10-01T00:00:00.000Z" },
+      { id: "m2", title: "Late payment detection", done: true, dueDate: "2026-08-05T00:00:00.000Z" },
+      { id: "m3", title: "Reminders that wait for approval", done: false, dueDate: "2026-10-01T00:00:00.000Z" },
       { id: "m4", title: "Automatic reconciliation", done: false, dueDate: "2026-11-01T00:00:00.000Z" },
     ],
     progressHistory: history(23, 64),
@@ -73,7 +73,7 @@ export const mockProjects: Project[] = [
   {
     id: "p_quarterly",
     name: "Quarterly board pack",
-    description: "Assemble KPIs, decisions and narrative into a board-ready document in Orion.",
+    description: "Assemble KPIs, decisions and narrative into a document ready for the board in Orion.",
     status: "on-track",
     stage: "rooting",
     progress: 28,
@@ -128,14 +128,14 @@ export const mockProjects: Project[] = [
     milestones: [
       { id: "m1", title: "Goals defined", done: true, dueDate: "2026-07-05T00:00:00.000Z" },
       { id: "m2", title: "Indicators connected", done: true, dueDate: "2026-07-30T00:00:00.000Z" },
-      { id: "m3", title: "Mid-point review", done: false, dueDate: "2026-10-01T00:00:00.000Z" },
+      { id: "m3", title: "Midpoint review", done: false, dueDate: "2026-10-01T00:00:00.000Z" },
     ],
     progressHistory: history(67, 58),
   },
   {
     id: "p_supplier",
     name: "Supplier invoice intake",
-    description: "Extract, categorise and route supplier invoices for approval without manual re-typing.",
+    description: "Extract, categorise and route supplier invoices for approval without manual retyping.",
     status: "completed",
     stage: "flourishing",
     progress: 100,
@@ -156,7 +156,7 @@ export const mockProjects: Project[] = [
   {
     id: "p_knowledge",
     name: "Internal knowledge base",
-    description: "Turn scattered docs into a searchable, always-current handbook.",
+    description: "Turn scattered docs into a searchable handbook that stays current.",
     status: "paused",
     stage: "rooting",
     progress: 34,

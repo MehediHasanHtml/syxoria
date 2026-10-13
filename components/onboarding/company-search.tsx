@@ -14,7 +14,7 @@ import { BigInput, Notice, QuietButton, rise, StageHeading } from "./primitives"
 const reasons = {
   empty: "Enter your company’s SIREN (9 digits) or SIRET (14 digits).",
   length: "A SIREN has 9 digits, a SIRET 14.",
-  checksum: "This number doesn’t look right — check the digits.",
+  checksum: "This number doesn’t look right. Check the digits.",
 };
 
 /** Where the search is: what is really happening, in order */
@@ -83,7 +83,7 @@ export function CompanySearch({ welcome, retry, initial, lookup, onSearching, on
       if (!alive.current) return;
       onSearching(false);
       setPhase("idle");
-      setError("The register didn’t answer. Nothing is wrong on your side — please try again.");
+      setError("The register didn’t answer. Nothing is wrong on your side. Please try again.");
     }
   }
 
@@ -91,7 +91,7 @@ export function CompanySearch({ welcome, retry, initial, lookup, onSearching, on
   const steps: { id: SearchPhase; label: string }[] = [
     { id: "reading", label: copy.search.reading },
     { id: "register", label: copy.search.register },
-    { id: "identified", label: name ? `${copy.search.identified} — ${name}` : copy.search.identified },
+    { id: "identified", label: name ? `${copy.search.identified}: ${name}` : copy.search.identified },
   ];
   const at = steps.findIndex((s) => s.id === phase);
 
@@ -117,7 +117,7 @@ export function CompanySearch({ welcome, retry, initial, lookup, onSearching, on
       >
         {retry && phase === "idle" && !error && (
           <Notice tone="info" className="mb-5">
-            Understood — let’s try another number.
+            Understood. Let’s try another number.
           </Notice>
         )}
         <Field label={copy.label} error={error}>

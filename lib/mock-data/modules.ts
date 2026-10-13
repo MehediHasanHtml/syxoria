@@ -10,7 +10,7 @@ export const productModules: ProductModule[] = [
     key: "lume",
     name: "Lume",
     role: "Signal",
-    summary: "Every conversation, request and document arrives in one calm stream — nothing important gets lost.",
+    summary: "Every conversation, request and document arrives in one calm stream, so nothing important gets lost.",
     capabilities: ["Unified inbox across email and chat", "Smart grouping by client and topic", "Priority surfacing"],
   },
   {
@@ -24,8 +24,8 @@ export const productModules: ProductModule[] = [
     key: "volt",
     name: "Volt",
     role: "Action",
-    summary: "Repetitive work becomes quiet automation — reviewed by you, executed reliably.",
-    capabilities: ["Approval-first automations", "Invoice & follow-up flows", "Full audit trail"],
+    summary: "Repetitive work becomes quiet automation, reviewed by you and executed reliably.",
+    capabilities: ["Automations that wait for approval", "Invoice & reminder flows", "Full audit trail"],
   },
   {
     key: "kairo",
@@ -46,7 +46,7 @@ export const productModules: ProductModule[] = [
     name: "Orion",
     role: "Direction",
     summary: "Documents, decisions and knowledge become a navigable map of where the company is heading.",
-    capabilities: ["Decision log", "Living documents", "Board-ready summaries"],
+    capabilities: ["Decision log", "Living documents", "Summaries ready for the board"],
   },
 ];
 

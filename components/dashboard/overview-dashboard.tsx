@@ -83,7 +83,7 @@ export function OverviewDashboard({ data }: { data: OverviewData }) {
             {greeting(now)}, <span className="font-display font-light text-accent-strong">{user.name.split(" ")[0]}.</span>
           </>
         }
-        description={`${longDate.format(new Date(now))}. ${needsYou} could use your eyes today — the rest is ticking along nicely.`}
+        description={`${longDate.format(new Date(now))}. ${needsYou} could use your eyes today. The rest is ticking along nicely.`}
         actions={
           <>
             <ButtonLink href="/app/analytics" variant="secondary" size="md">
@@ -151,7 +151,7 @@ export function OverviewDashboard({ data }: { data: OverviewData }) {
               ))}
             </dl>
             <p className="rounded-md border border-accent-line/50 bg-accent-soft px-3.5 py-3 text-[13px] leading-relaxed text-fg-2">
-              <span className="text-accent-strong">Worth a look — </span>
+              <span className="text-accent-strong">Worth a look: </span>
               Sales pipeline hygiene has slipped. Clara could use a hand before the review on 8 October.
             </p>
           </CardBody>

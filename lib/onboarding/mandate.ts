@@ -47,7 +47,7 @@ export function resolveBriefingAction(briefing: Briefing, mandate: Mandate, poli
     return rule ? effectiveMode(rule, mandate) : "off";
   };
   const n = briefing.drafts.length;
-  const these = n === 1 ? "this follow-up" : "these follow-ups";
+  const these = n === 1 ? "this reply" : "these replies";
   const email = connected.find((s) => s.category === "email");
 
   if (!email)
@@ -56,7 +56,7 @@ export function resolveBriefingAction(briefing: Briefing, mandate: Mandate, poli
       figure: String(n),
       caption: n === 1 ? "deal kept in view" : "deals kept in view",
       title: `I’ll keep ${n === 1 ? "it" : `these ${n}`} at the top of your day.`,
-      detail: "Connect your email and I can prepare the follow-ups for you.",
+      detail: "Connect your email and I can prepare the replies for you.",
       status: "listed",
       statusLabel: "To follow up",
     };
@@ -74,9 +74,9 @@ export function resolveBriefingAction(briefing: Briefing, mandate: Mandate, poli
     return {
       kind: "offer",
       figure: String(n),
-      caption: n === 1 ? "follow-up, drafted on your word" : "follow-ups, drafted on your word",
+      caption: n === 1 ? "reply, drafted on your word" : "replies, drafted on your word",
       title: `Shall I draft ${these}?`,
-      detail: `I’ll write them in ${email.name} once you say so — nothing before.`,
+      detail: `I’ll write them in ${email.name} once you say so. Nothing before.`,
       status: "listed",
       statusLabel: "Ready to draft",
     };
@@ -84,9 +84,9 @@ export function resolveBriefingAction(briefing: Briefing, mandate: Mandate, poli
     return {
       kind: "handle",
       figure: "10:00",
-      caption: "routine follow-ups go out",
+      caption: "routine replies go out",
       title: `I’ll handle ${these} within the mandate you’ve given me.`,
-      detail: "Routine follow-ups to existing clients go out at 10:00. If anyone asks for something new — a revised quote, a discount — I’ll stop and ask you.",
+      detail: "Routine replies to existing clients go out at 10:00. If anyone asks for something new, such as a revised quote or a discount, I’ll stop and ask you.",
       status: "scheduled",
       statusLabel: "Sends at 10:00",
     };
@@ -97,7 +97,7 @@ export function resolveBriefingAction(briefing: Briefing, mandate: Mandate, poli
     title: `I’ll prepare ${these} for your approval.`,
     detail:
       mode("records") === "auto"
-        ? `Drafts will be waiting in ${email.name} at 9:00. Nothing is sent without you — I’ll log the replies to each deal.`
+        ? `Drafts will be waiting in ${email.name} at 9:00. Nothing is sent without you, and I’ll log their answers on each deal.`
         : `Drafts will be waiting in ${email.name} at 9:00. Nothing is sent without you.`,
     status: "awaiting-approval",
     statusLabel: "Draft for approval",

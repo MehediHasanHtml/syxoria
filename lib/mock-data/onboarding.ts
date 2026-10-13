@@ -30,7 +30,7 @@ export const mockCompanies: CompanyProfile[] = [
     siret: "85237914800020",
     name: "Northfield Studio",
     legalName: "NORTHFIELD STUDIO",
-    legalForm: "SAS · Simplified joint-stock company",
+    legalForm: "SAS · Simplified joint stock company",
     address: "18 rue de Paradis, 75010",
     city: "Paris",
     activity: { code: "74.10Z", label: "Specialised design activities" },
@@ -47,7 +47,7 @@ export const mockCompanies: CompanyProfile[] = [
     name: "Atelier Vauban",
     legalName: "ATELIER VAUBAN CONSEIL",
     legalForm: "SARL · Limited liability company",
-    address: "7 quai Saint-Antoine, 69002",
+    address: "7 quai Romain Rolland, 69005",
     city: "Lyon",
     activity: { code: "70.22Z", label: "Business and management consultancy" },
     sector: "consultancy",
@@ -240,7 +240,7 @@ export function buildUnderstandingScript(company: CompanyProfile, sources: DataS
   discover(10100, "opportunities");
   out.push({ at: 10700, event: { type: "phase", id: "check", message: "Checking what doesn’t add up" } });
   discover(11400, "duplicates");
-  out.push({ at: 12800, event: { type: "done", knowledge, period: "Jan 2024 – today" } });
+  out.push({ at: 12800, event: { type: "done", knowledge, period: "Jan 2024 to today" } });
   return out.sort((a, b) => a.at - b.at);
 }
 
@@ -253,11 +253,46 @@ function namesFor(sources: DataSource[], cats: SourceCategory[], fallback: strin
 }
 
 export const quietDeals = [
-  { contact: "Camille Roy", company: "Atelier Rive", value: 42000, quietDays: 12, subject: "Spring launch — timing and next steps" },
-  { contact: "Hugo Lenoir", company: "Maison Lenoir", value: 21500, quietDays: 11, subject: "Following up on the identity proposal" },
-  { contact: "Nora Haddad", company: "Côté Sud Hôtels", value: 14800, quietDays: 15, subject: "Signage project — revised quote" },
-  { contact: "Paul Ondine", company: "Brasserie Ondine", value: 9600, quietDays: 10, subject: "Menu & packaging — a quick check-in" },
-  { contact: "Élise Belval", company: "Ferme Belval", value: 8500, quietDays: 18, subject: "Website refresh — where we left it" },
+  {
+    contact: "Camille Roy",
+    company: "Atelier Rive",
+    value: 42000,
+    quietDays: 12,
+    subject: "Spring launch: timing and next steps",
+    asked: "If we want to be live for the spring launch, when would you need our decision?",
+  },
+  {
+    contact: "Hugo Lenoir",
+    company: "Maison Lenoir",
+    value: 21500,
+    quietDays: 11,
+    subject: "Following up on the identity proposal",
+    asked: "The proposal looks right to us. Could you send the timeline this week?",
+  },
+  {
+    contact: "Nora Haddad",
+    company: "Côté Sud Hôtels",
+    value: 14800,
+    quietDays: 15,
+    subject: "Signage project: revised quote",
+    asked: "Thank you for the revised quote. Can we talk it through this week?",
+  },
+  {
+    contact: "Paul Ondine",
+    company: "Brasserie Ondine",
+    value: 9600,
+    quietDays: 10,
+    subject: "Menu & packaging: a quick word",
+    asked: "Are you still able to take this on before the summer?",
+  },
+  {
+    contact: "Élise Belval",
+    company: "Ferme Belval",
+    value: 8500,
+    quietDays: 18,
+    subject: "Website refresh: where we left it",
+    asked: "Shall we pick the website back up after the harvest?",
+  },
 ];
 
 const MONTHS = ["Nov", "Dec", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct"];
@@ -290,7 +325,7 @@ export function buildAnalysis(company: CompanyProfile, sources: DataSource[]): I
     {
       id: "activity",
       title: "Protect client activity",
-      insight: `Three returning clients — 18% of ${company.name}’s revenue last year — haven’t started a project this year.`,
+      insight: `Three returning clients, 18% of ${company.name}’s revenue last year, haven’t started a project this year.`,
       kpis: [
         { id: "active", label: "of clients active", value: "71%" },
         { id: "drifting", label: "returning clients drifting", value: "3" },
@@ -309,7 +344,7 @@ export function buildAnalysis(company: CompanyProfile, sources: DataSource[]): I
     {
       id: "payment",
       title: "Get paid closer to your terms",
-      insight: "Invoices are paid nine days later than your 30-day terms. €27,300 is overdue today, across six invoices.",
+      insight: "Invoices are paid nine days later than your terms of 30 days. €27,300 is overdue today, across six invoices.",
       kpis: [
         { id: "days", label: "to get paid", value: "39 days" },
         { id: "overdue", label: "overdue", value: "€27,300" },
@@ -341,30 +376,30 @@ export const mockAutonomyPolicy: AutonomyPolicy = {
       summary: "Syxoria identifies what needs attention and prepares the work. Nothing happens until you approve it.",
       scenario: [
         { id: "notice", label: "Notices the deal has gone quiet", by: "syxoria" },
-        { id: "prepare", label: "Prepares a follow-up", by: "syxoria" },
+        { id: "prepare", label: "Prepares a reply", by: "syxoria" },
         { id: "approve", label: "Waits for your approval", by: "you" },
       ],
     },
     {
       id: "assisted",
       name: "Assisted",
-      summary: "Syxoria handles the routine — notes, records, drafts — and asks you when it matters.",
+      summary: "Syxoria handles the routine (notes, records, drafts) and asks you when it matters.",
       scenario: [
         { id: "notice", label: "Notices the deal has gone quiet", by: "syxoria" },
         { id: "update", label: "Logs the activity, updates the deal", by: "syxoria" },
-        { id: "prepare", label: "Prepares a follow-up", by: "syxoria" },
+        { id: "prepare", label: "Prepares a reply", by: "syxoria" },
         { id: "approve", label: "Asks you before sending", by: "you" },
       ],
     },
     {
       id: "autonomous",
       name: "Autonomous",
-      summary: "Syxoria acts on its own within your mandate — and stops the moment something falls outside it.",
+      summary: "Syxoria acts on its own within your mandate, and stops the moment something falls outside it.",
       scenario: [
         { id: "notice", label: "Notices the deal has gone quiet", by: "syxoria" },
         { id: "update", label: "Updates the deal", by: "syxoria" },
-        { id: "send", label: "Sends a routine follow-up", by: "syxoria" },
-        { id: "approve", label: "They ask for a new quote — it stops and asks you", by: "you" },
+        { id: "send", label: "Sends a routine reply", by: "syxoria" },
+        { id: "approve", label: "They ask for a new quote: it stops and asks you", by: "you" },
       ],
     },
   ],
@@ -397,8 +432,8 @@ export const mockAutonomyPolicy: AutonomyPolicy = {
     {
       id: "draft",
       group: "prepare",
-      label: "Draft follow-ups",
-      description: "Follow-ups and replies, written for you — never sent on their own.",
+      label: "Draft replies",
+      description: "Replies and reminders, written for you, never sent on their own.",
       defaults: { guided: "auto", assisted: "auto", autonomous: "auto" },
       allowed: ["auto", "ask", "off"],
     },
@@ -421,7 +456,7 @@ export const mockAutonomyPolicy: AutonomyPolicy = {
     {
       id: "send",
       group: "act",
-      label: "Send routine follow-ups",
+      label: "Send routine replies",
       description: "To existing clients only, from templates you approved.",
       defaults: { guided: "ask", assisted: "ask", autonomous: "auto" },
       allowed: ["auto", "ask", "off"],
@@ -463,51 +498,55 @@ export const mockAutonomyPolicy: AutonomyPolicy = {
 const BRIEFING_WINDOW = 40;
 
 /**
- * A conversation's rhythm before it went quiet: emails per day, oldest first, ending on the last
- * one — exchanges come in short bursts with a day or two between them, as real threads do.
+ * A conversation's rhythm before it went quiet: emails per day on each side, oldest first —
+ * exchanges come in short bursts with a day or two between them, as real threads do. It ends on
+ * a day when only they wrote: the message nobody answered.
  */
-function rhythmFor(seed: number, days: number): number[] {
+function rhythmFor(seed: number, days: number): { them: number; you: number }[] {
   const random = createRandom(seed);
-  const out: number[] = [];
+  const out: { them: number; you: number }[] = [];
   let burst = 0;
   for (let i = 0; i < days; i++) {
     if (burst > 0) {
-      out.push(1 + Math.floor(random() * random() * 5));
+      const them = Math.floor(random() * random() * 4);
+      const you = Math.floor(random() * random() * 4);
+      out.push(them + you ? { them, you } : { them: 0, you: 1 });
       burst--;
     } else {
-      out.push(0);
+      out.push({ them: 0, you: 0 });
       if (random() < 0.55) burst = 1 + Math.floor(random() * 4);
     }
   }
-  // it ends on an email: the last word before the silence
-  out[days - 1] = 1 + Math.floor(random() * 2);
+  // the company's last word, then theirs: the question before the silence
+  out[days - 3] = { them: 0, you: 1 };
+  out[days - 2] = { them: 0, you: 0 };
+  out[days - 1] = { them: 1, you: 0 };
   return out;
 }
 
 export function buildBriefing(company: CompanyProfile, sources: DataSource[]): Briefing {
   const top = quietDeals.slice(0, 3);
+  const threshold = 10;
+  const first = top[0].contact.split(" ")[0];
   return {
+    // the analysis found the pattern (deals going quiet); the briefing says whose turn it is
     priority: {
-      title: "Three opportunities need your attention today.",
-      detail: "Each has been quiet for more than ten days.",
+      title: "Three clients are waiting on your reply.",
+      detail: "In each of these deals, the last message came from them.",
     },
     insight: {
-      title: "Your largest open deal has gone quiet.",
-      detail: `${top[0].company}’s last email asked about timing for the spring launch — it is still unanswered.`,
-      // the same finding as the conversion priority: deals quiet this long close half as often
-      quiet: { draftId: "d_0", threshold: 10, note: "Past 10 quiet days, deals close half as often." },
+      title: `Past ${threshold} quiet days, your deals close half as often.`,
+      detail: `All three are past that point. ${top[0].company}, your largest open deal, crossed it ${top[0].quietDays - threshold} days ago.`,
+      quiet: { draftId: "d_0", threshold },
     },
     recommendation: {
-      title: "Follow up with all three this morning.",
-      detail: `Answer ${top[0].company}’s question on timing first, then pick up where you left off with ${top
-        .slice(1)
-        .map((d) => d.company)
-        .join(" and ")}.`,
+      title: "Reply to all three this morning.",
+      detail: `Start with ${first}’s question on timing: it is the largest deal, and the quickest to answer.`,
     },
     impact: {
       value: "2×",
-      label: `as likely to close — on ${company.name}’s own history.`,
-      compare: { acted: "Answered within two weeks", left: "Left quiet", ratio: 2 },
+      label: "as likely to close once they hear back",
+      compare: { acted: "Replied to", left: "Left quiet", ratio: 2 },
     },
     drafts: top.map((d, i) => ({ id: `d_${i}`, ...d, rhythm: rhythmFor(71 + i * 13, BRIEFING_WINDOW - d.quietDays) })),
     basedOn: `Based on ${sources.length} ${sources.length === 1 ? "source" : "sources"} and two years of activity`,

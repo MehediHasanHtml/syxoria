@@ -99,7 +99,7 @@ export function AccountStep({ initialMode, plan, onAuthenticated }: { initialMod
       setBusy(false);
       if (error instanceof ServiceError && error.code === "validation") setFormError({ text: error.message, switchTo: "signin" });
       else if (error instanceof ServiceError) setFormError({ text: error.message });
-      else setFormError({ text: "Something interrupted us. Nothing was lost — please try again." });
+      else setFormError({ text: "Something interrupted us. Nothing was lost. Please try again." });
     }
   }
 

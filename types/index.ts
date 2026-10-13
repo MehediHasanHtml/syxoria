@@ -349,11 +349,14 @@ export type BriefingDraft = {
   subject: string;
   value: number;
   quietDays: number;
+  /** The last thing they wrote, in their own words — the message still waiting for an answer */
+  asked: string;
   /**
-   * The conversation before it went quiet: emails exchanged per day, oldest first, ending on the
-   * day of the last one. The briefing draws it to scale — the exchange, then the silence.
+   * The conversation before it went quiet, day by day, oldest first, ending on the day of their
+   * last email: how many they wrote, how many the company wrote back. The briefing draws both
+   * sides to scale — the exchange, then the silence.
    */
-  rhythm?: number[];
+  rhythm?: { them: number; you: number }[];
 };
 
 /** Priority → insight → recommendation → action: the briefing reads as one line of reasoning */
@@ -362,8 +365,8 @@ export type Briefing = {
   insight: {
     title: string;
     detail: string;
-    /** The silence it is about: which deal, and after how many quiet days the company’s deals start to slip */
-    quiet?: { draftId: string; threshold: number; note: string };
+    /** The silence it is about: the deal the briefing opens on, and after how many quiet days the company’s deals start to slip */
+    quiet?: { draftId: string; threshold: number };
   };
   recommendation: { title: string; detail: string };
   /**

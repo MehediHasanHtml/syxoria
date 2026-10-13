@@ -12,7 +12,7 @@ export default async function InsightsPage() {
       <PageHeader
         breadcrumbs={[{ label: "Workspace", href: "/app" }, { label: "Insights" }]}
         title="Insights"
-        description="Recommendations from Nexo — each with its reasoning, confidence and expected impact. Nothing is applied without you."
+        description="Recommendations from Nexo, each with its reasoning, confidence and expected impact. Nothing is applied without you."
       />
       <InsightsView insights={insights} />
     </>

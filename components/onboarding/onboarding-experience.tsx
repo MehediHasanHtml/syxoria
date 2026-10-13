@@ -49,6 +49,8 @@ export function OnboardingExperience({ sources, policy, shell, resume, mode, pla
   const [pulse, bump] = useReducer((n: number) => n + 1, 0);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  /** The briefing's prelude is over: the Core has left the stage for the bar */
+  const [unfolded, setUnfolded] = useState(false);
 
   /** stage changes go through a transition; everything else updates in place */
   const move = useCallback((action: OnboardingAction) => transition(() => dispatch(action)), []);
@@ -67,7 +69,7 @@ export function OnboardingExperience({ sources, policy, shell, resume, mode, pla
       const [saved, briefing] = await Promise.all([saveMandate(mandate), getFirstBriefing(state.company, connected)]);
       move({ type: "mandated", mandate: saved, briefing });
     } catch {
-      setSaveError("Your mandate couldn’t be saved just now. Nothing changed — please try again.");
+      setSaveError("Your mandate couldn’t be saved just now. Nothing changed. Please try again.");
     } finally {
       setSaving(false);
     }
@@ -79,9 +81,10 @@ export function OnboardingExperience({ sources, policy, shell, resume, mode, pla
 
   const stage = state.stage === "complete" ? "briefing" : state.stage;
   const memoryProps = { snapshot: state, sources };
-  // the Core lives in the composition while signing in, while it understands and while its mandate
-  // is being set (there it sits inside the boundary the user draws); in the bar otherwise
-  const coreHere = stage !== "account" && stage !== "syncing" && stage !== "autonomy";
+  // the Core lives in the composition while signing in, while it understands, while its mandate
+  // is being set (there it sits inside the boundary the user draws) and for the briefing's prelude
+  // (alone on the stage, saying what it now holds); in the bar otherwise
+  const coreHere = stage !== "account" && stage !== "syncing" && stage !== "autonomy" && (stage !== "briefing" || unfolded);
   const awake = milestones.filter((m) => m.on).length / milestones.length;
 
   return (
@@ -155,8 +158,10 @@ export function OnboardingExperience({ sources, policy, shell, resume, mode, pla
           sources={connected}
           firstName={state.session?.firstName ?? null}
           variant="onboarding"
+          pulse={pulse}
           onEntering={onPulse}
           onBeat={onPulse}
+          onUnfold={() => setUnfolded(true)}
           onEnter={() => move({ type: "go", stage: "complete" })}
         />
       )}

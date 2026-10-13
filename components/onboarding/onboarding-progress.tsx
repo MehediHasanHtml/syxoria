@@ -24,7 +24,7 @@ export function OnboardingProgress({ core, coreHere, milestones, email }: Props)
       <div className="mx-auto grid h-16 max-w-[90rem] grid-cols-[1fr_auto_1fr] items-center gap-4 px-(--gutter)">
         <div className="flex items-center">
           <Logo className="hidden sm:inline-flex" />
-          <Link href="/" aria-label="Syxoria — home" className="text-fg sm:hidden">
+          <Link href="/" aria-label="Syxoria home" className="text-fg sm:hidden">
             <LogoMark />
           </Link>
         </div>

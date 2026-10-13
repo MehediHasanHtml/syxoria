@@ -137,7 +137,7 @@ export default async function AnalyticsPage({ searchParams }: PageProps<"/app/an
                       </div>
                     </td>
                     <td className="tabular px-3 py-3 text-right text-fg-2">{p.impact.hoursSaved}h</td>
-                    <td className="tabular px-5 py-3 text-right text-fg sm:px-6">{p.impact.value ? formatCurrency(p.impact.value) : "—"}</td>
+                    <td className="tabular px-5 py-3 text-right text-fg sm:px-6">{p.impact.value ? formatCurrency(p.impact.value) : "Not yet"}</td>
                   </tr>
                 ))}
               </tbody>

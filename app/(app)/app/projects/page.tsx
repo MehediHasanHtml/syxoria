@@ -16,7 +16,7 @@ export default async function ProjectsPage({ searchParams }: PageProps<"/app/pro
       <PageHeader
         breadcrumbs={[{ label: "Workspace", href: "/app" }, { label: "Projects" }]}
         title="Projects"
-        description="Every outcome your company is growing toward — with its progress, owners and impact."
+        description="Every outcome your company is growing toward, with its progress, owners and impact."
       />
       {/* key: a new top-bar search (?q=) re-initialises the view */}
       <ProjectsView key={q} initialProjects={projects} members={members} currentUserId={user.id} initialSearch={q} openCreate={params.new === "1"} />

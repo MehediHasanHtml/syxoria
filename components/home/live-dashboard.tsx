@@ -170,7 +170,7 @@ export function LiveDashboard({ progress, className }: { progress: () => number;
 
   const stream = [
     ...(phase.logged ? [{ id: "volt", from: "Vo", title: "Volt sent 4 payment reminders", meta: "Approved by you · just now", fresh: true }] : []),
-    ...(phase.arrived ? [{ id: "pay", from: "St", title: "Payment received — Maison Leroux", meta: "Stripe · €2,400 · linked by Nexo", fresh: !phase.logged }] : []),
+    ...(phase.arrived ? [{ id: "pay", from: "St", title: "Payment received: Maison Leroux", meta: "Stripe · €2,400 · linked by Nexo", fresh: !phase.logged }] : []),
     { id: "deals", from: "Hs", title: "Two deals have gone quiet", meta: "HubSpot · 12 days without contact", fresh: false },
     { id: "kick", from: "Gm", title: "Kickoff request from Atelier Nord", meta: "Gmail · slot proposed", fresh: false },
     { id: "brief", from: "No", title: "Q3 brief updated", meta: "Notion · 3 decisions logged", fresh: false },
@@ -272,7 +272,7 @@ export function LiveDashboard({ progress, className }: { progress: () => number;
             {phase.done && (
               <p className="absolute bottom-5 left-1/2 flex -translate-x-1/2 animate-fade-in items-center gap-2 whitespace-nowrap rounded-full border border-white/10 bg-black/60 px-4 py-2 text-[12.5px] text-fg">
                 <Check className="size-3.5 text-accent" />
-                All caught up — €6,380 on its way, nothing waiting for you.
+                All caught up. €6,380 on its way, nothing waiting for you.
               </p>
             )}
           </div>

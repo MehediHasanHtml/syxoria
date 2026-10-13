@@ -63,7 +63,7 @@ export const ConnectorCard = forwardRef<HTMLDivElement, Props>(function Connecto
           </p>
           <p className={cn("mt-1 text-[12.5px] leading-snug", state === "connected" ? "text-fg-2" : state === "error" || state === "reconnect" ? "text-fg-2" : "text-fg-3")} aria-live={state === "connecting" ? "polite" : undefined}>
             {line}
-            {state === "connected" && <span className="text-fg-3"> · read-only</span>}
+            {state === "connected" && <span className="text-fg-3"> · read only</span>}
           </p>
         </div>
         {variant === "row" && <div className="shrink-0 self-center">{action}</div>}

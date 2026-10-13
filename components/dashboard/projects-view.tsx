@@ -107,7 +107,7 @@ export function ProjectsView({
             <option value="updated">Recently updated</option>
             <option value="progress">Most progress</option>
             <option value="impact">Highest impact</option>
-            <option value="name">Name A–Z</option>
+            <option value="name">Name A to Z</option>
           </Select>
         </div>
         <Button onClick={() => setCreateOpen(true)} className="shrink-0">
@@ -208,7 +208,7 @@ export function ProjectsView({
                           <td className="px-3 py-4">
                             <AvatarStack people={team} />
                           </td>
-                          <td className="tabular px-3 py-4 text-right text-fg-2">{p.impact.value > 0 ? formatCurrency(p.impact.value) : "—"}</td>
+                          <td className="tabular px-3 py-4 text-right text-fg-2">{p.impact.value > 0 ? formatCurrency(p.impact.value) : "Not yet"}</td>
                           <td className="px-5 py-4 text-right text-xs text-fg-3">{formatRelative(p.updatedAt, NOW)}</td>
                         </tr>
                       );

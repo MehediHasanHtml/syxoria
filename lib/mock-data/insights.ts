@@ -6,7 +6,7 @@ export const mockInsights: Insight[] = [
     title: "4 invoices can be followed up today",
     summary: "€6,380 is 14+ days overdue across 3 clients with a good payment history.",
     rationale:
-      "These clients usually pay within 3 days of a reminder. A polite follow-up now keeps the relationship intact and shortens your cash cycle.",
+      "These clients usually pay within 3 days of a reminder. A polite reminder now keeps the relationship intact and shortens your cash cycle.",
     priority: "high",
     status: "new",
     module: "nexo",

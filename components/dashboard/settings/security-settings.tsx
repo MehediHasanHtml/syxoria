@@ -45,7 +45,7 @@ function PasswordForm() {
     const err: typeof errors = {};
     if (!v.current) err.current = "Enter your current password.";
     if (v.next.length < 10) err.next = "Use at least 10 characters.";
-    else if (s.score < 3) err.next = "Add upper-case letters, numbers or symbols.";
+    else if (s.score < 3) err.next = "Add uppercase letters, numbers or symbols.";
     if (v.confirm !== v.next) err.confirm = "Passwords don’t match.";
     setErrors(err);
     if (Object.keys(err).length) return;
@@ -98,11 +98,11 @@ function PasswordForm() {
 function TwoFactor() {
   const [enabled, setEnabled] = useState(true);
   return (
-    <SettingsSection title="Two-factor authentication" description="Protect your account with a second step at sign-in.">
+    <SettingsSection title="Two factor authentication" description="Protect your account with a second step when you sign in.">
       <div className="rounded-lg border border-line bg-surface/40 p-4">
         <Switch
           label="Authenticator app"
-          description={enabled ? "Enabled · last used today" : "Disabled — we strongly recommend turning this on."}
+          description={enabled ? "Enabled · last used today" : "Disabled. We strongly recommend turning this on."}
           checked={enabled}
           onCheckedChange={setEnabled}
         />

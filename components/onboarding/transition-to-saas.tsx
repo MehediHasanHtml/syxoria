@@ -66,7 +66,7 @@ export function TransitionToSaaS({ shell, snapshot, sources, policy }: Props) {
             </div>
           </div>
           <div className="bg-canvas-2 p-5">
-            <p className="text-[11px] font-medium text-fg-3">Sources · read-only</p>
+            <p className="text-[11px] font-medium text-fg-3">Sources · read only</p>
             <ul className="mt-3 grid gap-2">
               {connected.map((s) => (
                 <li key={s.id} className="flex items-center gap-2.5 text-[13px] text-fg-2">

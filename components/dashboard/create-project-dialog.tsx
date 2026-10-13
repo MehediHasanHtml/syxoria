@@ -133,7 +133,7 @@ export function CreateProjectDialog({
             <Select value={values.module} onChange={(e) => set("module", e.target.value as ModuleKey)} disabled={submitting}>
               {productModules.map((m) => (
                 <option key={m.key} value={m.key}>
-                  {m.name} — {m.role}
+                  {m.name} · {m.role}
                 </option>
               ))}
             </Select>

@@ -1,26 +1,24 @@
 "use client";
 
-import { Check } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { SyxoriaCore } from "@/components/brand/syxoria-core";
 import { DecodeText } from "@/components/shared/decode-text";
 import { briefing as copy } from "@/content/onboarding";
 import { cn } from "@/lib/cn";
 import { formatCurrency } from "@/lib/format";
 import { reachOf, resolveBriefingAction } from "@/lib/onboarding/mandate";
 import type { AutonomyPolicy, Briefing, DataSource, Mandate } from "@/types";
-import { ActionLanes, NextLanes, OutcomeScale, SilenceLanes, StakeLanes } from "./briefing-evidence";
+import { DraftList, Exchange, OutcomeScale, StakeList } from "./briefing-evidence";
 import { BriefingSection } from "./briefing-section";
 import { ModeGlyph } from "./mandate-ring";
 import { OnbButton } from "./onboarding-button";
+import { transition } from "./view-transition";
 
-/** A step's figure — the briefing reads at a glance as four of them — what it measures, and its evidence beside it */
-function Lead({ value, caption, accent, beside }: { value: ReactNode; caption: string; accent?: boolean; beside?: ReactNode }) {
+/** A step's figure and what it measures — the briefing reads at a glance as four of them */
+function Lead({ value, caption, accent, hero, inline }: { value: ReactNode; caption: string; accent?: boolean; hero?: boolean; /** the figure and what it counts on one line */ inline?: boolean }) {
   return (
-    <div className="onb-brief__lead">
-      <div className="flex items-end gap-4">
-        <p className={cn("onb-brief__figure tabular", accent ? "text-accent-strong" : "text-fg")}>{value}</p>
-        {beside}
-      </div>
+    <div className={cn("onb-brief__lead", inline && "onb-brief__lead--inline")}>
+      <p className={cn("onb-brief__figure tabular", hero && "onb-brief__figure--hero", accent ? "text-accent-strong" : "text-fg")}>{value}</p>
       <p className="onb-brief__caption">{caption}</p>
     </div>
   );
@@ -29,10 +27,10 @@ function Lead({ value, caption, accent, beside }: { value: ReactNode; caption: s
 /** What a step means: one statement in the brand's voice, and what supports it */
 function Words({ title, detail }: { title: string; detail: string }) {
   return (
-    <>
+    <div className="onb-brief__words onb-brief__then">
       <p className="onb-brief__statement">{title}</p>
       <p className="onb-brief__detail">{detail}</p>
-    </>
+    </div>
   );
 }
 
@@ -55,41 +53,54 @@ type Props = {
   onEnter?: () => void;
   /** The moment "Enter Syxoria" is pressed — the Core answers at once */
   onEntering?: () => void;
-  /** Each step of the reasoning as it is reached — the Core answers as it presents it */
+  /** Each thing Syxoria says — a line of the prelude, a step of the reasoning — as it is reached: the Core answers */
   onBeat?: () => void;
+  /** The prelude is over and the briefing unfolds: the Core leaves the stage for the bar */
+  onUnfold?: () => void;
+  /** The Core's reaction count, for the one that stands on the stage during the prelude */
+  pulse?: number;
 };
 
 /** The moments of the onboarding variant, in milliseconds from its start */
-const PRELUDE = [250, 650, 1050, 1500];
-const PRELUDE_END = 2300;
+const PRELUDE = [350, 800, 1250, 1750];
+const PRELUDE_END = 2700;
 /**
- * The reasoning, step by step (ms after the prelude): priority → insight (the longest: its silence
- * is counted out day by day) → recommendation → the action, the strongest moment; then the way in.
+ * The reasoning, step by step (ms after the prelude): priority → insight (the longest: their
+ * message is read, then its silence counted out day by day) → recommendation → the action, the
+ * strongest moment; then the way in.
  */
-const STEPS = [300, 1400, 3500, 4500, 5700];
+const STEPS = [300, 1900, 4800, 6000, 7300];
 
 /**
- * The first briefing — the reward of the onboarding, and the template for every briefing Syxoria
- * writes. A very short prelude says what Syxoria now holds (the memory's final state, folding
- * away: its job is done), then the briefing reveals itself as one line of reasoning — priority →
- * insight → recommendation → action — each step given its own moment, the action last and
- * strongest.
+ * The first briefing — the finale of the onboarding, and the template for every briefing Syxoria
+ * writes. A short prelude first: the Core alone on the stage, saying what it now holds. Then it
+ * returns to the bar and the briefing unfolds as one line of reasoning — priority → insight →
+ * recommendation → action — each step given its own moment, the action last and strongest.
  *
- * It is one drawing rather than four boxes. Each step leads with one figure (how much → how long
- * → how much better → when), so the briefing reads at a glance as four numbers; under them the
- * same lanes run through all four steps — one per deal — and cross the line of today: left of it,
- * what Syxoria understood (the exchange, then the silence, counted in days), in white; right of
- * it, what happens next, in the Core's emerald. Everything in it is the briefing the service
- * returned; the action is worded by the mandate the user just gave and the tools connected
- * (resolveBriefingAction): it says what Syxoria will do or has prepared, never that it has done it.
+ * It is one sheet rather than four columns: WHAT IS above, in white — the sum waiting on the
+ * user, and who is waiting (priority); their own words, the exchange, then the silence counted in
+ * days (insight) — and WHAT SYXORIA DOES ABOUT IT below, in the Core's emerald — what a reply
+ * changes (recommendation), flowing into what it will do (action). One deal is in view at a time:
+ * choosing another reads its message instead.
+ *
+ * Everything in it is the briefing the service returned; the action is worded by the mandate the
+ * user just gave and the tools connected (resolveBriefingAction): it says what Syxoria will do or
+ * has prepared, never that it has done it.
  */
-export function FirstBriefing({ briefing, mandate, policy, sources, firstName, variant, onEnter, onEntering, onBeat }: Props) {
+export function FirstBriefing({ briefing, mandate, policy, sources, firstName, variant, onEnter, onEntering, onBeat, onUnfold, pulse }: Props) {
   const onboarding = variant === "onboarding";
   const [t, setT] = useState(onboarding ? 0 : Infinity);
   const [when, setWhen] = useState<{ hello: string; date: string } | null>(null);
   const headRef = useRef<HTMLHeadingElement>(null);
-  // a deal pointed at — in any stretch of the drawing — is shown as the same deal in all of them
-  const [hover, setHover] = useState<string | null>(null);
+  // the deal in view: the one chosen, else the one the briefing opens on
+  const [chosen, setChosen] = useState<string | null>(null);
+
+  const unfold = useRef(onUnfold);
+  const beat = useRef(onBeat);
+  useEffect(() => {
+    unfold.current = onUnfold;
+    beat.current = onBeat;
+  });
 
   useEffect(() => {
     // the time of day is the visitor's own, read once mounted (never at render on the server)
@@ -98,7 +109,20 @@ export function FirstBriefing({ briefing, mandate, policy, sources, firstName, v
     const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     // with reduced motion, everything is there at once
     const marks = still ? [Infinity] : [...PRELUDE, PRELUDE_END, ...STEPS.map((at) => PRELUDE_END + at)];
-    const timers = marks.map((m) => setTimeout(() => setT(m), Number.isFinite(m) ? m : 0));
+    const timers = marks.map((m) =>
+      setTimeout(
+        () => {
+          // the prelude ends as one continuous change: the Core travels from the stage to the bar
+          if (m === PRELUDE_END || m === Infinity)
+            transition(() => {
+              setT(m);
+              unfold.current?.();
+            });
+          else setT(m);
+        },
+        Number.isFinite(m) ? m : 0,
+      ),
+    );
     return () => {
       clearTimeout(w);
       timers.forEach(clearTimeout);
@@ -113,15 +137,11 @@ export function FirstBriefing({ briefing, mandate, policy, sources, firstName, v
   useEffect(() => {
     if (onboarding && !prelude) headRef.current?.focus({ preventScroll: true });
   }, [onboarding, prelude]);
-  // the Core answers each step as it is presented
-  const beat = useRef(onBeat);
+  // the Core answers each thing as it is said
+  const said = [...PRELUDE, ...STEPS.slice(0, 4).map((at) => PRELUDE_END + at)].filter((at) => t >= at).length;
   useEffect(() => {
-    beat.current = onBeat;
-  });
-  const step = STEPS.slice(0, 4).filter((at) => t >= PRELUDE_END + at).length;
-  useEffect(() => {
-    if (onboarding && step > 0) beat.current?.();
-  }, [onboarding, step]);
+    if (onboarding && said > 0) beat.current?.();
+  }, [onboarding, said]);
 
   /** A figure read out as it is reached (decoded, like everything Syxoria reads); at rest in the workspace */
   const figure = (text: string, i: number): ReactNode => (onboarding ? <DecodeText text={text} pending={!shown(i)} delay={260} /> : text);
@@ -129,37 +149,45 @@ export function FirstBriefing({ briefing, mandate, policy, sources, firstName, v
   const action = resolveBriefingAction(briefing, mandate, policy, sources);
   const { priority, insight, recommendation, drafts } = briefing;
   const worth = drafts.reduce((s, d) => s + d.value, 0);
-  // the deal the reasoning turns to: it stands out in every stretch of the drawing, and its silence is the insight
-  const subject = insight.quiet?.draftId ?? drafts[0]?.id ?? "";
-  const subjectDraft = drafts.find((d) => d.id === subject);
+  const opening = insight.quiet?.draftId ?? drafts[0]?.id ?? "";
+  const focus = chosen ?? opening;
+  const deal = drafts.find((d) => d.id === focus) ?? drafts[0];
+  // every conversation is drawn on the same line of time and to the same scale, so they compare
+  const span = Math.max(1, ...drafts.map((d) => (d.rhythm?.length ?? 1) + d.quietDays));
+  const peak = Math.max(1, ...drafts.flatMap((d) => (d.rhythm ?? []).flatMap((v) => [v.them, v.you])));
   // the mandate the action is taken under, with the mark it had when it was chosen
   const level = policy.levels.find((l) => l.id === mandate.level);
   const reach = reachOf(policy, mandate);
-  const lanes = { drafts, subject, focus: hover, onFocus: setHover };
+  const view = { drafts, focus, onChoose: setChosen };
+  // the first reading takes its time; a deal looked at again is read quickly
+  const again = !current(1) || focus !== opening;
 
   if (prelude)
     return (
-      <div className="onb-prelude grid min-h-[60vh] place-items-center" role="status" aria-live="polite">
-        <ul className="grid gap-3.5">
-          {copy.prelude.map((line, i) => (
-            <li key={line} className={cn("onb-prelude__line flex items-center gap-3.5 font-display text-[clamp(1.25rem,1rem+0.9vw,1.75rem)] font-light tracking-[-0.015em]", t >= PRELUDE[i] && "is-on")}>
-              <span aria-hidden="true" className="grid size-5 place-items-center rounded-full bg-accent-soft text-accent-strong ring-1 ring-accent-line">
-                <Check className="size-3" strokeWidth={3} />
-              </span>
-              {line}
-            </li>
-          ))}
-          <li className={cn("onb-prelude__line pl-[2.125rem] font-display text-[clamp(1.25rem,1rem+0.9vw,1.75rem)] font-light italic text-accent-strong", t >= PRELUDE[3] && "is-on")}>{copy.ready}</li>
-        </ul>
+      <div className="onb-prelude grid min-h-[64vh] place-items-center" role="status" aria-live="polite">
+        <div className="grid justify-items-center gap-9 tight:gap-6">
+          <SyxoriaCore state="ready" pulse={pulse} vtName="syx-core" className="onb-prelude__core" />
+          <ul className="grid justify-items-center gap-2.5 text-center">
+            {copy.prelude.map((line, i) => (
+              <li key={line} className={cn("onb-prelude__line font-display text-[clamp(1.2rem,1rem+0.8vw,1.65rem)] font-light tracking-[-0.015em] text-fg-2", t >= PRELUDE[i] && "is-on")}>
+                {line}
+              </li>
+            ))}
+            <li className={cn("onb-prelude__line mt-1 font-display text-[clamp(1.2rem,1rem+0.8vw,1.65rem)] font-light italic text-accent-strong", t >= PRELUDE[3] && "is-on")}>{copy.ready}</li>
+          </ul>
+        </div>
       </div>
     );
 
   return (
     <div className="editorial-type onb-briefing @container w-full">
-      <p className="onb-rise font-label text-label uppercase text-fg-3">
-        Your first briefing
-        {when && <span className="text-fg-3/70"> · {when.date}</span>}
-      </p>
+      <div className="flex items-baseline justify-between gap-8">
+        <p className="onb-rise font-label text-label uppercase text-fg-3">
+          Your first briefing
+          {when && <span className="text-fg-3/70"> · {when.date}</span>}
+        </p>
+        <p className="onb-briefing__source hidden text-[12.5px] text-fg-3 @4xl:block">{briefing.basedOn}.</p>
+      </div>
       <h1
         ref={headRef}
         tabIndex={-1}
@@ -170,72 +198,86 @@ export function FirstBriefing({ briefing, mandate, policy, sources, firstName, v
         <em className="font-serif italic tracking-(--accent-tracking) [font-size:var(--accent-size)] [font-weight:var(--accent-weight)]">{copy.accent}</em>
       </h1>
 
-      <div className="onb-course mt-8 tight:mt-4" data-variant={variant} data-reading={(onboarding && reading) || undefined} data-hover={hover ? "" : undefined}>
-        {/* how much — what deserves attention: who, and what each is worth */}
-        <BriefingSection label={copy.labels.priority} kind="priority" shown={shown(0)} current={current(0)} lead={<Lead value={figure(formatCurrency(worth), 0)} caption={copy.figures.stake(drafts.length)} />} lanes={<StakeLanes {...lanes} />}>
-          <Words title={priority.title} detail={priority.detail} />
-        </BriefingSection>
+      <div className="onb-sheet" data-variant={variant} data-reading={(onboarding && reading) || undefined}>
+        {/* WHAT IS — in white */}
+        <div className="onb-sheet__is">
+          {/* what needs you: how much is waiting, and who — choosing one shows what they wrote */}
+          <BriefingSection label={copy.labels.priority} gloss={copy.glosses.priority} kind="priority" shown={shown(0)} current={current(0)}>
+            <Lead hero value={figure(formatCurrency(worth), 0)} caption={copy.figures.stake(drafts.length)} />
+            <Words title={priority.title} detail={priority.detail} />
+            <StakeList {...view} />
+          </BriefingSection>
 
-        {/* how long — why: what Syxoria noticed. The exchange, then the silence, counted out day by day up to today */}
-        <BriefingSection
-          label={copy.labels.insight}
-          kind="insight"
-          shown={shown(1)}
-          current={current(1)}
-          lead={subjectDraft ? <Lead value={figure(copy.figures.days(subjectDraft.quietDays), 1)} caption={copy.figures.silence(subjectDraft.company)} /> : null}
-          lanes={<SilenceLanes {...lanes} threshold={insight.quiet?.threshold} />}
-        >
-          <Words title={insight.title} detail={insight.detail} />
-        </BriefingSection>
-
-        {/* how much better — what to do, and what it achieves on the company’s own history. From here on: the Core’s emerald */}
-        <BriefingSection
-          label={copy.labels.recommendation}
-          kind="recommendation"
-          shown={shown(2)}
-          current={current(2)}
-          lead={briefing.impact ? <Lead value={figure(briefing.impact.value, 2)} caption={briefing.impact.label} beside={briefing.impact.compare && <OutcomeScale {...briefing.impact.compare} />} /> : null}
-          lanes={<NextLanes {...lanes} />}
-        >
-          <Words title={recommendation.title} detail={recommendation.detail} />
-        </BriefingSection>
-
-        {/* when — what Syxoria does with each, worded by the mandate and the tools, never more */}
-        <BriefingSection
-          label={copy.labels.action}
-          kind="action"
-          shown={shown(3)}
-          current={current(3)}
-          aside={
-            level && (
+          {/* why now: their own words, read out; the exchange, then the silence counted day by day up to today; what that costs here */}
+          <BriefingSection label={copy.labels.insight} gloss={copy.glosses.insight} kind="insight" shown={shown(1)} current={current(1)}>
+            {deal && (
               <>
-                <ModeGlyph share={reach.auto / reach.total} />
-                {copy.mandate(level.name)}
+                <figure className="onb-quote">
+                  <blockquote className="onb-quote__words">
+                    {/* every message holds the place, so the sheet never moves when another is chosen */}
+                    {drafts.map((d) => (
+                      <span key={d.id} aria-hidden="true" className="onb-quote__sizer">
+                        “{d.asked}”
+                      </span>
+                    ))}
+                    <span>{onboarding ? <DecodeText text={`“${deal.asked}”`} pending={!shown(1)} delay={again ? 0 : 260} /> : `“${deal.asked}”`}</span>
+                  </blockquote>
+                  <figcaption className="onb-quote__by">{copy.wrote(deal.contact, deal.company, deal.quietDays)}</figcaption>
+                  <div className="onb-quote__count">
+                    <p className="onb-brief__figure tabular text-fg">{figure(copy.figures.days(deal.quietDays), 1)}</p>
+                    <p className="onb-brief__caption">{copy.figures.silence}</p>
+                  </div>
+                </figure>
+                <Exchange key={deal.id} draft={deal} span={span} peak={peak} threshold={insight.quiet?.threshold} quick={again} reply={shown(3) ? { status: action.status, label: action.statusLabel } : undefined} />
               </>
-            )
-          }
-          lead={<Lead value={figure(action.figure, 3)} caption={action.caption} accent />}
-          lanes={<ActionLanes {...lanes} status={action.status} statusLabel={action.statusLabel} />}
-        >
-          <Words title={action.title} detail={action.detail} />
-        </BriefingSection>
-      </div>
+            )}
+            <Words title={insight.title} detail={insight.detail} />
+          </BriefingSection>
+        </div>
 
-      <div className={cn("mt-6 flex flex-wrap items-center justify-between gap-x-8 gap-y-4 transition-opacity duration-700 tight:mt-4", shown(4) ? "opacity-100" : "pointer-events-none opacity-0")}>
-        <p className="flex flex-wrap items-center gap-x-6 gap-y-1 text-[12.5px] text-fg-3">
-          {insight.quiet && (
-            <span className="onb-brief__key">
-              <span aria-hidden="true" />
-              {insight.quiet.note}
-            </span>
-          )}
-          <span>{briefing.basedOn}.</span>
-        </p>
-        {onboarding && (
-          <OnbButton tone="emerald" onClick={onEntering} onAdvance={onEnter} disabled={!shown(4)} aria-hidden={!shown(4) || undefined}>
-            {copy.enter}
-          </OnbButton>
-        )}
+        {/* WHAT SYXORIA DOES ABOUT IT — in the Core's emerald */}
+        <div className="onb-sheet__does">
+          {/* what I suggest, and what it changes on the company's own history — it runs on into the action */}
+          <BriefingSection label={copy.labels.recommendation} gloss={copy.glosses.recommendation} kind="recommendation" shown={shown(2)} current={current(2)} aside={<span aria-hidden="true" className="onb-brief__flow" />}>
+            {briefing.impact && <Lead accent inline value={figure(briefing.impact.value, 2)} caption={briefing.impact.label} />}
+            {briefing.impact?.compare && <OutcomeScale {...briefing.impact.compare} />}
+            <Words title={recommendation.title} detail={recommendation.detail} />
+          </BriefingSection>
+
+          {/* what I'll do — with each, worded by the mandate and the tools, never more */}
+          <BriefingSection
+            label={copy.labels.action}
+            gloss={copy.glosses.action}
+            kind="action"
+            shown={shown(3)}
+            current={current(3)}
+            aside={
+              level && (
+                <>
+                  <ModeGlyph share={reach.auto / reach.total} />
+                  {copy.mandate(level.name)}
+                </>
+              )
+            }
+          >
+            <div className="onb-act">
+              <div>
+                <Lead accent inline value={figure(action.figure, 3)} caption={action.caption} />
+                <Words title={action.title} detail={action.detail} />
+              </div>
+              <div>
+                <DraftList {...view} status={action.status} statusLabel={action.statusLabel} />
+                {onboarding && (
+                  <div className={cn("onb-act__enter transition-opacity duration-700", shown(4) ? "opacity-100" : "pointer-events-none opacity-0")}>
+                    <OnbButton tone="emerald" onClick={onEntering} onAdvance={onEnter} disabled={!shown(4)} aria-hidden={!shown(4) || undefined}>
+                      {copy.enter}
+                    </OnbButton>
+                  </div>
+                )}
+              </div>
+            </div>
+          </BriefingSection>
+        </div>
       </div>
     </div>
   );

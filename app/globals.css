@@ -3036,13 +3036,18 @@ html.lenis {
   }
 }
 
-/* ---------- The first briefing: one drawing, read left to right ----------
+/* ---------- The first briefing: one sheet — what is, above; what Syxoria does, below ----------
    The template for every briefing. Four steps — priority · insight · recommendation · action —
-   but one drawing: each step leads with one figure, and under the figures the same lanes (one per
-   deal) run through all four and cross THE LINE OF TODAY. Left of it, what Syxoria understood, in
-   white: who and how much, the exchange (a bar per day), then the silence (a mark per quiet day).
-   Right of it, what happens next, in the Core's emerald: the way forward, and what Syxoria does
-   with each. White = what is · emerald = what Syxoria does about it. */
+   but not four columns: each takes the shape of what it has to show. WHAT IS stands above, in
+   white: the sum waiting on the user, and who is waiting (priority) · their own words, both sides
+   of the exchange, then the silence — a mark per day, up to today (insight). WHAT SYXORIA DOES
+   ABOUT IT lies below, in the Core's emerald: what a reply changes (recommendation), running on
+   into what it will do (action) — the sheet's destination. One deal is in view at a time.
+   White = what is · emerald = what Syxoria does about it. */
+.onb-prelude__core {
+  width: clamp(7.5rem, 24vh, 12.5rem);
+}
+
 .onb-prelude__line {
   opacity: 0;
   translate: 0 8px;
@@ -3056,16 +3061,29 @@ html.lenis {
   filter: none;
 }
 
-.onb-course {
-  --lane-h: 3.6rem;
+/* its rhythm follows the height of the screen (13" laptop → large display), so the whole sheet
+   stays in one viewport without ever feeling packed */
+.onb-sheet {
   --pad: 1.4rem;
-  position: relative;
+  --pad-y: clamp(1rem, 1.7vh + 0.25rem, 1.3rem);
+  --split: 2.75rem;
+  --gap: clamp(0.85rem, 6.2vh - 1.95rem, 2rem);
+  --step: clamp(0.65rem, 2.8vh - 0.6rem, 1.05rem);
   display: grid;
+  gap: 2.25rem;
+  margin-top: var(--gap);
+}
+
+.onb-sheet__is,
+.onb-sheet__does {
+  display: grid;
+  gap: 2.25rem;
+  min-width: 0;
 }
 
 .onb-brief {
   position: relative;
-  padding-block: 1.6rem;
+  min-width: 0;
   opacity: 0;
   translate: 0 10px;
   transition: opacity var(--flow-reveal) var(--ease-out-soft), translate var(--flow-reveal) var(--ease-out-soft);
@@ -3076,31 +3094,24 @@ html.lenis {
   translate: 0 0;
 }
 
-.onb-brief+.onb-brief {
-  border-top: 1px solid rgb(255 255 255 / 0.06);
-}
-
-.onb-brief__lanes {
-  margin-block: 1.2rem 1.1rem;
-}
-
-/* a step's name, and beside the action's the mandate it acts under */
+/* a step's name, the question it answers in plain words, and opposite the action's the mandate it acts under */
 .onb-brief__label {
   display: flex;
   align-items: center;
   gap: 0.65rem;
+  color: var(--color-fg-2);
+  white-space: nowrap;
+}
+
+.onb-brief__gloss {
+  padding-left: 0.65rem;
+  border-left: 1px solid rgb(255 255 255 / 0.14);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  line-height: 1;
+  letter-spacing: 0;
+  text-transform: none;
   color: var(--color-fg-3);
-}
-
-.onb-brief__mark {
-  width: 0.75rem;
-  height: 1px;
-  background: rgb(255 255 255 / 0.3);
-  transition: background-color 500ms, box-shadow 500ms;
-}
-
-.onb-brief[data-kind="recommendation"] .onb-brief__mark {
-  background: var(--color-accent-line);
 }
 
 .onb-brief__aside {
@@ -3127,16 +3138,23 @@ html.lenis {
 
 /* its figure — the briefing reads at a glance as four of them — and what it measures */
 .onb-brief__lead {
-  margin-top: 0.95rem;
+  margin-top: var(--step);
 }
 
 .onb-brief__figure {
   font-family: var(--font-display);
-  font-size: clamp(2.3rem, 1.7rem + 1.4vw, 3.15rem);
+  font-size: clamp(2.2rem, 1.75rem + 1.3cqi, 2.9rem);
   font-weight: 200;
   line-height: 1;
   letter-spacing: -0.03em;
   white-space: nowrap;
+}
+
+/* the one that leads the sheet: what is waiting on the user */
+.onb-brief__figure--hero {
+  font-size: clamp(3.2rem, min(1.6rem + 5cqi, 11vh - 1.45rem), 5.5rem);
+  line-height: 0.95;
+  letter-spacing: -0.04em;
 }
 
 .onb-brief__caption {
@@ -3148,6 +3166,10 @@ html.lenis {
 }
 
 /* what it means: one statement in the brand's editorial voice, and what supports it */
+.onb-brief__words {
+  margin-top: var(--step);
+}
+
 .onb-brief__statement {
   font-family: var(--font-display);
   font-size: clamp(1.18rem, 1.02rem + 0.4vw, 1.4rem);
@@ -3155,237 +3177,427 @@ html.lenis {
   line-height: 1.2;
   letter-spacing: -0.016em;
   color: var(--color-fg);
-  text-wrap: pretty;
+  text-wrap: balance;
 }
 
 .onb-brief__detail {
-  margin-top: 0.5rem;
+  margin-top: 0.45rem;
   font-size: 13px;
   line-height: 1.55;
   color: var(--color-fg-2);
   text-wrap: pretty;
 }
 
-/* the drawing's key: what the lit marks past the dashed line mean */
-.onb-brief__key {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.55rem;
-  color: var(--color-fg-2);
+/* ---- priority: who is waiting, and what each is worth. The one in view is marked; choosing another reads its message ---- */
+.onb-stake {
+  margin-top: calc(var(--step) + 0.15rem);
+  border-bottom: 1px solid rgb(255 255 255 / 0.06);
 }
 
-.onb-brief__key>span {
-  flex: none;
-  width: 15px;
-  height: 9px;
-  background: radial-gradient(circle, var(--color-fg) 1.6px, transparent 2px) 7px 50% / 8px 9px repeat-x, repeating-linear-gradient(180deg, rgb(255 255 255 / 0.55) 0 2px, transparent 2px 4px) 0 0 / 1px 100% no-repeat;
-}
-
-/* ---- the lanes: one per deal, the same height in every stretch, each read along its middle ---- */
-.onb-lanes__axis {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  height: 1.15rem;
-  font-size: 10.5px;
-  line-height: 1;
-  color: var(--color-fg-3);
-  white-space: nowrap;
-}
-
-.onb-lanes__rows {
+.onb-stake__row {
   position: relative;
-}
-
-.onb-lane {
-  position: relative;
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(2rem, 1fr) 4.1rem 3.9rem;
   align-items: center;
-  height: var(--lane-h);
-  transition: opacity 300ms var(--ease-out-soft);
-}
-
-/* a deal pointed at, in any stretch, is the same deal in all of them */
-.onb-course[data-hover] .onb-lane:not([data-focus]) {
-  opacity: 0.38;
-}
-
-/* who, and how much: its weight against the largest */
-.onb-lane__who {
-  flex: 1;
-  min-width: 0;
-}
-
-.onb-lane__name {
+  column-gap: 1rem;
+  width: 100%;
+  height: clamp(2.05rem, 2.6vh + 0.9rem, 2.5rem);
+  padding-left: 0.9rem;
+  border-top: 1px solid rgb(255 255 255 / 0.06);
+  text-align: left;
   font-size: 13.5px;
   color: var(--color-fg-2);
+  cursor: pointer;
   transition: color 300ms;
 }
 
-.onb-lane__value {
-  font-size: 13px;
-  color: var(--color-fg-3);
-  transition: color 300ms;
+.onb-stake__row::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 24%;
+  bottom: 24%;
+  width: 1.5px;
+  background: var(--color-fg);
+  scale: 1 0;
+  transition: scale 350ms var(--ease-out-soft);
 }
 
-.onb-lane[data-subject] .onb-lane__name,
-.onb-lane[data-focus] .onb-lane__name {
+.onb-stake__row:hover,
+.onb-stake__row[aria-pressed="true"] {
   color: var(--color-fg);
 }
 
-.onb-lane[data-subject] .onb-lane__value,
-.onb-lane[data-focus] .onb-lane__value {
-  color: var(--color-fg-2);
+.onb-stake__row[aria-pressed="true"]::before {
+  scale: 1 1;
 }
 
-.onb-lane__weight {
+.onb-stake__row:focus-visible {
+  outline: 2px solid var(--color-fg);
+  outline-offset: 2px;
+}
+
+.onb-stake__weight {
   display: block;
   height: 2px;
-  margin-top: 0.5rem;
   border-radius: 1px;
   background: rgb(255 255 255 / 0.055);
 }
 
-.onb-lane__weight>span {
+.onb-stake__weight>span {
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: rgb(255 255 255 / 0.42);
+  background: rgb(255 255 255 / 0.36);
   transform-origin: left;
+  transition: background-color 300ms;
 }
 
-.onb-lane[data-subject] .onb-lane__weight>span {
+.onb-stake__row[aria-pressed="true"] .onb-stake__weight>span {
   background: var(--color-fg);
 }
 
-/* what happened: a column per day, on one line of time that ends today */
-.onb-lane__tag {
+.onb-stake__value,
+.onb-stake__quiet {
+  text-align: right;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.onb-stake__quiet {
+  color: var(--color-fg-3);
+}
+
+/* ---- insight: their own words, and beside them how long they have waited ---- */
+.onb-quote {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: 2.25rem;
+  align-items: start;
+  margin-top: var(--step);
+}
+
+.onb-quote__words {
+  grid-column: 1;
+  display: grid;
+  font-family: var(--font-serif);
+  font-size: clamp(1.3rem, 1rem + 1cqi, 1.72rem);
+  font-style: italic;
+  font-weight: 300;
+  line-height: 1.22;
+  letter-spacing: -0.012em;
+  color: var(--color-fg);
+  text-wrap: pretty;
+}
+
+/* every deal’s message lies in the same place, unseen: the tallest sets the height, so choosing another never moves the sheet */
+.onb-quote__words>span {
+  grid-area: 1 / 1;
+}
+
+.onb-quote__sizer {
+  visibility: hidden;
+}
+
+.onb-quote__words .decode {
+  display: block;
+}
+
+.onb-quote__words .decode[data-pending]::after {
   display: none;
 }
 
-.onb-lane__days {
-  flex: 1;
+.onb-quote__by {
+  grid-column: 1;
+  margin-top: 0.6rem;
+  font-size: 12.5px;
+  color: var(--color-fg-3);
+}
+
+.onb-quote__count {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  text-align: right;
+}
+
+.onb-quote__count .onb-brief__caption {
+  margin-top: 0.45rem;
+}
+
+/* the exchange: a column per day on a line of time that ends today — what they wrote above the
+   line, what the company wrote back below it; their last message, then a mark per quiet day */
+.onb-exchange {
+  --h: clamp(3.4rem, 27.8vh - 8.75rem, 7rem);
+  display: grid;
+  grid-template-columns: 2.5rem minmax(0, 1fr);
+  grid-template-rows: var(--h) auto;
+  margin-top: calc(var(--step) + 0.15rem);
+}
+
+.onb-exchange__sides {
+  grid-area: 1 / 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding-block: 0.5rem;
+  font-size: 10.5px;
+  line-height: 1;
+  color: var(--color-fg-3);
+}
+
+.onb-exchange__days {
+  grid-area: 1 / 2;
+  position: relative;
   display: grid;
   grid-template-columns: repeat(var(--span), minmax(0, 1fr));
-  align-items: center;
-  height: 100%;
-  padding-right: 7px;
+  padding-right: 9px;
+}
+
+.onb-exchange__days::before {
+  content: "";
+  position: absolute;
+  inset: 50% 0 auto;
+  height: 1px;
+  background: rgb(255 255 255 / 0.07);
 }
 
 .onb-day {
+  position: relative;
   display: block;
-  justify-self: center;
-  border-radius: 1px;
-  transform-origin: center;
 }
 
-/* a day without a word, while they were still talking */
-.onb-day[data-kind="rest"] {
+.onb-day>b {
+  position: absolute;
+  left: calc(50% - 1.5px);
+  width: 3px;
+  height: calc(4px + var(--v) * (var(--h) / 2 - 0.9rem));
+  border-radius: 1.5px;
+}
+
+/* what they wrote: above the line */
+.onb-day>b[data-side="them"] {
+  bottom: calc(50% + 2.5px);
+  background: rgb(255 255 255 / 0.62);
+}
+
+/* what the company wrote back: below it, quieter */
+.onb-day>b[data-side="you"] {
+  top: calc(50% + 3.5px);
+  background: rgb(255 255 255 / 0.24);
+}
+
+/* their last message — the one nobody answered */
+.onb-day[data-kind="last"]>b {
+  height: calc(var(--h) / 2 - 0.55rem);
+  background: var(--color-fg);
+}
+
+/* a day without a word: while they were still talking · since · and past the point where deals slip */
+.onb-day:not([data-kind="talk"], [data-kind="last"])::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: calc(50% + 0.5px);
   width: 2px;
   height: 2px;
   border-radius: 50%;
-  background: rgb(255 255 255 / 0.12);
+  background: rgb(255 255 255 / 0.14);
+  translate: -50% -50%;
 }
 
-/* the exchange: as tall as the emails that day */
-.onb-day[data-kind="talk"],
-.onb-day[data-kind="last"] {
+.onb-day[data-kind="quiet"]::after {
   width: 3px;
-  height: calc(5px + var(--v) * (var(--lane-h) - 1.75rem));
-  border-radius: 1.5px;
+  height: 3px;
   background: rgb(255 255 255 / 0.3);
 }
 
-.onb-lane[data-subject] .onb-day[data-kind="talk"],
-.onb-lane[data-focus] .onb-day[data-kind="talk"] {
-  background: rgb(255 255 255 / 0.56);
-}
-
-/* the last email */
-.onb-day[data-kind="last"] {
-  background: var(--color-fg);
-}
-
-/* …then nothing: a mark per quiet day; past the point where the company's deals slip, they are lit */
-.onb-day[data-kind="quiet"] {
-  width: 3px;
-  height: 3px;
-  border-radius: 50%;
-  background: rgb(255 255 255 / 0.2);
-}
-
-.onb-day[data-kind="past"] {
+.onb-day[data-kind="past"]::after {
   width: 4px;
   height: 4px;
-  border-radius: 50%;
   background: var(--color-fg);
 }
 
-.onb-lane__edge {
+.onb-exchange__edge {
   position: absolute;
-  top: 28%;
-  bottom: 28%;
+  top: 20%;
+  bottom: 14%;
   border-left: 1px dashed rgb(255 255 255 / 0.5);
   pointer-events: none;
 }
 
-.onb-lane__quiet {
+.onb-exchange__edge>span {
   position: absolute;
-  top: calc(50% - 1.35rem);
-  padding-left: 2px;
+  right: 7px;
+  bottom: -1px;
   font-size: 10.5px;
   line-height: 1;
   white-space: nowrap;
-  color: var(--color-fg-3);
-  pointer-events: none;
-  transition: color 300ms;
+  color: var(--color-fg-2);
 }
 
-.onb-lane[data-subject] .onb-lane__quiet,
-.onb-lane[data-focus] .onb-lane__quiet {
-  color: var(--color-fg);
-}
-
-/* THE LINE OF TODAY — where understanding hands over to what happens next */
-.onb-lanes__today {
-  color: var(--color-fg);
-}
-
-.onb-lanes[data-slice="silence"] .onb-lanes__rows::after {
-  content: "";
+/* THE LINE OF TODAY — where what is hands over to what Syxoria does */
+.onb-exchange__today {
   position: absolute;
   right: 0;
-  top: -0.45rem;
-  bottom: -0.45rem;
+  top: -0.3rem;
+  bottom: -0.3rem;
   width: 1px;
+  pointer-events: none;
+}
+
+.onb-exchange__today::before {
+  content: "";
+  position: absolute;
+  inset: 0;
   background: linear-gradient(180deg, var(--color-fg), var(--color-fg) 78%, rgb(255 255 255 / 0));
   box-shadow: 6px 0 22px 2px rgb(29 122 85 / 0.5);
   transform-origin: top;
 }
 
-/* the way forward: each conversation picked up again */
-.onb-lanes[data-slice="next"] .onb-lanes__axis {
-  padding-left: 0.6rem;
+.onb-exchange__today>span {
+  position: absolute;
+  right: 8px;
+  top: 0.3rem;
+  font-size: 10.5px;
+  line-height: 1;
+  white-space: nowrap;
+  color: var(--color-fg);
+}
+
+/* beyond today, in emerald: the reply, as far as the mandate lets Syxoria take it */
+.onb-exchange__reply {
+  grid-area: 2 / 2;
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.7rem;
+  font-size: 11px;
+  line-height: 1;
+  white-space: nowrap;
   color: var(--color-accent-strong);
+  opacity: 0;
+  transition: opacity 700ms var(--ease-out-soft);
 }
 
-.onb-lanes[data-slice="next"] .onb-lanes__rows {
-  background: linear-gradient(90deg, rgb(42 141 102 / 0.13), rgb(42 141 102 / 0.03) 55%, rgb(42 141 102 / 0.07));
-  -webkit-mask-image: linear-gradient(180deg, transparent, #000 22%, #000 78%, transparent);
-  mask-image: linear-gradient(180deg, transparent, #000 22%, #000 78%, transparent);
+.onb-exchange__reply[data-on] {
+  opacity: 1;
 }
 
-.onb-lane__go {
-  position: relative;
-  flex: 1;
+.onb-exchange__reply::before {
+  content: "";
+  flex: none;
+  width: 1.5rem;
   height: 1.5px;
   background: linear-gradient(90deg, rgb(79 174 134 / 0.4), var(--emerald-bright));
   box-shadow: 0 0 8px rgb(29 122 85 / 0.7);
   transform-origin: left;
+  scale: 0 1;
+  transition: scale 700ms var(--ease-awaken);
+}
+
+.onb-exchange__reply[data-on]::before {
+  scale: 1 1;
+}
+
+.onb-exchange__reply[data-status="listed"] {
+  color: var(--color-fg-2);
+}
+
+.onb-exchange__reply[data-status="listed"]::before {
+  background: rgb(255 255 255 / 0.3);
+  box-shadow: none;
+}
+
+/* where a follow-up stands under the mandate: to do · waiting for approval · going out on its own */
+.onb-exchange__reply>i,
+.onb-draft__node {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--color-canvas-2);
+  box-shadow: inset 0 0 0 1.5px rgb(255 255 255 / 0.5);
+}
+
+.onb-exchange__reply[data-status="awaiting-approval"]>i,
+.onb-draft__node[data-status="awaiting-approval"] {
+  background: radial-gradient(circle, var(--emerald-bright) 0 2px, #0c1512 2.6px);
+  box-shadow: inset 0 0 0 1.5px var(--emerald-bright), 0 0 10px rgb(29 122 85 / 0.6);
+}
+
+.onb-exchange__reply[data-status="scheduled"]>i,
+.onb-draft__node[data-status="scheduled"] {
+  background: var(--emerald-bright);
+  box-shadow: 0 0 0 3px rgb(79 174 134 / 0.18), 0 0 12px var(--core-glow);
+}
+
+/* ---- recommendation: how much better — the two outcomes named and drawn to scale, one under the other ---- */
+.onb-outcome {
+  display: grid;
+  gap: 0.55rem;
+  margin-top: calc(var(--step) - 0.1rem);
+}
+
+.onb-outcome__row {
+  display: grid;
+  grid-template-columns: 4.75rem minmax(0, 1fr);
+  align-items: center;
+  column-gap: 0.9rem;
+}
+
+.onb-outcome__bar {
+  display: block;
+  height: 4px;
+  border-radius: 2px;
+  background: rgb(255 255 255 / 0.2);
+  transform-origin: left;
+}
+
+.onb-outcome__row[data-on] .onb-outcome__bar {
+  background: linear-gradient(90deg, var(--color-accent-line), var(--color-accent-strong));
+}
+
+.onb-outcome__label {
+  font-size: 11.5px;
+  line-height: 1;
+  white-space: nowrap;
+  color: var(--color-fg-3);
+}
+
+.onb-outcome__row[data-on] .onb-outcome__label {
+  color: var(--color-fg-2);
+}
+
+/* …and it runs on into the action: a line of the Core's light from one to the other (wide only) */
+.onb-brief[data-kind="recommendation"] .onb-brief__aside {
+  display: none;
+}
+
+.onb-brief__flow {
+  position: relative;
+  display: block;
+  flex: 1;
+  height: 1.5px;
+  background: linear-gradient(90deg, rgb(79 174 134 / 0), rgb(79 174 134 / 0.35) 45%, var(--emerald-bright));
+  transform-origin: left;
+}
+
+/* it ends on the action's edge, like a seal */
+.onb-brief__flow::before {
+  content: "";
+  position: absolute;
+  right: -4px;
+  top: -3.25px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--emerald-bright);
+  box-shadow: 0 0 0 3px rgb(79 174 134 / 0.16), 0 0 12px var(--core-glow);
 }
 
 /* now and then a little light travels along it, towards what Syxoria does */
-.onb-lane__go::after {
+.onb-brief__flow::after {
   content: "";
   position: absolute;
   top: -1px;
@@ -3395,8 +3607,7 @@ html.lenis {
   border-radius: 2px;
   background: linear-gradient(90deg, transparent, var(--emerald-lit));
   opacity: 0;
-  animation: onb-travel 5.2s var(--ease-in-out-soft) infinite;
-  animation-delay: calc(2.4s + var(--i, 0) * 0.5s);
+  animation: onb-travel 5.2s var(--ease-in-out-soft) 2.4s infinite;
 }
 
 @keyframes onb-travel {
@@ -3420,90 +3631,9 @@ html.lenis {
   }
 }
 
-/* what Syxoria does with each — the lane ends on its state under the mandate */
-.onb-lanes[data-slice="action"] .onb-lane {
-  gap: 0.75rem;
-}
-
-.onb-lane__node {
-  flex: none;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: var(--color-canvas-2);
-  box-shadow: inset 0 0 0 1.5px rgb(255 255 255 / 0.5);
-}
-
-.onb-lane__node[data-status="awaiting-approval"] {
-  background: radial-gradient(circle, var(--emerald-bright) 0 2px, #0c1512 2.6px);
-  box-shadow: inset 0 0 0 1.5px var(--emerald-bright), 0 0 10px rgb(29 122 85 / 0.6);
-}
-
-.onb-lane__node[data-status="scheduled"] {
-  background: var(--emerald-bright);
-  box-shadow: 0 0 0 3px rgb(79 174 134 / 0.18), 0 0 12px var(--core-glow);
-}
-
-.onb-lane__subject {
-  font-size: 13px;
-  line-height: 1.3;
-  color: var(--color-fg);
-}
-
-.onb-lane__status {
-  color: var(--color-accent-strong);
-}
-
-.onb-lane__status[data-status="listed"] {
-  color: var(--color-fg-2);
-}
-
-.onb-lane__tag-inline {
-  display: inline;
-}
-
-/* how much better: the two outcomes to scale, beside the figure */
-.onb-outcome {
-  flex: 1;
-  min-width: 0;
-  display: grid;
-  gap: 0.4rem;
-  padding-bottom: 0.3rem;
-}
-
-.onb-outcome__row {
-  display: grid;
-  gap: 0.3rem;
-}
-
-.onb-outcome__bar {
-  display: block;
-  height: 3px;
-  border-radius: 2px;
-  background: rgb(255 255 255 / 0.22);
-  transform-origin: left;
-}
-
-.onb-outcome__row[data-on] .onb-outcome__bar {
-  background: linear-gradient(90deg, var(--color-accent-line), var(--color-accent-strong));
-}
-
-.onb-outcome__label {
-  font-size: 10.5px;
-  line-height: 1;
-  white-space: nowrap;
-  color: var(--color-fg-3);
-}
-
-.onb-outcome__row[data-on] .onb-outcome__label {
-  color: var(--color-fg-2);
-}
-
-/* the action: where understanding becomes execution — the drawing's destination */
+/* ---- the action: where understanding becomes execution — the sheet's destination ---- */
 .onb-brief[data-kind="action"] {
-  margin-top: 0.75rem;
-  padding-inline: var(--pad);
-  border-top: 0;
+  padding: var(--pad-y) var(--pad);
   border-radius: 16px;
   background: linear-gradient(180deg, rgb(42 141 102 / 0.11), rgb(42 141 102 / 0.03));
   box-shadow: inset 0 0 0 1px var(--color-accent-line), 0 30px 60px -40px rgb(10 105 70 / 0.6);
@@ -3513,9 +3643,9 @@ html.lenis {
   color: var(--color-accent-strong);
 }
 
-.onb-brief[data-kind="action"] .onb-brief__mark {
-  background: var(--color-accent-strong);
-  box-shadow: 0 0 8px var(--core-glow);
+.onb-brief[data-kind="action"] .onb-brief__gloss {
+  border-left-color: var(--color-accent-line);
+  color: var(--color-fg-2);
 }
 
 .onb-brief[data-kind="action"]> :not(.onb-brief__fill) {
@@ -3543,124 +3673,188 @@ html.lenis {
   opacity: 0;
 }
 
-/* WIDE — the four steps side by side, their rows lined up (subgrid) and their lanes edge to edge */
+.onb-act {
+  display: grid;
+  gap: 1.25rem;
+}
+
+/* a figure and what it counts on one line (what Syxoria suggests, what it will do): the rest follows at once */
+.onb-brief__lead--inline {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+}
+
+.onb-brief__lead--inline .onb-brief__caption {
+  margin-top: 0;
+  font-size: 12.5px;
+  color: var(--color-fg-2);
+}
+
+/* the follow-ups themselves: what each is, who it goes to, where it stands */
+.onb-drafts {
+  margin-top: 0.35rem;
+}
+
+.onb-draft {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  height: clamp(2.4rem, 2.8vh + 1.15rem, 2.9rem);
+  border-top: 1px solid rgb(79 174 134 / 0.14);
+  cursor: pointer;
+}
+
+.onb-draft:first-child {
+  border-top: 0;
+}
+
+.onb-draft__subject {
+  font-size: 13px;
+  line-height: 1.3;
+  color: var(--color-fg-2);
+  transition: color 300ms;
+}
+
+.onb-draft:hover .onb-draft__subject,
+.onb-draft[data-focus] .onb-draft__subject {
+  color: var(--color-fg);
+}
+
+.onb-draft__to {
+  margin-top: 0.1rem;
+  font-size: 11.5px;
+  color: var(--color-fg-3);
+}
+
+.onb-draft__status {
+  font-size: 11.5px;
+  color: var(--color-accent-strong);
+}
+
+.onb-draft__status[data-status="listed"] {
+  color: var(--color-fg-2);
+}
+
+.onb-act__enter {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--step);
+}
+
+/* WIDE — the sheet: priority and insight side by side above; below them, recommendation into action */
 @container (min-width: 56rem) {
-  .onb-course {
-    --lane-h: 4.1rem;
-    grid-template-columns: 1fr 1.5fr 1.12fr 1.32fr;
-    grid-template-rows: auto auto 1fr;
+  .onb-sheet {
+    gap: var(--gap);
   }
 
-  .onb-brief {
-    display: grid;
-    grid-row: 1 / span 3;
-    grid-template-rows: subgrid;
-    padding-block: 1.4rem 1.5rem;
-  }
-
-  .onb-brief+.onb-brief {
-    border-top: 0;
-  }
-
-  .onb-brief__top,
-  .onb-brief__words {
-    padding-right: 1.75rem;
-  }
-
-  .onb-brief__lanes {
-    margin-block: 1.35rem 1.25rem;
-  }
-
-  .onb-lane__who {
-    padding-right: 1.6rem;
-  }
-
-  .onb-brief[data-kind="recommendation"] .onb-brief__top,
-  .onb-brief[data-kind="recommendation"] .onb-brief__words {
-    padding-left: 0.6rem;
-  }
-
-  .onb-brief[data-kind="action"] {
-    margin-top: 0;
-  }
-
-  .onb-brief[data-kind="action"] .onb-brief__top,
-  .onb-brief[data-kind="action"] .onb-brief__words {
-    padding-right: 0;
-  }
-
-  /* the lane arrives on the panel's edge: its state sits on it, like a seal */
-  .onb-lanes[data-slice="action"] .onb-lane {
+  .onb-sheet__is,
+  .onb-sheet__does {
+    grid-template-columns: minmax(0, 0.74fr) minmax(0, 1fr);
     gap: 0;
   }
 
-  .onb-lane__node {
-    position: absolute;
-    left: calc(var(--pad) * -1 - 5px);
+  .onb-brief[data-kind="priority"],
+  .onb-brief[data-kind="recommendation"] {
+    padding-right: var(--split);
   }
 
-  .onb-lane__tag-inline {
-    display: none;
+  .onb-brief[data-kind="insight"] {
+    padding-left: var(--split);
+    border-left: 1px solid rgb(255 255 255 / 0.07);
+  }
+
+  /* its name stands level with the action's, so the line between them runs straight */
+  .onb-brief[data-kind="recommendation"] {
+    padding-top: var(--pad-y);
+  }
+
+  .onb-brief[data-kind="recommendation"] .onb-brief__aside {
+    display: flex;
+    flex: 1;
+    margin-left: 0.2rem;
+    margin-right: calc(var(--pad) - 2 * var(--split));
+  }
+
+  /* the action's words line up under the insight's */
+  .onb-brief[data-kind="action"] {
+    margin-left: calc(var(--split) - var(--pad));
+  }
+
+  .onb-act {
+    grid-template-columns: minmax(0, 0.92fr) minmax(0, 1fr);
+    column-gap: 2rem;
+    align-items: start;
+  }
+
+  .onb-drafts {
+    margin-top: calc(var(--step) - 0.3rem);
+  }
+
+  .onb-exchange {
+    grid-template-columns: 2.5rem minmax(0, 1fr) auto;
+    grid-template-rows: var(--h);
+  }
+
+  .onb-exchange__reply {
+    grid-area: 1 / 3;
+    justify-self: start;
+    align-self: center;
+    min-width: 9.5rem;
+    margin-top: 0;
   }
 }
 
-/* STACKED — each stretch stands under its step; the forward lines alone say nothing, so they rest */
+/* STACKED — one step under the other, each on its own ground */
 @container (max-width: 55.99rem) {
-  .onb-lanes[data-slice="next"] {
-    display: none;
+  .onb-brief[data-kind="insight"],
+  .onb-brief[data-kind="recommendation"] {
+    padding-top: 2rem;
+    border-top: 1px solid rgb(255 255 255 / 0.06);
   }
 
-  .onb-brief[data-kind="recommendation"] .onb-brief__lanes {
-    margin-block: 0.9rem 0;
-  }
-
-  .onb-lane__tag {
-    display: block;
-    position: absolute;
-    left: 0;
-    top: 0.15rem;
-    font-size: 10.5px;
-    line-height: 1;
-    color: var(--color-fg-3);
-  }
-
-  .onb-lanes[data-slice="silence"] {
-    --lane-h: 4rem;
-  }
-
-  .onb-lanes[data-slice="silence"] .onb-lane__days {
-    padding-top: 0.6rem;
-  }
-
-  .onb-lane__quiet {
-    top: calc(50% - 1.05rem);
-  }
-
-  .onb-outcome {
-    max-width: 14rem;
+  .onb-sheet__does {
+    gap: 2rem;
   }
 }
 
-/* short desktop screens (13" laptops): the same composition, a tighter rhythm, still one viewport */
+@container (max-width: 34rem) {
+  .onb-quote {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .onb-quote__count {
+    grid-column: 1;
+    grid-row: auto;
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+    margin-top: 1rem;
+    text-align: left;
+  }
+
+  .onb-stake__row {
+    grid-template-columns: minmax(0, 1fr) 4.1rem 3.9rem;
+    column-gap: 0.75rem;
+  }
+
+  .onb-stake__weight {
+    display: none;
+  }
+
+  .onb-brief__gloss {
+    display: none;
+  }
+}
+
+/* short desktop screens (13" laptops): the rhythm is already fluid — here the type steps down too */
 @media (min-width: 1024px) and (max-height: 820px) {
-  .onb-course {
-    --lane-h: 2.95rem !important;
+  .onb-brief__figure:not(.onb-brief__figure--hero) {
+    font-size: 2.1rem;
   }
 
-  .onb-brief {
-    padding-block: 1rem 1.1rem !important;
-  }
-
-  .onb-brief__lead {
-    margin-top: 0.7rem;
-  }
-
-  .onb-brief__lanes {
-    margin-block: 0.85rem 0.8rem !important;
-  }
-
-  .onb-brief__figure {
-    font-size: 2.2rem;
+  .onb-brief__caption {
+    margin-top: 0.4rem;
   }
 
   .onb-brief__statement {
@@ -3668,73 +3862,98 @@ html.lenis {
   }
 
   .onb-brief__detail {
-    margin-top: 0.4rem;
+    margin-top: 0.35rem;
     font-size: 12.5px;
     line-height: 1.5;
+  }
+
+  .onb-stake__row {
+    font-size: 13px;
+  }
+
+  .onb-quote__words {
+    font-size: 1.28rem;
+  }
+
+  .onb-quote__by {
+    margin-top: 0.4rem;
   }
 }
 
 /* REVEALED in the onboarding (data-variant="onboarding"): each step gets its own moment — the one
-   just reached holds the attention while those before it settle back — and its stretch of the
-   drawing draws itself as it is read: the weights stretch out · the exchange rises day by day, then
-   the silence is counted out mark by mark up to today, where the line drops · the emerald runs on
-   from it · and arrives at what Syxoria does. The workspace shows the same briefing at rest. */
-.onb-course[data-reading] .onb-brief[data-shown]:not([data-current]) {
-  opacity: 0.55;
+   just reached holds the attention while those before it settle back — and what it shows arrives
+   as it is read: the sum, then who is waiting, one by one · their message, read out; the exchange
+   rising day by day, then the silence counted mark by mark up to today, where the line drops; only
+   then what that costs · what a reply changes, and the line running on · and the action, where the
+   reply lands. A deal looked at again is read quickly. The workspace shows the same sheet at rest. */
+.onb-sheet[data-reading] .onb-brief[data-shown]:not([data-current]) {
+  opacity: 0.5;
 }
 
-.onb-course[data-variant="onboarding"] .onb-brief[data-shown] .onb-brief__then {
-  animation: onb-rise 600ms var(--ease-out-soft) 280ms both;
+.onb-sheet[data-variant="onboarding"] .onb-brief[data-shown] .onb-brief__then {
+  animation: onb-rise 600ms var(--ease-out-soft) 320ms both;
 }
 
-.onb-course[data-variant="onboarding"] .onb-brief[data-shown] .onb-lane__who {
+.onb-sheet[data-variant="onboarding"] .onb-brief[data-shown] .onb-stake>li {
   animation: onb-rise 600ms var(--ease-out-soft) both;
-  animation-delay: calc(260ms + var(--i, 0) * 120ms);
+  animation-delay: calc(650ms + var(--i, 0) * 130ms);
 }
 
-.onb-course[data-variant="onboarding"] .onb-brief[data-shown] .onb-lane__weight>span {
+.onb-sheet[data-variant="onboarding"] .onb-brief[data-shown] .onb-stake__weight>span {
   animation: onb-grow 800ms var(--ease-awaken) both;
-  animation-delay: calc(480ms + var(--i, 0) * 120ms);
+  animation-delay: calc(850ms + var(--i, 0) * 130ms);
 }
 
-.onb-course[data-variant="onboarding"] .onb-brief[data-shown] .onb-day {
+.onb-sheet[data-variant="onboarding"] .onb-exchange {
+  --lead: 950ms;
+}
+
+.onb-sheet[data-variant="onboarding"] .onb-brief[data-shown]:not([data-current]) .onb-exchange {
+  --lead: 120ms;
+}
+
+.onb-sheet[data-variant="onboarding"] .onb-brief[data-shown] .onb-quote__by,
+.onb-sheet[data-variant="onboarding"] .onb-brief[data-shown] .onb-exchange__sides {
+  animation: onb-fade 600ms var(--ease-out-soft) 700ms both;
+}
+
+.onb-sheet[data-variant="onboarding"] .onb-brief[data-shown] .onb-day {
   animation: onb-day 380ms var(--ease-out-soft) both;
-  animation-delay: calc(260ms + var(--d, 0ms));
+  animation-delay: calc(var(--lead) + var(--d, 0ms));
 }
 
-.onb-course[data-variant="onboarding"] .onb-brief[data-shown] .onb-lane__edge,
-.onb-course[data-variant="onboarding"] .onb-brief[data-shown] .onb-lane__quiet {
+.onb-sheet[data-variant="onboarding"] .onb-brief[data-shown] .onb-exchange__edge {
   animation: onb-fade 450ms var(--ease-out-soft) both;
-  animation-delay: calc(260ms + var(--d, 0ms));
+  animation-delay: calc(var(--lead) + var(--d, 0ms));
 }
 
-.onb-course[data-variant="onboarding"] .onb-brief[data-shown] .onb-lanes[data-slice="silence"] .onb-lanes__rows::after {
+.onb-sheet[data-variant="onboarding"] .onb-brief[data-shown] .onb-exchange__today::before {
   animation: onb-drop 800ms var(--ease-awaken) both;
-  animation-delay: calc(360ms + var(--end, 0ms));
+  animation-delay: calc(var(--lead) + 100ms + var(--end, 0ms));
 }
 
-.onb-course[data-variant="onboarding"] .onb-brief[data-shown] .onb-lanes__today {
+.onb-sheet[data-variant="onboarding"] .onb-brief[data-shown] .onb-exchange__today>span {
   animation: onb-fade 500ms var(--ease-out-soft) both;
-  animation-delay: calc(360ms + var(--end, 0ms));
+  animation-delay: calc(var(--lead) + 100ms + var(--end, 0ms));
 }
 
-.onb-course[data-variant="onboarding"] .onb-brief[data-shown] .onb-lanes[data-slice="next"] .onb-lanes__rows {
-  animation: onb-fade 900ms var(--ease-out-soft) 150ms both;
+/* the insight's conclusion comes once its silence has been counted */
+.onb-sheet[data-variant="onboarding"] .onb-brief[data-kind="insight"][data-shown] .onb-brief__then {
+  animation-delay: 2150ms;
 }
 
-.onb-course[data-variant="onboarding"] .onb-brief[data-shown] .onb-lane__go {
-  animation: onb-grow 850ms var(--ease-awaken) both;
-  animation-delay: calc(300ms + var(--i, 0) * 130ms);
-}
-
-.onb-course[data-variant="onboarding"] .onb-brief[data-shown] .onb-outcome__bar {
+.onb-sheet[data-variant="onboarding"] .onb-brief[data-shown] .onb-outcome__bar {
   animation: onb-grow 900ms var(--ease-awaken) both;
   animation-delay: calc(560ms + var(--i, 0) * 160ms);
 }
 
-.onb-course[data-variant="onboarding"] .onb-brief[data-shown] .onb-outcome__label {
+.onb-sheet[data-variant="onboarding"] .onb-brief[data-shown] .onb-outcome__label {
   animation: onb-fade 500ms var(--ease-out-soft) both;
   animation-delay: calc(760ms + var(--i, 0) * 160ms);
+}
+
+.onb-sheet[data-variant="onboarding"] .onb-brief[data-shown] .onb-brief__flow {
+  animation: onb-grow 1000ms var(--ease-awaken) 700ms both;
 }
 
 @keyframes onb-grow {
@@ -3757,8 +3976,8 @@ html.lenis {
 }
 
 /* the action, last and strongest: the Core's emerald wells up through it once, its edge lights,
-   then each lane arrives on it — its seal, what it is, and only then its state */
-.onb-course[data-variant="onboarding"] .onb-brief[data-kind="action"][data-shown] .onb-brief__fill::before {
+   then each follow-up arrives — its seal, what it is, and only then its state */
+.onb-sheet[data-variant="onboarding"] .onb-brief[data-kind="action"][data-shown] .onb-brief__fill::before {
   animation: onb-well 1500ms var(--ease-awaken) 150ms both;
 }
 
@@ -3779,25 +3998,25 @@ html.lenis {
   }
 }
 
-.onb-course[data-variant="onboarding"] .onb-brief[data-kind="action"] {
+.onb-sheet[data-variant="onboarding"] .onb-brief[data-kind="action"] {
   transition: opacity var(--flow-reveal) var(--ease-out-soft), translate var(--flow-reveal) var(--ease-out-soft), box-shadow 900ms var(--ease-out-soft) 450ms;
 }
 
-.onb-course[data-variant="onboarding"] .onb-brief[data-kind="action"]:not([data-shown]) {
+.onb-sheet[data-variant="onboarding"] .onb-brief[data-kind="action"]:not([data-shown]) {
   box-shadow: inset 0 0 0 1px rgb(42 141 102 / 0.12);
 }
 
-.onb-course[data-variant="onboarding"] .onb-brief[data-shown] .onb-lane__node {
+.onb-sheet[data-variant="onboarding"] .onb-brief[data-shown] .onb-draft__node {
   animation: onb-pop 500ms var(--ease-out-soft) both;
   animation-delay: calc(420ms + var(--i, 0) * 120ms);
 }
 
-.onb-course[data-variant="onboarding"] .onb-brief[data-shown] .onb-lanes[data-slice="action"] .onb-lane> :not(.onb-lane__node) {
+.onb-sheet[data-variant="onboarding"] .onb-brief[data-shown] .onb-draft> :not(.onb-draft__node) {
   animation: onb-rise 500ms var(--ease-out-soft) both;
   animation-delay: calc(560ms + var(--i, 0) * 120ms);
 }
 
-.onb-course[data-variant="onboarding"] .onb-brief[data-shown] .onb-lane__status {
+.onb-sheet[data-variant="onboarding"] .onb-brief[data-shown] .onb-draft__status {
   animation: onb-word 500ms var(--ease-out-soft) both;
   animation-delay: calc(980ms + var(--i, 0) * 120ms);
 }
@@ -4009,16 +4228,20 @@ html[data-vt="onboarding"]::view-transition-new(root) {
     transition: none;
   }
 
-  .onb-brief__then, .onb-brief__fill::before {
+  .onb-brief__then, .onb-brief__fill::before, .onb-brief__flow {
     animation: none !important;
   }
 
-  .onb-lane__who, .onb-lane__weight>span, .onb-day, .onb-lane__edge, .onb-lane__quiet, .onb-lanes__today, .onb-lanes__rows, .onb-lanes__rows::after, .onb-lane__go, .onb-lane__node, .onb-lane>*, .onb-lane__status, .onb-outcome__bar, .onb-outcome__label {
+  .onb-stake>li, .onb-stake__weight>span, .onb-quote__by, .onb-exchange__sides, .onb-day, .onb-exchange__edge, .onb-exchange__today::before, .onb-exchange__today>span, .onb-outcome__bar, .onb-outcome__label, .onb-draft__node, .onb-draft>*, .onb-draft__status {
     animation: none !important;
   }
 
-  .onb-lane__go::after {
+  .onb-brief__flow::after {
     display: none;
+  }
+
+  .onb-stake__row::before, .onb-exchange__reply, .onb-exchange__reply::before {
+    transition: none;
   }
 
   .onb-priority::before, .onb-priority__hint, .onb-priority__more, .onb-priority__title {

@@ -351,15 +351,13 @@ export type BriefingDraft = {
   quietDays: number;
   /** The last thing they wrote, in their own words — the message still waiting for an answer */
   asked: string;
-  /**
-   * The conversation before it went quiet, day by day, oldest first, ending on the day of their
-   * last email: how many they wrote, how many the company wrote back. The briefing draws both
-   * sides to scale — the exchange, then the silence.
-   */
-  rhythm?: { them: number; you: number }[];
 };
 
-/** Priority → insight → recommendation → action: the briefing reads as one line of reasoning */
+/**
+ * Priority → insight → recommendation → action: the briefing reads as one line of reasoning.
+ * Each step's `title` is what the screen says; its `detail` is the fuller sentence, for screen
+ * readers and for the briefing read at length.
+ */
 export type Briefing = {
   priority: { title: string; detail: string };
   insight: {
@@ -367,14 +365,16 @@ export type Briefing = {
     detail: string;
     /** The silence it is about: the deal the briefing opens on, and after how many quiet days the company’s deals start to slip */
     quiet?: { draftId: string; threshold: number };
+    /**
+     * How often the company’s deals closed, by how many days the client had been waiting for an
+     * answer (index = days, from 0): measured on its own history, never a benchmark
+     */
+    curve?: number[];
   };
   recommendation: { title: string; detail: string };
-  /**
-   * What acting on it can achieve, measured on the company’s own history ("2×" · "as likely to close …"),
-   * and the two outcomes it compares — acting, and leaving it — drawn to scale
-   */
-  impact?: { value: string; label: string; compare?: { acted: string; left: string; ratio: number } };
-  /** The follow-ups the action is about — what Syxoria may do with them depends on the mandate and the tools */
+  /** What acting on it can achieve, measured on the company’s own history ("2×" · "as likely to close …") */
+  impact?: { value: string; label: string };
+  /** The replies the action is about — what Syxoria may do with them depends on the mandate and the tools */
   drafts: BriefingDraft[];
   basedOn: string;
 };

@@ -36,6 +36,45 @@ export type BriefingAction = {
   statusLabel: string;
 };
 
+/** One moment in the life of a priority: who makes it happen, and whether it has happened yet */
+export type FollowStep = {
+  id: string;
+  label: string;
+  /** When, or by whom, when that is the point */
+  when?: string;
+  by: "syxoria" | "you" | "client";
+  state: "done" | "now" | "next";
+};
+
+/**
+ * The life of the priority from the moment it was found to the deal closing, as far as the mandate
+ * takes it: what Syxoria has done, what it is doing, what waits on the user, what waits on the client.
+ * Today it is the plan; each morning after, the briefing moves it on as things happen.
+ */
+export function followThrough(action: BriefingAction): FollowStep[] {
+  const found: FollowStep = { id: "found", label: "Found", when: "Today", by: "syxoria", state: "done" };
+  const end: FollowStep[] = [
+    { id: "answered", label: "Answered", by: "client", state: "next" },
+    { id: "closed", label: "Closed", by: "client", state: "next" },
+  ];
+  switch (action.kind) {
+    case "handle":
+      return [found, { id: "drafted", label: "Drafted", when: "Now", by: "syxoria", state: "now" }, { id: "sent", label: "Sent", when: "10:00", by: "syxoria", state: "next" }, ...end];
+    case "prepare":
+      return [
+        found,
+        { id: "drafted", label: "Drafted", when: "By 9:00", by: "syxoria", state: "now" },
+        { id: "approved", label: "Approved", when: "By you", by: "you", state: "next" },
+        { id: "sent", label: "Sent", by: "syxoria", state: "next" },
+        ...end,
+      ];
+    case "offer":
+      return [found, { id: "word", label: "Your word", when: "To draft", by: "you", state: "now" }, { id: "drafted", label: "Drafted", by: "syxoria", state: "next" }, { id: "sent", label: "Sent", when: "By you", by: "you", state: "next" }, ...end];
+    case "list":
+      return [found, { id: "view", label: "In view", when: "Every morning", by: "syxoria", state: "now" }, { id: "replied", label: "Replied", when: "By you", by: "you", state: "next" }, ...end];
+  }
+}
+
 /**
  * The briefing's ACTION — only what Syxoria can genuinely do today, given what the product can do,
  * the tools connected and the mandate just set. It never promises more: without an email source

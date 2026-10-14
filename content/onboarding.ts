@@ -133,27 +133,26 @@ export const briefing = {
   /** The short moment before the briefing: what Syxoria now holds */
   prelude: ["I understand your business.", "I know your priorities.", "I know how you want me to work."],
   ready: "I’m ready.",
+  /** Above the title: which briefing this is, and its day */
+  eyebrow: { onboarding: "Your first executive briefing", workspace: "Executive briefing" },
   lead: "Here’s what matters",
   accent: "today.",
   labels: { priority: "Priority", insight: "Insight", recommendation: "Recommendation", action: "Action" },
   /** The question each step answers, in plain words beside its name */
-  glosses: { priority: "What needs you", insight: "Why now", recommendation: "What I suggest", action: "What I’ll do" },
-  /** What each step's figure measures */
-  figures: {
-    stake: (n: number) => `in open deals, across ${n === 1 ? "one client" : `${n} clients`}`,
-    days: (n: number) => `${n} ${n === 1 ? "day" : "days"}`,
-    silence: "without an answer",
-  },
-  /** Who wrote the message quoted, and when */
-  wrote: (contact: string, company: string, days: number) => `${contact}, ${company} · ${days} ${days === 1 ? "day" : "days"} ago`,
-  /** The exchange's own words: who wrote, where the company's deals start to slip, and where today is */
-  exchange: {
-    them: "Them",
-    you: "You",
+  glosses: { priority: "What needs you", insight: "Why it matters", recommendation: "What to do", action: "What I’m doing" },
+  /** The priority's figure finishes as a sentence: "€78,300 is waiting on your reply." */
+  waiting: "is waiting on your reply.",
+  days: (n: number) => `${n} ${n === 1 ? "day" : "days"}`,
+  /** The curve's own words: what it measures, along which days, and where the company's deals start to slip */
+  curve: {
+    rate: "Chance of closing",
+    days: "Days waiting for your reply",
     edge: (n: number) => `${n} days`,
-    today: "Today",
-    summary: (company: string, days: number) => `${company}: they wrote last, ${days} ${days === 1 ? "day" : "days"} ago. No reply since.`,
+    summary: (threshold: number, high: string, low: string) => `On your history, deals close ${high} of the time when the client hears back within ${threshold} days, and ${low} after.`,
+    deal: (company: string, days: number) => `${company}, waiting ${days} ${days === 1 ? "day" : "days"}`,
   },
+  /** The life of the priority from here, as the mandate takes it */
+  follow: "Follow through",
   mandate: (level: string) => `${level} mandate`,
   enter: "Enter Syxoria",
 };

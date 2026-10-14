@@ -1,5 +1,4 @@
 import { knowledgeLabels } from "@/content/onboarding";
-import { createRandom } from "@/lib/random";
 import type {
   AutonomyPolicy,
   Briefing,
@@ -494,34 +493,14 @@ export const mockAutonomyPolicy: AutonomyPolicy = {
 
 /* ---------- The first briefing ---------- */
 
-/** The days the briefing looks back over */
-const BRIEFING_WINDOW = 40;
-
 /**
- * A conversation's rhythm before it went quiet: emails per day on each side, oldest first —
- * exchanges come in short bursts with a day or two between them, as real threads do. It ends on
- * a day when only they wrote: the message nobody answered.
+ * How often the company’s deals closed, by how many days the client had been waiting for an
+ * answer (0 to 20 days): steady while they hear back in time, then half as often past the threshold.
  */
-function rhythmFor(seed: number, days: number): { them: number; you: number }[] {
-  const random = createRandom(seed);
-  const out: { them: number; you: number }[] = [];
-  let burst = 0;
-  for (let i = 0; i < days; i++) {
-    if (burst > 0) {
-      const them = Math.floor(random() * random() * 4);
-      const you = Math.floor(random() * random() * 4);
-      out.push(them + you ? { them, you } : { them: 0, you: 1 });
-      burst--;
-    } else {
-      out.push({ them: 0, you: 0 });
-      if (random() < 0.55) burst = 1 + Math.floor(random() * 4);
-    }
-  }
-  // the company's last word, then theirs: the question before the silence
-  out[days - 3] = { them: 0, you: 1 };
-  out[days - 2] = { them: 0, you: 0 };
-  out[days - 1] = { them: 1, you: 0 };
-  return out;
+function closeCurve(threshold: number): number[] {
+  const high = 0.62;
+  const low = 0.31;
+  return Array.from({ length: 21 }, (_, d) => Math.round((low + (high - low) / (1 + Math.exp((d - threshold - 0.5) / 1.1))) * 1000) / 1000);
 }
 
 export function buildBriefing(company: CompanyProfile, sources: DataSource[]): Briefing {
@@ -538,6 +517,7 @@ export function buildBriefing(company: CompanyProfile, sources: DataSource[]): B
       title: `Past ${threshold} quiet days, your deals close half as often.`,
       detail: `All three are past that point. ${top[0].company}, your largest open deal, crossed it ${top[0].quietDays - threshold} days ago.`,
       quiet: { draftId: "d_0", threshold },
+      curve: closeCurve(threshold),
     },
     recommendation: {
       title: "Reply to all three this morning.",
@@ -546,9 +526,8 @@ export function buildBriefing(company: CompanyProfile, sources: DataSource[]): B
     impact: {
       value: "2×",
       label: "as likely to close once they hear back",
-      compare: { acted: "Replied to", left: "Left quiet", ratio: 2 },
     },
-    drafts: top.map((d, i) => ({ id: `d_${i}`, ...d, rhythm: rhythmFor(71 + i * 13, BRIEFING_WINDOW - d.quietDays) })),
+    drafts: top.map((d, i) => ({ id: `d_${i}`, ...d })),
     basedOn: `Based on ${sources.length} ${sources.length === 1 ? "source" : "sources"} and two years of activity`,
   };
 }

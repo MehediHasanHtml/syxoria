@@ -401,3 +401,119 @@ export type OnboardingSnapshot = {
   mandate: Mandate | null;
   briefing: Briefing | null;
 };
+
+/* ---------- Daily briefings (morning · midday · evening) ----------
+ * One briefing = one line of reasoning: priority → insight → recommendation → action. Each step
+ * names the one it follows from, so the screen can show how a finding leads to what Syxoria does.
+ * Nothing here is tied to one industry or one KPI: a step carries a metric only when there is a
+ * real one, and a plain statement otherwise.
+ */
+
+export type BriefingPeriod = "morning" | "midday" | "evening";
+export type BriefingDimension = "priority" | "insight" | "recommendation" | "action";
+
+/** How pressing a priority is — always said in words and a mark, never by colour alone */
+export type BriefingSeverity = "critical" | "high" | "watch" | "routine";
+
+/** The one figure the centre of the dial can lead with, when the data has one */
+export type BriefingMetric = {
+  /** "€78,300" · "2 days" · "3 of 3" · "+18%": already formatted by the service */
+  value: string;
+  /** What the figure counts, read after it ("waiting on your reply") */
+  caption: string;
+  /** What sort of figure it is, so the dial can set it (a duration reads differently from money) */
+  kind: "money" | "count" | "duration" | "change" | "time";
+};
+
+/** How a step compares with the previous briefing of the day */
+export type BriefingStepChange = {
+  kind: "new" | "unchanged" | "changed" | "resolved";
+  /** What it said before, when it changed ("Reply this morning") */
+  was?: string;
+};
+
+export type BriefingStep = {
+  dimension: BriefingDimension;
+  /** The step in one short sentence: what the screen says first */
+  title: string;
+  /** Why it matters, in a line */
+  why: string;
+  /** The figure the centre leads with; absent when there is no honest figure to show */
+  metric?: BriefingMetric;
+  /** A secondary detail: a deadline, a comparison, a source */
+  detail?: string;
+  /** The reasoning behind it, shown on demand: short evidence lines */
+  evidence?: string[];
+  change?: BriefingStepChange;
+};
+
+export type BriefingPriorityStep = BriefingStep & { dimension: "priority"; severity: BriefingSeverity };
+
+export type BriefingActionStatus = "drafted" | "awaiting-approval" | "scheduled" | "in-progress" | "completed" | "unsuccessful";
+
+/** One thing Syxoria has prepared, planned, is doing or did */
+export type BriefingActionItem = {
+  id: string;
+  name: string;
+  status: BriefingActionStatus;
+  /** When it happened or will happen, or how far along it is ("10:00" · "2 of 5 deals") */
+  timing: string;
+  /** What happens next, if anything */
+  next?: string;
+  /** Whether this action needs the owner's word, whatever the autonomy mode */
+  needsApproval: boolean;
+  /** Why it needs it, or why it failed: one line */
+  note?: string;
+  /** The recommendation it carries out */
+  recommendationId: string;
+};
+
+export type BriefingChangeKind = "new" | "unresolved" | "decided" | "changed" | "in-progress" | "completed" | "risk" | "opportunity";
+
+export type BriefingChange = {
+  id: string;
+  kind: BriefingChangeKind;
+  text: string;
+  /** When it happened, if that matters ("11:40") */
+  at?: string;
+  /** The step of the reasoning it concerns, to select it */
+  dimension?: BriefingDimension;
+};
+
+export type DailyBriefing = {
+  id: string;
+  period: BriefingPeriod;
+  /** ISO date and time it was prepared */
+  preparedAt: string;
+  /** The briefing in one sentence: what the owner should take away */
+  headline: string;
+  priority: BriefingPriorityStep;
+  insight: BriefingStep & { dimension: "insight"; priorityId?: string };
+  recommendation: BriefingStep & { dimension: "recommendation"; id: string };
+  action: BriefingStep & { dimension: "action" };
+  actions: BriefingActionItem[];
+  /** Since the previous briefing of the day; null for the first one (nothing to compare with) */
+  changes: BriefingChange[] | null;
+  /** The previous briefing it is compared with, for the change summary's words */
+  comparedWith: BriefingPeriod | "yesterday" | null;
+};
+
+/** The autonomy the owner has granted: what Syxoria may do on its own, and what still asks */
+export type BriefingAutonomy = {
+  level: AutonomyLevel;
+  name: string;
+  /** Share of acting rules Syxoria takes on its own (0 to 1), for the mode's mark */
+  share: number;
+  /** One line: what this mode lets it do */
+  promise: string;
+  /** One line: what always waits for the owner, whatever the mode */
+  limit: string;
+};
+
+export type DailyBriefingSet = {
+  date: string;
+  company: string;
+  autonomy: BriefingAutonomy;
+  /** The day's briefings so far, in order */
+  briefings: DailyBriefing[];
+};

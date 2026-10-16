@@ -1,30 +1,34 @@
 import type { DailyBriefing } from "@/types";
 
 /**
- * One day of executive briefings for the demo company, in order: the morning briefing is the first
- * one ever (the end of the onboarding), so it has nothing to compare with; midday and evening each
- * say what changed since the one before. The three tell one coherent story:
+ * One day of executive briefings for the demo company, in order. The morning is compared with
+ * yesterday evening's briefing; midday and evening each with the one before. (For a brand new
+ * user, the service drops the morning's comparison: the very first briefing has no past.)
+ * The three tell one coherent story:
  *
  *   08:00  three proposals wait on a reply → two routine replies are scheduled, a quote waits for you
  *   13:00  the replies went out, Camille answered: the contract is now the priority
  *   18:30  the contract went out, Nora's quote bounced: call her tomorrow
  *
- * The mandate is Autonomous: routine replies go out on their own, while quotes, contracts and
- * anything involving money still wait for the owner (see mockAutonomyPolicy). The UI only reads
- * this through services/briefings.ts.
+ * The centre of the dial reads each step in its own way: money, a fall in a rate, a multiplier,
+ * a count, a deadline, a result, a statement without a figure, a client's issue, a time, progress.
+ * Updates are listed most relevant first; those about an action name it (actionId), so their
+ * status is read from the action itself. The mandate is Autonomous: routine replies go out on
+ * their own, while quotes, contracts and anything involving money still wait for the owner (see
+ * mockAutonomyPolicy). The UI only reads this through services/briefings.ts.
  */
 
 const morning: DailyBriefing = {
   id: "b_morning",
   period: "morning",
-  preparedAt: "2026-10-16T08:00:00",
+  preparedAt: "2026-10-14T08:00:00",
   headline: "Three clients are waiting on your reply.",
   priority: {
     dimension: "priority",
     severity: "high",
     title: "Three proposals are waiting on your reply.",
     why: "In each one the client wrote last, more than ten days ago.",
-    metric: { value: "€78,300", caption: "waiting on your reply", kind: "money" },
+    metric: { kind: "money", value: "€78,300", caption: "waiting on your reply" },
     detail: "Largest: Atelier Rive, €42,000",
     evidence: ["Atelier Rive, €42,000: 12 days without an answer", "Maison Lenoir, €21,500: 11 days", "Côté Sud Hôtels, €14,800: 15 days"],
   },
@@ -32,29 +36,32 @@ const morning: DailyBriefing = {
     dimension: "insight",
     title: "Past ten quiet days, your deals close half as often.",
     why: "All three have crossed that line.",
-    metric: { value: "31%", caption: "close once a client waits over 10 days", kind: "change" },
-    detail: "62% when they hear back in time",
+    metric: { kind: "change", value: "31%", caption: "close after ten quiet days", direction: "down", from: "62%" },
+    detail: "Half the rate of deals answered in time",
     evidence: ["128 proposals over the last two years", "Answered within 10 days: 62% closed", "Left waiting longer: 31% closed"],
+    limits: "Your own history: it says what usually happens, not what will.",
   },
   recommendation: {
     dimension: "recommendation",
     id: "rec_morning",
     title: "Reply to all three this morning.",
     why: "It is the quickest way to double their chances.",
-    metric: { value: "2×", caption: "as likely to close once they hear back", kind: "change" },
+    metric: { kind: "change", value: "2×", caption: "as likely to close once answered", direction: "up" },
     detail: "Start with Camille: one line answers her question",
     evidence: ["Camille asked when you need a decision", "Hugo asked for a timeline, drafted from your last project", "Nora’s revised quote needs your eye on the price"],
+    outcome: "Each client hears back before the deal goes cold.",
+    limits: "Doubling is your past average, not a promise for these three.",
   },
   action: {
     dimension: "action",
     title: "Two replies go out at 10:00. One waits for you.",
     why: "Routine replies are within your mandate. A quote always needs your approval.",
-    metric: { value: "3", caption: "actions prepared this morning", kind: "count" },
+    metric: { kind: "count", value: "3", caption: "replies prepared this morning" },
     detail: "Nothing involving money is sent without you",
+    evidence: ["Autonomous mode: routine replies go out on their own", "Quotes, contracts and money always wait for you"],
+    outcome: "All three clients answered today, Nora as soon as you approve.",
   },
   actions: [
-    { id: "reply_camille", name: "Reply to Camille Roy", status: "scheduled", timing: "10:00", next: "Her answer is logged on the deal", needsApproval: false, recommendationId: "rec_morning" },
-    { id: "reply_hugo", name: "Reply to Hugo Lenoir", status: "scheduled", timing: "10:00", next: "His answer is logged on the deal", needsApproval: false, recommendationId: "rec_morning" },
     {
       id: "quote_nora",
       name: "Revised quote for Nora Haddad",
@@ -65,32 +72,38 @@ const morning: DailyBriefing = {
       note: "Quotes always wait for you",
       recommendationId: "rec_morning",
     },
-    {
-      id: "note_belval",
-      name: "Note to Élise Belval",
-      status: "drafted",
-      timing: "Holding",
-      next: "Ready for your review on Monday",
-      needsApproval: false,
-      note: "Élise asked to pick it up after the harvest",
-      recommendationId: "rec_morning",
-    },
+    { id: "reply_camille", name: "Reply to Camille Roy", status: "scheduled", timing: "Today 10:00", next: "Her answer is logged on the deal", needsApproval: false, recommendationId: "rec_morning" },
+    { id: "reply_hugo", name: "Reply to Hugo Lenoir", status: "scheduled", timing: "Today 10:00", next: "His answer is logged on the deal", needsApproval: false, recommendationId: "rec_morning" },
   ],
-  changes: null,
-  comparedWith: null,
+  followThrough: {
+    title: "Two replies go out at 10:00. Nora’s quote waits for you.",
+    steps: [
+      { id: "found", label: "Found", when: "Today", detail: "3 proposals", state: "done" },
+      { id: "drafted", label: "Drafted", when: "7:45", detail: "3 messages", state: "done" },
+      { id: "scheduled", label: "Scheduled", when: "10:00", detail: "2 go on their own", state: "now" },
+      { id: "replied", label: "Replied", when: "Pending", state: "next" },
+      { id: "closed", label: "Closed", when: "Pending", detail: "€78,300", state: "next" },
+    ],
+  },
+  changes: [
+    { id: "c1", kind: "risk", title: "All three are now past ten quiet days", detail: "Maison Lenoir crossed the line overnight", at: "Overnight", dimension: "priority" },
+    { id: "c2", kind: "new", title: "Nora’s revised quote is ready", detail: "It waits for your approval", at: "7:45", dimension: "action", actionId: "quote_nora" },
+    { id: "c3", kind: "new", title: "Hugo reopened your proposal", detail: "Maison Lenoir, last night", at: "21:14", dimension: "insight" },
+  ],
+  comparedWith: { period: "evening", preparedAt: "2026-10-13T18:30:00" },
 };
 
 const midday: DailyBriefing = {
   id: "b_midday",
   period: "midday",
-  preparedAt: "2026-10-16T13:00:00",
+  preparedAt: "2026-10-14T13:00:00",
   headline: "Atelier Rive is ready to sign.",
   priority: {
     dimension: "priority",
     severity: "critical",
     title: "Atelier Rive wants the contract by Friday.",
     why: "Camille answered at 11:40: they want to be live for the spring launch.",
-    metric: { value: "2 days", caption: "until Camille’s deadline", kind: "duration" },
+    metric: { kind: "deadline", value: "2 days", caption: "until Camille’s deadline", due: "Friday 16 October" },
     detail: "€42,000, your largest open deal",
     evidence: ["Camille’s reply, 11:40: “Send the contract and we sign this week”", "Spring launch planned for 3 March", "No other deal is this close to signing"],
     change: { kind: "new" },
@@ -99,7 +112,7 @@ const midday: DailyBriefing = {
     dimension: "insight",
     title: "Answered deals moved within hours.",
     why: "Both clients who heard back at 10:00 replied before noon.",
-    metric: { value: "2 of 2", caption: "replied the same morning", kind: "count" },
+    metric: { kind: "result", value: "2 of 2", caption: "answered the same morning" },
     detail: "Hugo asked to start in March, a month earlier",
     evidence: ["Camille replied at 11:40", "Hugo replied at 12:15", "Nora has not heard back yet: her quote waits for you"],
     change: { kind: "changed", was: "Past ten quiet days, your deals close half as often." },
@@ -111,14 +124,18 @@ const midday: DailyBriefing = {
     why: "Sent today, it leaves Camille two days to sign.",
     detail: "Then approve Nora’s quote: it has waited since 7:45",
     evidence: ["Drafted from your standard contract and her accepted proposal", "Only the start date changed: 3 March"],
+    outcome: "Camille signs before Friday, as she asked.",
+    limits: "Read the contract before it goes: Syxoria drafted it, it is not legal advice.",
     change: { kind: "changed", was: "Reply to all three this morning." },
   },
   action: {
     dimension: "action",
     title: "The contract is drafted. Two items need you.",
     why: "Contracts and quotes wait for your approval, even in Autonomous mode.",
-    metric: { value: "2", caption: "waiting for your approval", kind: "count" },
+    metric: { kind: "count", value: "2", caption: "waiting for your approval" },
     detail: "Both replies went out at 10:00",
+    evidence: ["Contract drafted at 12:50", "Nora’s quote ready since 7:45"],
+    outcome: "Both go out as soon as you approve them.",
     change: { kind: "changed", was: "Two replies go out at 10:00. One waits for you." },
   },
   actions: [
@@ -140,34 +157,44 @@ const midday: DailyBriefing = {
       next: "Sent as soon as you approve",
       needsApproval: true,
       note: "Quotes always wait for you",
-      recommendationId: "rec_midday",
+      recommendationId: "rec_morning",
     },
     { id: "stages", name: "Update deal stages in HubSpot", status: "in-progress", timing: "2 of 3 deals", next: "Done by 13:30", needsApproval: false, recommendationId: "rec_midday" },
     { id: "reply_camille", name: "Reply to Camille Roy", status: "completed", timing: "Sent 10:00", next: "Camille answered at 11:40", needsApproval: false, recommendationId: "rec_morning" },
     { id: "reply_hugo", name: "Reply to Hugo Lenoir", status: "completed", timing: "Sent 10:00", next: "Hugo answered at 12:15", needsApproval: false, recommendationId: "rec_morning" },
   ],
+  followThrough: {
+    title: "Two clients answered. The contract waits for your approval.",
+    steps: [
+      { id: "found", label: "Found", when: "8:00", detail: "3 proposals", state: "done" },
+      { id: "sent", label: "Sent", when: "10:00", detail: "2 replies", state: "done" },
+      { id: "replied", label: "Replied", when: "12:15", detail: "2 of 3", state: "done" },
+      { id: "contract", label: "Contract", when: "By you", detail: "Drafted 12:50", state: "now" },
+      { id: "closed", label: "Signed", when: "By Friday", detail: "€42,000", state: "next" },
+    ],
+  },
   changes: [
-    { id: "c1", kind: "completed", text: "Both routine replies went out.", at: "10:00", dimension: "action" },
-    { id: "c2", kind: "new", text: "Camille answered: Atelier Rive wants to sign by Friday.", at: "11:40", dimension: "priority" },
-    { id: "c3", kind: "opportunity", text: "Hugo wants to start in March, a month earlier.", at: "12:15", dimension: "insight" },
-    { id: "c4", kind: "changed", text: "Review the contract, rather than reply.", dimension: "recommendation" },
-    { id: "c5", kind: "unresolved", text: "Nora’s quote still waits for your approval.", dimension: "action" },
+    { id: "c1", kind: "new", title: "Camille answered", detail: "Atelier Rive wants to sign by Friday", at: "11:40", dimension: "priority" },
+    { id: "c2", kind: "completed", title: "Both replies went out", detail: "To Camille and Hugo, as scheduled", at: "10:00", dimension: "action" },
+    { id: "c3", kind: "unresolved", title: "Nora’s quote still waits for you", detail: "Ready since 7:45", dimension: "action", actionId: "quote_nora" },
+    { id: "c4", kind: "changed", title: "The priority moved to the contract", detail: "This morning: reply to all three", dimension: "priority" },
+    { id: "c5", kind: "opportunity", title: "Hugo wants to start in March", detail: "A month earlier than planned", at: "12:15", dimension: "insight" },
   ],
-  comparedWith: "morning",
+  comparedWith: { period: "morning", preparedAt: "2026-10-14T08:00:00" },
 };
 
 const evening: DailyBriefing = {
   id: "b_evening",
   period: "evening",
-  preparedAt: "2026-10-16T18:30:00",
+  preparedAt: "2026-10-14T18:30:00",
   headline: "The contract is out. Nora’s quote did not reach her.",
   priority: {
     dimension: "priority",
-    severity: "watch",
-    title: "Nora’s revised quote was returned.",
+    severity: "high",
+    title: "Nora’s revised quote did not reach her.",
     why: "Her address at Côté Sud Hôtels no longer receives mail.",
-    metric: { value: "€14,800", caption: "quote not delivered", kind: "money" },
-    detail: "15 days since she last heard from you",
+    metric: { kind: "message", value: "Address no longer in use", caption: "Returned by her mail server, 14:12", urgency: "high" },
+    detail: "€14,800 quote, 15 days without news",
     evidence: ["Returned at 14:12: address no longer in use", "Her phone number is on the deal", "No other contact at Côté Sud Hôtels yet"],
     change: { kind: "new" },
   },
@@ -175,7 +202,7 @@ const evening: DailyBriefing = {
     dimension: "insight",
     title: "Two of three deals moved forward today.",
     why: "This morning, all three were waiting on you.",
-    metric: { value: "€63,500", caption: "in deals that moved today", kind: "money" },
+    metric: { kind: "money", value: "€63,500", caption: "in deals that moved today" },
     detail: "Camille opened the contract at 16:02",
     evidence: ["Atelier Rive: contract sent, opened at 16:02", "Maison Lenoir: start moved to March", "Côté Sud Hôtels: no contact yet"],
     change: { kind: "changed", was: "Answered deals moved within hours." },
@@ -184,18 +211,22 @@ const evening: DailyBriefing = {
     dimension: "recommendation",
     id: "rec_evening",
     title: "Call Nora tomorrow at 9:30.",
-    why: "She answers calls within a day, and email no longer reaches her.",
-    metric: { value: "9:30", caption: "free in your calendar tomorrow", kind: "time" },
-    detail: "Syxoria can hold the slot, not make the call",
-    evidence: ["Nora returned your last two calls the same day", "Ask for her new address to resend the quote"],
+    why: "Email no longer reaches her, and she returns calls the same day.",
+    metric: { kind: "time", value: "9:30", caption: "tomorrow, free in your calendar" },
+    detail: "Syxoria holds the slot. The call is yours.",
+    evidence: ["Nora returned your last two calls the same day", "9:30 is free in your calendar tomorrow"],
+    outcome: "Her new address, so the quote can go out again.",
+    limits: "Syxoria cannot make the call. It only holds the time.",
     change: { kind: "changed", was: "Review the contract this afternoon." },
   },
   action: {
     dimension: "action",
-    title: "Four done today. One could not be completed.",
-    why: "The quote was approved and sent, then returned.",
-    metric: { value: "4 of 5", caption: "actions completed today", kind: "count" },
-    detail: "A payment reminder waits for you",
+    title: "Four went through today. One was returned.",
+    why: "The quote was approved and sent, then bounced.",
+    metric: { kind: "progress", value: "4 of 5", caption: "of today’s actions went through", share: 0.8 },
+    detail: "A payment reminder is drafted for Monday",
+    evidence: ["Replies to Camille and Hugo, contract, deal stages: through", "Nora’s quote: returned at 14:12"],
+    outcome: "The quote goes out again once you have her new address.",
     change: { kind: "changed", was: "The contract is drafted. Two items need you." },
   },
   actions: [
@@ -209,7 +240,6 @@ const evening: DailyBriefing = {
       note: "Her address no longer receives mail",
       recommendationId: "rec_evening",
     },
-    { id: "hold_call", name: "Hold 9:30 tomorrow for a call with Nora", status: "scheduled", timing: "Tomorrow 9:30", next: "Moves if you book something else", needsApproval: false, recommendationId: "rec_evening" },
     {
       id: "reminder_ondine",
       name: "Payment reminder for Brasserie Ondine",
@@ -220,17 +250,31 @@ const evening: DailyBriefing = {
       note: "Anything involving money waits for you",
       recommendationId: "rec_evening",
     },
-    { id: "contract_rive", name: "Contract for Atelier Rive", status: "completed", timing: "Sent 14:10", next: "Camille opened it at 16:02", needsApproval: true, recommendationId: "rec_midday" },
+    { id: "hold_call", name: "Hold 9:30 tomorrow for Nora", status: "scheduled", timing: "Tomorrow 9:30", next: "Moves if you book something else", needsApproval: false, recommendationId: "rec_evening" },
+    { id: "contract_rive", name: "Contract for Atelier Rive", status: "sent", timing: "Sent 14:10", next: "Camille opened it at 16:02. Signature due Friday", needsApproval: true, recommendationId: "rec_midday" },
     { id: "stages", name: "Update deal stages in HubSpot", status: "completed", timing: "Done 13:24", needsApproval: false, recommendationId: "rec_midday" },
+    { id: "reply_camille", name: "Reply to Camille Roy", status: "completed", timing: "Sent 10:00", next: "Camille answered at 11:40", needsApproval: false, recommendationId: "rec_morning" },
+    { id: "reply_hugo", name: "Reply to Hugo Lenoir", status: "completed", timing: "Sent 10:00", next: "Hugo answered at 12:15", needsApproval: false, recommendationId: "rec_morning" },
   ],
+  followThrough: {
+    title: "The contract is with Camille. Nora’s quote did not arrive.",
+    steps: [
+      { id: "found", label: "Found", when: "8:00", detail: "3 proposals", state: "done" },
+      { id: "sent", label: "Sent", when: "10:00", detail: "2 replies", state: "done" },
+      { id: "replied", label: "Replied", when: "12:15", detail: "2 of 3", state: "done" },
+      { id: "contract", label: "Contract", when: "14:10", detail: "Opened 16:02", state: "done" },
+      { id: "quote", label: "Quote", when: "14:12", detail: "Returned", state: "failed" },
+      { id: "closed", label: "Signed", when: "By Friday", detail: "€42,000", state: "next" },
+    ],
+  },
   changes: [
-    { id: "c1", kind: "decided", text: "You approved the contract and Nora’s quote.", at: "14:05", dimension: "recommendation" },
-    { id: "c2", kind: "completed", text: "The contract went to Atelier Rive.", at: "14:10", dimension: "action" },
-    { id: "c3", kind: "risk", text: "Nora’s quote was returned: her address no longer works.", at: "14:12", dimension: "priority" },
-    { id: "c4", kind: "new", text: "Camille opened the contract.", at: "16:02", dimension: "insight" },
-    { id: "c5", kind: "unresolved", text: "Côté Sud Hôtels has now waited 15 days.", dimension: "priority" },
+    { id: "c1", kind: "risk", title: "Nora’s quote was returned", detail: "Her address no longer receives mail", at: "14:12", dimension: "priority", actionId: "quote_nora" },
+    { id: "c2", kind: "completed", title: "The contract went to Atelier Rive", detail: "Camille opened it at 16:02", at: "14:10", dimension: "action", actionId: "contract_rive" },
+    { id: "c3", kind: "new", title: "A payment reminder is ready", detail: "Brasserie Ondine’s invoice is due Monday", at: "17:05", dimension: "action", actionId: "reminder_ondine" },
+    { id: "c4", kind: "decided", title: "You approved the contract and the quote", at: "14:05", dimension: "recommendation" },
+    { id: "c5", kind: "unresolved", title: "Côté Sud Hôtels is still waiting", detail: "15 days without news", dimension: "priority" },
   ],
-  comparedWith: "midday",
+  comparedWith: { period: "midday", preparedAt: "2026-10-14T13:00:00" },
 };
 
 export const mockDailyBriefings: DailyBriefing[] = [morning, midday, evening];

@@ -133,24 +133,4 @@ export const briefing = {
   /** The short moment before the briefing: what Syxoria now holds, and that it has found something */
   prelude: ["I understand your business.", "I know your priorities.", "I know how you want me to work."],
   found: "And I’ve found something.",
-  /** Above the discovery: which briefing this is, and its day */
-  eyebrow: { onboarding: "Your first briefing", workspace: "Executive briefing" },
-  /** The line that opens the discovery */
-  intro: { onboarding: (name: string | null) => (name ? `${name}, here is what I found.` : "Here is what I found."), workspace: () => "Here is what matters today." },
-  /** The priority's figure finishes as a sentence: "€78,300 is waiting on your reply." */
-  waiting: "is waiting on your reply.",
-  days: (n: number) => `${n} ${n === 1 ? "day" : "days"}`,
-  /** The ring around the Core: how long each client has waited, and where the company's deals start to slip */
-  ring: {
-    caption: "Days each client has waited for you",
-    edge: (n: number) => `${n} days`,
-    inTime: ["close when", "answered in time"],
-    late: ["close when", "left waiting"],
-    summary: (threshold: number, high: string, low: string) => `On your history, deals close ${high} of the time when the client hears back within ${threshold} days, and ${low} after.`,
-    deal: (company: string, days: number, value: string) => `${company}, ${value}, waiting ${days} ${days === 1 ? "day" : "days"}`,
-  },
-  mandate: (level: string) => `${level} mandate`,
-  /** The life of the priority from here, as the mandate takes it (named for screen readers) */
-  follow: "Follow through",
-  enter: "Enter Syxoria",
 };

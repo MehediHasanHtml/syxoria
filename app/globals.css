@@ -3036,18 +3036,9 @@ html.lenis {
   }
 }
 
-/* ---------- The discovery (the executive briefing) ----------
-   The finale of the onboarding, and the page the user returns to every morning. Not a dashboard:
-   one discovery, told in four sentences beside the Core.
-     THE STAGE: the Core inside the ring of silence (components/onboarding/briefing-evidence.tsx).
-       A full turn is the company's own curve, the threshold splits it in two halves, each client
-       sits where their silence has taken them. In emerald: the half where deals still close, then
-       the Core reaching each client.
-     THE STORY, from the largest to the one to act on: what is waiting (priority) · why it matters
-       (insight) · what to do (recommendation) · what is already in hand, the thread it follows
-       from here, and the decision (action).
-   White = what is · emerald = what Syxoria does about it. On desktop the whole of it stays in one
-   viewport; its rhythm follows the height of the screen. */
+/* ---------- The executive briefing's prelude ----------
+   The Core alone on the stage, saying what it now holds; then it returns to the bar and the
+   briefing arrives around the dial ("DAILY BRIEFING", components/briefing). */
 .onb-prelude {
   min-height: 64vh;
 }
@@ -3069,634 +3060,17 @@ html.lenis {
   filter: none;
 }
 
-.onb-disc {
-  /* the height the page has to itself: one viewport in the onboarding, a fixed stage in the workspace */
-  --disc-h: 44rem;
-  /* one hundredth of that height: the story's type and spacing follow it, so it always fits */
-  --u: calc(var(--disc-h) / 100);
-  overflow-x: clip;
-}
-
-@media (min-width: 1024px) {
-  .onb-disc[data-variant="onboarding"] {
-    --disc-h: calc(100dvh - 4rem - clamp(1rem, 12vh - 3.5rem, 5rem) - clamp(1rem, 3vh, 2.5rem));
-  }
-}
-
-.onb-disc__grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  grid-template-areas: "head" "stage" "why" "act";
-  row-gap: 2.25rem;
-}
-
-.onb-disc__stage {
-  grid-area: stage;
-  min-width: 0;
-}
-
-.onb-disc__head {
-  grid-area: head;
-}
-
-.onb-disc__why {
-  grid-area: why;
-  display: grid;
-  gap: 0.55rem;
-}
-
-.onb-disc__act {
-  grid-area: act;
-}
-
-/* WIDE — the stage on the left, the story beside it, centred on it */
-@container (min-width: 56rem) {
-  .onb-disc__grid {
-    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
-    grid-template-areas: "stage ." "stage head" "stage why" "stage act" "stage .";
-    grid-template-rows: 1fr auto auto auto 1fr;
-    column-gap: clamp(1.5rem, 3.5cqi, 4rem);
-    row-gap: 0;
-    min-height: var(--disc-h);
-  }
-
-  .onb-disc__stage {
-    align-self: center;
-  }
-
-  .onb-disc__why {
-    margin-top: clamp(1.25rem, var(--u) * 5.4, 2.75rem);
-  }
-
-  .onb-disc__act {
-    margin-top: clamp(1.1rem, var(--u) * 4.8, 2.5rem);
-  }
-}
-
-/* the story */
-.onb-disc__intro {
-  margin-top: clamp(0.7rem, var(--u) * 2.6, 1.5rem);
-  font-family: var(--font-display);
-  font-size: clamp(1rem, var(--u) * 3.4, 1.45rem);
-  font-style: italic;
-  font-weight: 300;
-  color: var(--color-fg-2);
-}
-
-.onb-disc__hero {
-  display: grid;
-  margin-top: 0.3rem;
-}
-
-.onb-disc__figure {
-  font-family: var(--font-display);
-  font-size: min(clamp(3rem, var(--u) * 13.6, 7rem), 21cqi);
-  font-weight: 200;
-  line-height: 0.98;
-  letter-spacing: -0.035em;
-  color: var(--color-fg);
-}
-
-.onb-disc__words {
-  margin-top: 0.25rem;
-  font-family: var(--font-display);
-  font-size: clamp(1.25rem, var(--u) * 4.5, 2.15rem);
-  font-weight: 300;
-  line-height: 1.2;
-  letter-spacing: -0.015em;
-  color: var(--color-fg);
-}
-
-.onb-disc__line {
-  font-family: var(--font-display);
-  font-size: clamp(1.05rem, var(--u) * 3.5, 1.45rem);
-  font-weight: 300;
-  line-height: 1.35;
-  color: var(--color-fg-2);
-  text-wrap: pretty;
-}
-
-.onb-disc__stress {
-  font-family: var(--font-serif);
-  font-style: normal;
-  color: var(--color-fg);
-}
-
-.onb-disc__stress[data-tone="accent"] {
-  font-style: italic;
-  color: var(--color-accent-strong);
-}
-
-/* the action: the one emerald surface of the page */
-.onb-disc__act {
-  position: relative;
-  padding: clamp(0.85rem, var(--u) * 2.6, 1.35rem) clamp(1.15rem, 2.2cqi, 1.5rem) clamp(0.85rem, var(--u) * 2.4, 1.3rem);
-  border: 1px solid rgb(79 174 134 / 0.32);
-  border-radius: 14px;
-  background: linear-gradient(160deg, rgb(29 122 85 / 0.16), rgb(29 122 85 / 0.04) 60%), rgb(8 9 10 / 0.6);
-  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.02), 0 30px 60px -30px rgb(0 0 0 / 0.8), 0 0 60px -30px rgb(42 141 102 / 0.5);
-}
-
-.onb-disc__mandate {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 12px;
-  color: var(--color-fg-3);
-  white-space: nowrap;
-}
-
-.onb-disc__title {
-  margin-top: 0.7rem;
-  font-family: var(--font-display);
-  font-size: clamp(1.05rem, var(--u) * 3.3, 1.45rem);
-  font-weight: 300;
-  line-height: 1.25;
-  color: var(--color-fg);
-  text-wrap: balance;
-}
-
-.onb-disc__note {
-  margin-top: 0.25rem;
-  font-size: 14px;
-  color: var(--color-fg-2);
-}
-
-.onb-disc__act .onb-follow {
-  margin-top: clamp(0.8rem, var(--u) * 2.8, 1.5rem);
-}
-
-.onb-disc__enter {
-  margin-top: clamp(0.8rem, var(--u) * 2.4, 1.25rem);
-  padding-top: clamp(0.8rem, var(--u) * 2.4, 1.25rem);
-  border-top: 1px solid rgb(79 174 134 / 0.16);
-}
-
-/* REVEALED in the onboarding: one sentence at a time; the action arrives last, its emerald
-   welling up once. The workspace shows the same page at rest. */
-.onb-disc__head,
-.onb-disc__line,
-.onb-disc__act {
-  transition: opacity var(--flow-reveal) var(--ease-out-soft), translate var(--flow-reveal) var(--ease-out-soft), filter var(--flow-reveal), box-shadow 1200ms var(--ease-out-soft) 400ms, border-color 1200ms var(--ease-out-soft) 400ms;
-}
-
-.onb-disc[data-variant="onboarding"] :is(.onb-disc__head, .onb-disc__line, .onb-disc__act):not([data-shown]) {
-  opacity: 0;
-  translate: 0 10px;
-  filter: blur(3px);
-}
-
-.onb-disc[data-variant="onboarding"] .onb-disc__act:not([data-shown]) {
-  border-color: rgb(79 174 134 / 0.08);
-  box-shadow: none;
-}
-
-.onb-disc[data-variant="onboarding"] .onb-disc__act[data-shown] .onb-follow__step {
-  animation: onb-word 500ms var(--ease-out-soft) both;
-  animation-delay: calc(700ms + var(--i, 0) * 140ms);
-}
-
-/* The ring of silence. Its words are laid over the drawing, so they keep a readable size at
-   every width; the drawing itself scales. */
-.onb-disc__stage .onb-silence,
-.onb-disc__core {
-  width: min(100%, 34rem);
-  margin-inline: auto;
-}
-
-@container (max-width: 55.99rem) {
-  .onb-disc__stage .onb-silence {
-    margin-bottom: 1.5rem;
-  }
-}
-
-@container (min-width: 56rem) {
-  .onb-disc__stage .onb-silence {
-    width: min(100%, calc(var(--disc-h) * 1.288));
-  }
-}
-
-.onb-silence {
-  position: relative;
-  container-type: inline-size;
-  aspect-ratio: 760 / 590;
-}
-
-.onb-silence__svg {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  overflow: visible;
-}
-
-.onb-silence__core {
-  position: absolute;
-  translate: -50% -50%;
-  aspect-ratio: 1;
-}
-
-.onb-silence__tick {
-  stroke: var(--color-fg);
-  stroke-opacity: 0.22;
-  stroke-width: 1;
-  opacity: 0;
-  transition: opacity 600ms var(--ease-out-soft) calc(var(--i, 0) * 40ms), stroke-opacity 700ms;
-}
-
-.onb-silence__tick[data-edge] {
-  stroke-opacity: 0.3;
-  stroke-width: 1.25;
-}
-
-.onb-silence[data-drawn] .onb-silence__tick {
-  opacity: 1;
-}
-
-.onb-silence[data-halves] .onb-silence__tick[data-edge] {
-  stroke-opacity: 0.75;
-}
-
-/* the two halves, drawn clockwise like the days: answered in time, then left waiting */
-.onb-silence__half {
-  fill: none;
-  stroke: var(--color-fg);
-  stroke-opacity: 0.3;
-  stroke-width: 1.25;
-  stroke-dasharray: 1;
-  stroke-dashoffset: 1;
-  transition: stroke-dashoffset 900ms var(--ease-in-out-soft), stroke-opacity 900ms var(--ease-out-soft);
-}
-
-.onb-silence__half[data-side="late"] {
-  transition-delay: 800ms, 0ms;
-}
-
-.onb-silence[data-drawn] .onb-silence__half {
-  stroke-dashoffset: 0;
-}
-
-.onb-silence[data-halves] .onb-silence__half[data-side="in-time"] {
-  stroke-opacity: 0.5;
-}
-
-.onb-silence[data-halves] .onb-silence__half[data-side="late"] {
-  stroke-opacity: 0.14;
-}
-
-/* in emerald, where deals still close */
-.onb-silence__lit {
-  fill: none;
-  stroke: var(--emerald-bright);
-  stroke-width: 1.5;
-  stroke-dasharray: 1;
-  stroke-dashoffset: 1;
-  transition: stroke-dashoffset 1300ms var(--ease-awaken);
-}
-
-.onb-silence__lit--glow {
-  stroke-width: 5;
-  stroke-opacity: 0.55;
-}
-
-.onb-silence[data-lit] .onb-silence__lit {
-  stroke-dashoffset: 0;
-}
-
-/* each client lands on the ring */
-.onb-silence__dot {
-  fill: var(--color-fg);
-  opacity: 0;
-  scale: 0.3;
-  transform-box: fill-box;
-  transform-origin: center;
-  transition: opacity 500ms var(--ease-out-soft), scale 650ms var(--ease-spring);
-  transition-delay: calc(1500ms + var(--i, 0) * 170ms);
-}
-
-.onb-silence[data-drawn] .onb-silence__dot {
-  opacity: 1;
-  scale: 1;
-}
-
-/* the Core reaches each one: a line drawn out from it, a light that keeps running along it */
-.onb-silence__thread {
-  stroke-width: 1.25;
-  stroke-dasharray: 1;
-  stroke-dashoffset: 1;
-  transition: stroke-dashoffset 900ms var(--ease-awaken) calc(var(--i, 0) * 180ms);
-}
-
-.onb-silence[data-reach] .onb-silence__thread {
-  stroke-dashoffset: 0;
-}
-
-.onb-silence__spark {
-  stroke: var(--emerald-lit);
-  stroke-width: 1.5;
-  stroke-dasharray: 0.07 1;
-  stroke-dashoffset: 1;
-  opacity: 0;
-}
-
-.onb-silence[data-reach] .onb-silence__spark {
-  opacity: 1;
-  animation: onb-spark 3.4s var(--ease-in-out-soft) calc(1.2s + var(--i, 0) * 0.45s) infinite both;
-}
-
-@keyframes onb-spark {
-  from {
-    stroke-dashoffset: 1;
-  }
-
-  to {
-    stroke-dashoffset: -0.07;
-  }
-}
-
-.onb-silence__halo {
-  fill: none;
-  stroke: var(--emerald-bright);
-  stroke-width: 1.25;
-  opacity: 0;
-  transition: opacity 600ms var(--ease-out-soft) calc(700ms + var(--i, 0) * 180ms);
-}
-
-.onb-silence[data-reach] .onb-silence__halo {
-  opacity: 1;
-}
-
-/* the words over the drawing */
-.onb-silence__name,
-.onb-silence__rate,
-.onb-silence__edge,
-.onb-silence__caption {
-  position: absolute;
-  opacity: 0;
-  transition: opacity 700ms var(--ease-out-soft);
-}
-
-.onb-silence__name {
-  display: grid;
-  gap: 0.15em;
-  font-size: clamp(11px, 1.85cqi, 14px);
-  line-height: 1.25;
-  color: var(--color-fg-3);
-  transition-delay: calc(1750ms + var(--i, 0) * 170ms);
-}
-
-.onb-silence__name> :last-child {
-  font-size: 0.86em;
-}
-
-.onb-silence__name[data-side="left"] {
-  translate: -100% -50%;
-  text-align: right;
-}
-
-.onb-silence__name[data-side="right"] {
-  translate: 0 -50%;
-}
-
-.onb-silence__name[data-side="below"] {
-  translate: -50% 0;
-  text-align: center;
-}
-
-.onb-silence__name[data-side="above"] {
-  translate: -50% -100%;
-  text-align: center;
-}
-
-.onb-silence[data-drawn] .onb-silence__name {
-  opacity: 1;
-}
-
-.onb-silence__rate {
-  display: grid;
-  justify-items: center;
-  translate: -50% -50%;
-  font-size: clamp(9.5px, 1.5cqi, 12px);
-  line-height: 1.3;
-  text-align: center;
-  white-space: nowrap;
-  color: rgb(245 245 242 / 0.55);
-}
-
-.onb-silence__rate[data-side="late"] {
-  transition-delay: 250ms;
-}
-
-.onb-silence__figure {
-  margin-bottom: 0.2em;
-  font-family: var(--font-display);
-  font-size: 2.85em;
-  font-weight: 200;
-  line-height: 1.05;
-  letter-spacing: -0.02em;
-  color: var(--color-fg);
-  transition: color 900ms var(--ease-out-soft);
-}
-
-.onb-silence[data-halves] .onb-silence__rate {
-  opacity: 1;
-}
-
-.onb-silence[data-halves] .onb-silence__rate[data-side="late"] {
-  opacity: 0.6;
-}
-
-.onb-silence[data-lit] .onb-silence__rate[data-side="in-time"] .onb-silence__figure {
-  color: var(--color-accent-strong);
-}
-
-.onb-silence__edge {
-  translate: -50% -50%;
-  font-size: clamp(9px, 1.4cqi, 11px);
-  letter-spacing: 0.18em;
-  color: rgb(245 245 242 / 0.7);
-  white-space: nowrap;
-}
-
-.onb-silence[data-halves] .onb-silence__edge {
-  opacity: 1;
-}
-
-.onb-silence__caption {
-  translate: -50% -50%;
-  font-size: clamp(9px, 1.38cqi, 10.5px);
-  letter-spacing: 0.2em;
-  color: rgb(245 245 242 / 0.42);
-  white-space: nowrap;
-  transition-delay: 1200ms;
-}
-
-.onb-silence[data-drawn] .onb-silence__caption {
-  opacity: 1;
-}
-
-/* small stages: a name may take two lines rather than leave the drawing, and the caption sits
-   under it, clear of the names */
-@container (max-width: 30rem) {
-  .onb-silence__caption {
-    top: auto !important;
-    bottom: -1.5rem;
-    translate: -50% 0;
-  }
-
-
-  .onb-silence__name[data-side="left"] {
-    max-width: calc(var(--x) * 1cqi - 0.75rem);
-  }
-
-  .onb-silence__name[data-side="right"] {
-    max-width: calc((100 - var(--x)) * 1cqi - 0.75rem);
-  }
-}
-
-/* the thread: the life of the priority from the moment it was found to the deal closing.
-   Emerald = done or under way by Syxoria · white = waits on the user · grey = waits on the client */
-.onb-follow {
-  display: grid;
-  grid-template-columns: repeat(var(--n), minmax(0, 1fr));
-}
-
-.onb-follow__step {
-  position: relative;
-  display: grid;
-  justify-items: center;
-  min-width: 0;
-  text-align: center;
-}
-
-/* the line to the next moment */
-.onb-follow__step:not(:last-child)::before {
-  content: "";
-  position: absolute;
-  top: calc(0.35rem - 0.5px);
-  left: calc(50% + 0.65rem);
-  right: calc(-50% + 0.65rem);
-  height: 1px;
-  background: rgb(255 255 255 / 0.14);
-}
-
-.onb-follow__step[data-state="done"]::before {
-  background: var(--color-accent-strong);
-}
-
-.onb-follow__step[data-state="now"]::before {
-  background: linear-gradient(90deg, var(--color-accent-strong), rgb(79 174 134 / 0.1));
-}
-
-.onb-follow__node {
-  position: relative;
-  width: 0.7rem;
-  height: 0.7rem;
-  border-radius: 50%;
-  background: var(--color-canvas-2);
-  box-shadow: inset 0 0 0 1.5px rgb(255 255 255 / 0.2);
-}
-
-.onb-follow__step[data-by="you"] .onb-follow__node {
-  box-shadow: inset 0 0 0 1.5px rgb(255 255 255 / 0.6);
-}
-
-.onb-follow__step[data-state="done"] .onb-follow__node {
-  background: var(--color-accent-strong);
-  box-shadow: 0 0 10px rgb(79 174 134 / 0.55);
-}
-
-.onb-follow__step[data-state="now"] .onb-follow__node {
-  background: radial-gradient(circle, var(--emerald-bright) 0 2px, #0c1512 2.6px);
-  box-shadow: inset 0 0 0 1.5px var(--emerald-bright), 0 0 12px rgb(29 122 85 / 0.7);
-}
-
 /* what is under way breathes */
-.onb-follow__step[data-state="now"] .onb-follow__node::after {
-  content: "";
-  position: absolute;
-  inset: -4px;
-  border-radius: 50%;
-  box-shadow: 0 0 0 1px rgb(79 174 134 / 0.5);
-  animation: onb-breathe 2.4s var(--ease-in-out-soft) infinite;
-}
-
 @keyframes onb-breathe {
   0% {
     opacity: 0.9;
     scale: 0.8;
   }
 
-  70%, 100% {
+  70%,
+  100% {
     opacity: 0;
     scale: 1.7;
-  }
-}
-
-.onb-follow__label {
-  margin-top: 0.55rem;
-  font-size: 12px;
-  line-height: 1.2;
-  color: var(--color-fg-3);
-  white-space: nowrap;
-}
-
-.onb-follow__when {
-  min-height: 1em;
-  margin-top: 0.2rem;
-  font-size: 11px;
-  line-height: 1.2;
-  color: var(--color-fg-3);
-  white-space: nowrap;
-}
-
-.onb-follow__step:is([data-state="done"], [data-state="now"]) .onb-follow__label {
-  color: var(--color-fg);
-}
-
-/* the end of the thread carries what it all leads to */
-.onb-follow__step:last-child .onb-follow__when {
-  color: var(--color-fg-2);
-}
-
-/* narrow: the thread runs down, one moment per line, and the decision takes the width */
-@container (max-width: 34rem) {
-  .onb-follow {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .onb-follow__step {
-    grid-template-columns: 0.7rem auto minmax(0, 1fr);
-    align-items: center;
-    column-gap: 0.85rem;
-    padding: 0 0 0.9rem;
-    text-align: left;
-  }
-
-  .onb-follow__step:not(:last-child)::before {
-    top: 0.85rem;
-    bottom: 0.15rem;
-    left: calc(0.35rem - 0.5px);
-    right: auto;
-    width: 1px;
-    height: auto;
-  }
-
-  .onb-follow__step[data-state="now"]::before {
-    background: linear-gradient(180deg, var(--color-accent-strong), rgb(79 174 134 / 0.1));
-  }
-
-  .onb-follow__label,
-  .onb-follow__when {
-    margin-top: 0;
-  }
-
-  .onb-follow__when {
-    justify-self: end;
-  }
-
-  .onb-disc__enter> * {
-    width: 100%;
   }
 }
 
@@ -3855,9 +3229,10 @@ html[data-vt="onboarding"]::view-transition-new(root) {
   animation: onb-rise 800ms var(--ease-out-soft) 700ms both;
 }
 
-/* one screen on a desktop: the shell's top bar (4rem and its line), its top padding (2rem) and
-   what is left of its bottom padding (1rem), the strip below; the briefing takes the rest */
-@media (min-width: 1280px) and (min-height: 600px) {
+/* one screen on a desktop, once the briefing has room for its wide layout beside the sidebar: the
+   shell's top bar (4rem and its line), its top padding (2rem) and what is left of its bottom
+   padding (1rem), the strip below; the briefing takes the rest. Narrower, the page simply flows. */
+@container (min-width: 70rem) {
   .arrival-fit {
     --strip-h: 4.5rem;
     --strip-gap: 1.25rem;
@@ -3868,9 +3243,7 @@ html[data-vt="onboarding"]::view-transition-new(root) {
   }
 
   .arrival-fit__main {
-    display: grid;
     flex: 1;
-    align-items: center;
     min-height: 0;
   }
 
@@ -3880,8 +3253,8 @@ html[data-vt="onboarding"]::view-transition-new(root) {
     margin-top: var(--strip-gap);
   }
 
-  .arrival-fit .onb-disc {
-    --disc-h: calc(100dvh - 4rem - 1px - 3rem - var(--strip-gap) - var(--strip-h));
+  .arrival-fit .bd {
+    --bd-h: calc(100dvh - 4rem - 1px - 3rem - var(--strip-gap) - var(--strip-h));
   }
 }
 
@@ -3917,7 +3290,7 @@ html[data-vt="onboarding"]::view-transition-new(root) {
     animation: none;
   }
 
-  .onb-prelude__line, .onb-disc__head, .onb-disc__line, .onb-disc__act {
+  .onb-prelude__line {
     transition: none;
   }
 
@@ -3930,14 +3303,6 @@ html[data-vt="onboarding"]::view-transition-new(root) {
   }
 
   .onb-reach__row, .onb-reach__boundary, .onb-ring__edge, .onb-ring__arc, .onb-modes__item::after {
-    transition: none;
-  }
-
-  .onb-follow__step, .onb-follow__node::after, .onb-silence__spark {
-    animation: none !important;
-  }
-
-  .onb-silence :is(.onb-silence__tick, .onb-silence__half, .onb-silence__lit, .onb-silence__dot, .onb-silence__thread, .onb-silence__halo, .onb-silence__name, .onb-silence__rate, .onb-silence__edge, .onb-silence__caption) {
     transition: none;
   }
 
@@ -3970,15 +3335,21 @@ html[data-vt="onboarding"]::view-transition-new(root) {
 
 /* ==========================================================================
    DAILY BRIEFING (components/briefing) — the executive briefing, morning,
-   midday and evening. The dial is the focal point: priority on top, insight
-   right, action below, recommendation left, the selected one in the centre.
-   Beside it, what changed since the previous briefing, and bottom right what
-   Syxoria is doing. White = what is · emerald = what Syxoria does. Every state
-   is said with a word and a mark, never by colour alone.
+   midday and evening. The dial is the focal point: four points on the ring,
+   priority on top, insight right, action below, recommendation left, each
+   with its card beside it, and the selected step's figure in the centre.
+   At its right, what changed since the last briefing. Along the bottom: the
+   follow through, and the autonomy it runs under.
+   White = what is · emerald = what is selected, and what Syxoria did. Every
+   state is said with a word and a mark, never by colour alone.
    ========================================================================== */
 .bd {
   /* the height the page has to itself (one viewport on a desktop) */
-  --bd-h: 44rem;
+  --bd-h: 46rem;
+  /* the briefing's reading tones, a step lighter than the app's: small type and secondary lines
+     read clearly on the dark without competing with what is primary */
+  --color-fg-2: #bcbfc1;
+  --color-fg-3: #979b9e;
   container-name: bd;
 }
 
@@ -3988,114 +3359,196 @@ html[data-vt="onboarding"]::view-transition-new(root) {
   }
 }
 
+.bd-label {
+  font-family: var(--font-label);
+  font-size: 10.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-fg-3);
+}
+
 .bd-grid {
   display: grid;
+  gap: 2rem;
+}
+
+.bd-stage {
+  display: grid;
   gap: 1.75rem;
+  min-width: 0;
 }
 
-/* the headline and the day's briefings */
-.bd-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 1rem 2rem;
+/* ---------- The greeting ---------- */
+.bd-greet__title {
+  margin-top: 0.5rem;
+  font-family: var(--font-display);
+  font-size: clamp(1.7rem, 1rem + 2.2vh, 2.4rem);
+  font-weight: 200;
+  line-height: 1.08;
+  letter-spacing: -0.025em;
+  color: var(--color-fg);
 }
 
-.bd-head__title {
+.bd-greet__name {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 300;
+}
+
+.bd-greet__periods {
+  margin-top: clamp(0.75rem, 2vh, 1.1rem);
+}
+
+.bd-greet__line {
   margin-top: 0.55rem;
   font-family: var(--font-display);
-  font-size: clamp(1.5rem, 0.6rem + 2.6vh, 2.4rem);
-  font-weight: 200;
-  line-height: 1.12;
-  letter-spacing: -0.022em;
-  color: var(--color-fg);
+  font-size: clamp(0.95rem, 0.6rem + 1vh, 1.2rem);
+  font-weight: 300;
+  line-height: 1.3;
+  color: var(--color-fg-2);
   text-wrap: balance;
   animation: bd-in 500ms var(--ease-out-soft) both;
 }
 
-.bd-periods {
-  display: inline-flex;
-  padding: 3px;
-  border-radius: 999px;
-  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.08);
+/* ---------- The day line ----------
+   Today's briefings as three stations on one thin line: lit up to the briefing in view, then the
+   rest of the day so far, then what is still to come. The latest carries the Core's emerald. */
+.bd-day {
+  display: grid;
+  grid-template-columns: repeat(var(--n), minmax(0, 8.25rem));
+  max-width: 100%;
 }
 
-.bd-periods__item {
+.bd-day__stop {
+  --dot: 0.625rem;
   position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.45rem;
-  min-height: 2.25rem;
-  padding: 0.4rem 0.9rem;
-  border-radius: 999px;
-  font-size: 12.5px;
-  color: var(--color-fg-3);
-  white-space: nowrap;
-  transition: color 250ms, background-color 250ms;
-}
-
-.bd-periods__item:hover {
-  color: var(--color-fg);
-}
-
-.bd-periods__item[aria-checked="true"] {
-  color: var(--color-fg);
-  background: rgb(255 255 255 / 0.07);
-}
-
-.bd-periods__item:focus-visible {
-  outline: 2px solid var(--color-fg);
-  outline-offset: 2px;
-}
-
-.bd-periods__time {
-  font-size: 11.5px;
-  color: var(--color-fg-3);
-}
-
-.bd-periods__latest {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--emerald-bright);
-}
-
-.bd-body {
   display: grid;
-  gap: 2rem;
-  min-height: 0;
-}
-
-.bd-body__side {
-  display: grid;
-  gap: 1.5rem;
+  justify-items: start;
   align-content: start;
+  gap: 0.15rem;
   min-width: 0;
+  padding: 0.15rem 0.6rem 0.2rem 0;
+  border-radius: 6px;
+  text-align: left;
+}
+
+/* the line on to the next station */
+.bd-day__stop[data-link]::before {
+  content: "";
+  position: absolute;
+  top: calc(0.15rem + var(--dot) / 2 - 0.5px);
+  left: calc(var(--dot) + 0.45rem);
+  right: 0.45rem;
+  height: 1px;
+  background: rgb(255 255 255 / 0.2);
+  transition: background-color 400ms var(--ease-out-soft);
+}
+
+.bd-day__stop[data-link="day"]::before {
+  background: rgb(255 255 255 / 0.34);
+}
+
+/* the part of the day travelled to the briefing in view */
+.bd-day__stop[data-link="read"]::before {
+  background: rgb(79 174 134 / 0.7);
+}
+
+.bd-day__stop[data-link="ahead"]::before {
+  background: linear-gradient(90deg, rgb(255 255 255 / 0.3), rgb(255 255 255 / 0.08));
+}
+
+.bd-day__node {
+  width: var(--dot);
+  height: var(--dot);
+  margin-bottom: 0.35rem;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1.25px rgb(255 255 255 / 0.55);
+  transition: background-color 300ms, box-shadow 300ms;
+}
+
+/* the latest briefing: the end of the day so far */
+.bd-day__stop[data-latest] .bd-day__node {
+  box-shadow: inset 0 0 0 1.5px var(--color-fg);
+}
+
+.bd-day__stop:hover:not([data-on], [data-upcoming]) .bd-day__node {
+  box-shadow: inset 0 0 0 1.5px var(--emerald-bright);
+}
+
+.bd-day__stop[data-on] .bd-day__node {
+  background: var(--emerald-bright);
+  box-shadow: 0 0 0 4px rgb(79 174 134 / 0.18);
+}
+
+.bd-day__stop[data-upcoming] {
+  cursor: default;
+}
+
+.bd-day__stop[data-upcoming] .bd-day__node {
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.3);
+}
+
+.bd-day__name {
+  font-size: 12px;
+  line-height: 1.2;
+  color: var(--color-fg-2);
+  white-space: nowrap;
+  transition: color 250ms;
+}
+
+.bd-day__time {
+  margin-left: 0.2rem;
+  font-size: 11px;
+  color: var(--color-fg-3);
+}
+
+.bd-day__brought {
+  max-width: 100%;
+  overflow: hidden;
+  font-size: 11px;
+  line-height: 1.25;
+  color: var(--color-fg-3);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: color 250ms;
+}
+
+.bd-day__stop:hover .bd-day__name,
+.bd-day__stop[data-on] .bd-day__name {
+  color: var(--color-fg);
+}
+
+.bd-day__stop[data-on] .bd-day__brought {
+  color: var(--color-fg-2);
+}
+
+.bd-day__stop[data-upcoming] :is(.bd-day__name, .bd-day__time, .bd-day__brought) {
+  color: rgb(255 255 255 / 0.42);
+}
+
+.bd-day__stop:focus-visible {
+  outline: 2px solid var(--color-fg);
+  outline-offset: 3px;
 }
 
 /* ---------- The dial ---------- */
 .bd-dial {
-  --ring: min(100%, 30rem);
+  --ring: min(100%, 26rem);
+  /* the points on the ring, and the gap between a point and its card */
+  --node: clamp(2.75rem, calc(var(--ring) * 0.14), 3.6rem);
   display: grid;
   justify-items: center;
-  padding: 2.6rem 7.25rem;
+  gap: 1.5rem;
 }
 
-.bd-dial__ring,
-.bd-nodes {
-  grid-area: 1 / 1;
+.bd-ring {
+  position: relative;
   width: var(--ring);
   aspect-ratio: 1;
-}
-
-.bd-dial__ring {
-  position: relative;
   container-type: inline-size;
 }
 
-.bd-dial__svg {
+.bd-ring__svg {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -4103,181 +3556,98 @@ html[data-vt="onboarding"]::view-transition-new(root) {
   overflow: visible;
 }
 
-.bd-dial__arc {
+.bd-ring__arc {
   fill: none;
   stroke: var(--color-fg);
-  stroke-opacity: 0.13;
+  stroke-opacity: 0.3;
   stroke-width: 1.25;
   stroke-linecap: round;
-  transition: stroke-opacity 500ms var(--ease-out-soft);
+  transition: stroke 500ms var(--ease-out-soft), stroke-opacity 500ms var(--ease-out-soft);
 }
 
-.bd-dial__arc[data-near] {
-  stroke-opacity: 0.42;
+/* the two quarters either side of the selected step carry it */
+.bd-ring__arc[data-near] {
+  stroke: var(--emerald-bright);
+  stroke-opacity: 0.7;
 }
 
-.bd-dial__pointer {
-  stroke: var(--color-fg);
-  stroke-opacity: 0.45;
-  stroke-width: 1.25;
-  stroke-linecap: round;
-  animation: bd-fade 500ms var(--ease-out-soft) both;
-}
-
-.bd-dial__dot {
-  fill: var(--color-canvas);
-  stroke: var(--color-fg);
-  stroke-opacity: 0.45;
-  stroke-width: 1.5;
-  transition: fill 300ms, stroke-opacity 300ms;
-}
-
-.bd-dial__halo {
-  fill: none;
-  stroke: var(--color-fg);
-  stroke-opacity: 0;
-  stroke-width: 1;
-  transition: stroke-opacity 300ms;
-}
-
-.bd-dial__mark[data-on] .bd-dial__dot {
+.bd-ring__tick {
   fill: var(--color-fg);
-  stroke-opacity: 1;
+  fill-opacity: 0.5;
 }
 
-.bd-dial__mark[data-on] .bd-dial__halo {
+.bd-ring__disc {
+  fill: rgb(255 255 255 / 0.025);
+  stroke: var(--color-fg);
+  stroke-opacity: 0.22;
+  stroke-width: 1;
+}
+
+/* progress towards a goal, round the disc */
+.bd-ring__progress {
+  fill: none;
+  stroke: var(--emerald-bright);
+  stroke-width: 2;
+  stroke-linecap: round;
+  animation: bd-draw 900ms var(--ease-out-soft) both;
+}
+
+.bd-ring__link {
+  stroke: var(--color-fg);
   stroke-opacity: 0.28;
+  stroke-width: 1.25;
+  transition: stroke 400ms, stroke-opacity 400ms;
 }
 
-/* the action is what Syxoria does: its point carries the Core's emerald */
-.bd-dial__mark[data-dimension="action"] .bd-dial__dot {
+.bd-ring__link[data-on] {
   stroke: var(--emerald-bright);
-  stroke-opacity: 0.85;
+  stroke-opacity: 0.9;
 }
 
-.bd-dial__mark[data-dimension="action"][data-on] .bd-dial__dot {
-  fill: var(--emerald-bright);
-}
-
-.bd-dial__mark[data-dimension="action"] .bd-dial__halo {
-  stroke: var(--emerald-bright);
-}
-
-.bd-dial:has(.bd-node[data-dimension="priority"]:hover) .bd-dial__mark[data-dimension="priority"] .bd-dial__dot,
-.bd-dial:has(.bd-node[data-dimension="insight"]:hover) .bd-dial__mark[data-dimension="insight"] .bd-dial__dot,
-.bd-dial:has(.bd-node[data-dimension="recommendation"]:hover) .bd-dial__mark[data-dimension="recommendation"] .bd-dial__dot,
-.bd-dial:has(.bd-node[data-dimension="action"]:hover) .bd-dial__mark[data-dimension="action"] .bd-dial__dot {
-  stroke-opacity: 1;
-}
-
-/* the four points: on the ring, their names outside it */
-.bd-nodes {
-  position: relative;
-  pointer-events: none;
-}
-
-/* a 2.75rem target centred on its point; the name sits outside the ring */
-.bd-node {
-  position: absolute;
-  width: 2.75rem;
-  height: 2.75rem;
-  margin: -1.375rem 0 0 -1.375rem;
-  padding: 0;
-  border-radius: 50%;
-  outline: none;
-  color: var(--color-fg-3);
-  pointer-events: auto;
-}
-
-.bd-node[data-dimension="priority"] {
-  left: 50%;
-  top: 7.5%;
-}
-
-.bd-node[data-dimension="insight"] {
-  left: 92.5%;
-  top: 50%;
-}
-
-.bd-node[data-dimension="action"] {
-  left: 50%;
-  top: 92.5%;
-}
-
-.bd-node[data-dimension="recommendation"] {
-  left: 7.5%;
-  top: 50%;
-}
-
-.bd-node__label {
+.bd-point {
   position: absolute;
   display: grid;
-  gap: 0.2rem;
-  padding: 0.2rem 0.35rem;
-  border-radius: 6px;
-  white-space: nowrap;
-  transition: color 250ms, scale 150ms;
-}
-
-.bd-node[data-dimension="priority"] .bd-node__label {
-  bottom: 2.5rem;
-  left: 50%;
-  translate: -50% 0;
-  justify-items: center;
-}
-
-.bd-node[data-dimension="action"] .bd-node__label {
-  top: 2.5rem;
-  left: 50%;
-  translate: -50% 0;
-  justify-items: center;
-}
-
-.bd-node[data-dimension="insight"] .bd-node__label {
-  left: 2.65rem;
-  top: 50%;
-  translate: 0 -50%;
-  justify-items: start;
-}
-
-.bd-node[data-dimension="recommendation"] .bd-node__label {
-  right: 2.65rem;
-  top: 50%;
-  translate: 0 -50%;
-  justify-items: end;
-}
-
-.bd-node__name {
-  font-family: var(--font-label);
-  font-size: 11px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-}
-
-.bd-node__sub {
-  font-size: 12.5px;
-  color: var(--color-fg-3);
-}
-
-.bd-node:hover .bd-node__name {
+  place-items: center;
+  width: var(--node);
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: var(--color-canvas);
   color: var(--color-fg-2);
+  box-shadow: inset 0 0 0 1.5px rgb(255 255 255 / 0.36);
+  transition: color 250ms, box-shadow 250ms, background-color 250ms;
 }
 
-.bd-node[aria-checked="true"] .bd-node__name {
+.bd-point[data-dimension="priority"] {
+  left: 50%;
+  top: 7%;
+}
+
+.bd-point[data-dimension="insight"] {
+  left: 93%;
+  top: 50%;
+}
+
+.bd-point[data-dimension="action"] {
+  left: 50%;
+  top: 93%;
+}
+
+.bd-point[data-dimension="recommendation"] {
+  left: 7%;
+  top: 50%;
+}
+
+.bd-point:hover {
   color: var(--color-fg);
+  box-shadow: inset 0 0 0 1.5px rgb(255 255 255 / 0.65);
 }
 
-.bd-node[aria-checked="true"] .bd-node__sub {
-  color: var(--color-fg-2);
-}
-
-.bd-node:active .bd-node__label {
-  scale: 0.98;
-}
-
-.bd-node:focus-visible .bd-node__label {
-  outline: 2px solid var(--color-fg);
-  outline-offset: 2px;
+/* the selected step, in the Core's emerald */
+.bd-point[data-on] {
+  color: var(--emerald-bright);
+  background: #0d1713;
+  box-shadow: inset 0 0 0 1.5px var(--emerald-bright), 0 0 0 6px rgb(79 174 134 / 0.12);
 }
 
 /* ---------- The centre ---------- */
@@ -4292,34 +3662,38 @@ html[data-vt="onboarding"]::view-transition-new(root) {
 .bd-center__body {
   display: grid;
   justify-items: center;
-  width: 66%;
+  width: 50%;
   text-align: center;
   pointer-events: auto;
   animation: bd-in 420ms var(--ease-out-soft) both;
+  transition: opacity 250ms;
 }
 
+/* while the reasoning is open over it, the centre steps back; the ring (a container, so its own
+   stacking context) comes up over the cards so the reasoning is read whole */
+.bd-ring[data-why] {
+  z-index: 2;
+}
+
+.bd-ring[data-why] .bd-center__body {
+  opacity: 0;
+}
+
+/* the question the selected step answers */
 .bd-center__kicker {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.6rem;
-  font-family: var(--font-label);
-  font-size: 10.5px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--color-fg-3);
-}
-
-.bd-center__severity {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  color: var(--color-fg-2);
+  font-size: clamp(10.5px, 2.8cqi, 12px);
+  line-height: 1.3;
+  color: var(--color-accent-strong);
+  text-wrap: balance;
 }
 
 .bd-center__metric {
-  margin-top: 0.55rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.12em;
+  margin-top: 0.45rem;
   font-family: var(--font-display);
-  font-size: clamp(2rem, 13cqi, 4.25rem);
+  font-size: clamp(1.6rem, 11cqi, 3.4rem);
   font-weight: 200;
   line-height: 1;
   letter-spacing: -0.03em;
@@ -4327,85 +3701,422 @@ html[data-vt="onboarding"]::view-transition-new(root) {
   white-space: nowrap;
 }
 
+/* a time or a short phrase reads smaller than money */
+.bd-center__metric[data-kind="time"] {
+  font-size: clamp(1.5rem, 9.5cqi, 3rem);
+}
+
+.bd-center__mark {
+  flex: none;
+  width: 0.55em;
+  height: 0.55em;
+  color: var(--color-fg-2);
+}
+
+.bd-center__metric[data-kind="result"] .bd-center__mark,
+.bd-direction[data-direction="up"] {
+  color: var(--emerald-bright);
+}
+
+.bd-center__meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: 0.3rem;
+  font-size: clamp(10.5px, 2.6cqi, 11.5px);
+  color: var(--color-fg-3);
+}
+
+/* a client's issue or an alert: a few words, not a number */
+.bd-center__urgency {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.45rem;
+  font-size: clamp(10px, 2.6cqi, 11.5px);
+  color: var(--color-fg-2);
+}
+
+.bd-center__message {
+  margin-top: 0.35rem;
+  font-family: var(--font-display);
+  font-size: clamp(1.05rem, 5.6cqi, 1.6rem);
+  font-weight: 300;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  color: var(--color-fg);
+  text-wrap: balance;
+}
+
 .bd-center__caption {
   margin-top: 0.4rem;
-  font-size: clamp(11.5px, 3.1cqi, 14px);
+  font-size: clamp(10.5px, 2.8cqi, 12.5px);
   line-height: 1.35;
   color: var(--color-fg-2);
   text-wrap: balance;
 }
 
 .bd-center__title {
-  margin-top: 0.8rem;
+  margin-top: 0.55rem;
   font-family: var(--font-display);
-  font-size: clamp(0.95rem, 4.1cqi, 1.25rem);
+  font-size: clamp(0.95rem, 4.2cqi, 1.25rem);
   font-weight: 300;
-  line-height: 1.3;
+  line-height: 1.25;
   color: var(--color-fg);
   text-wrap: balance;
 }
 
-.bd-center__title[data-lead] {
-  margin-top: 0.7rem;
-  font-size: clamp(1.15rem, 6cqi, 1.75rem);
-  font-weight: 200;
-  line-height: 1.2;
-}
-
 .bd-center__detail {
-  margin-top: 0.5rem;
-  font-size: 12px;
+  margin-top: 0.45rem;
+  font-size: clamp(10px, 2.5cqi, 11.5px);
   line-height: 1.35;
   color: var(--color-fg-3);
+  text-wrap: balance;
+}
+
+.bd-center__body > .bd-link--why {
+  margin-top: 0.65rem;
 }
 
 .bd-center__was {
-  margin-top: 0.35rem;
+  display: -webkit-box;
+  margin-top: 0.4rem;
+  overflow: hidden;
   font-family: var(--font-display);
-  font-size: 13px;
+  font-size: clamp(10.5px, 2.7cqi, 12px);
   font-style: italic;
   line-height: 1.35;
   color: var(--color-fg-3);
   text-wrap: balance;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
-.bd-center__nav {
+/* small dials: the comparison takes the detail's place; smaller still, the centre keeps only its
+   question, its figure and Why (the urgency stays on the priority card) */
+@container (max-width: 26rem) {
+  .bd-center__body:has(.bd-center__was) .bd-center__detail {
+    display: none;
+  }
+}
+
+@container (max-width: 22rem) {
+  .bd-center__was,
+  .bd-center__urgency,
+  .bd-center__detail {
+    display: none;
+  }
+}
+
+/* ---------- Why: the reasoning, over the dial ---------- */
+.bd-why {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 3;
+  display: grid;
+  align-content: start;
+  gap: 0.65rem;
+  width: min(23rem, 94%);
+  max-height: 100%;
+  overflow-y: auto;
+  padding: 0.95rem 1.1rem 1.05rem;
+  border-radius: 18px;
+  background: rgb(13 14 15 / 0.97);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.14), 0 24px 60px -20px rgb(0 0 0 / 0.85);
+  translate: -50% -50%;
+  backdrop-filter: blur(10px);
+  scrollbar-width: thin;
+  animation: bd-why-in 260ms var(--ease-out-soft) both;
+}
+
+.bd-why__head {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 0.35rem 0.75rem;
-  margin-top: 0.85rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
 }
 
-.bd-center__why {
-  margin-top: 0.7rem;
+.bd-why__title {
+  font-family: var(--font-label);
+  font-size: 10.5px;
+  font-weight: 400;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-accent-strong);
+}
+
+.bd-why__close {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  margin: -0.4rem -0.55rem -0.4rem 0;
+  border-radius: 50%;
+  color: var(--color-fg-2);
+  transition: color 200ms, background-color 200ms;
+}
+
+.bd-why__close:hover {
+  color: var(--color-fg);
+  background: rgb(255 255 255 / 0.06);
+}
+
+.bd-why__close:focus-visible {
+  outline: 2px solid var(--color-fg);
+  outline-offset: 1px;
+}
+
+.bd-why__lead {
   font-family: var(--font-display);
-  font-size: clamp(1rem, 4.4cqi, 1.3rem);
+  font-size: 1rem;
   font-weight: 300;
   line-height: 1.3;
+  color: var(--color-fg);
+  text-wrap: pretty;
+}
+
+.bd-why__part {
+  display: grid;
+  gap: 0.2rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid rgb(255 255 255 / 0.08);
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--color-fg-2);
+}
+
+.bd-why__label {
+  font-size: 11px;
+  color: var(--color-fg-3);
+}
+
+.bd-why__list {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.bd-why__list li {
+  position: relative;
+  padding-left: 0.85rem;
+}
+
+.bd-why__list li::before {
+  content: "";
+  position: absolute;
+  top: 0.6em;
+  left: 0.1rem;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 0.4);
+}
+
+.bd-why__part[data-limits] p:last-child {
+  font-family: var(--font-serif);
+  font-style: italic;
+  color: var(--color-fg-3);
+}
+
+/* ---------- The four cards ---------- */
+.bd-cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.bd-card {
+  position: relative;
+  display: grid;
+  align-content: start;
+  gap: 0.3rem;
+  padding: 0.75rem 0.9rem 0.85rem;
+  border-radius: 14px;
+  text-align: left;
+  background: rgb(13 14 15 / 0.9);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.12);
+  transition: box-shadow 250ms, background-color 250ms;
+  container: card / inline-size;
+}
+
+.bd-card[data-dimension="insight"] {
+  order: 2;
+}
+
+.bd-card[data-dimension="recommendation"] {
+  order: 3;
+}
+
+.bd-card[data-dimension="action"] {
+  order: 4;
+}
+
+.bd-card:hover {
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.26);
+}
+
+/* the selected step, in the Core's emerald */
+.bd-card[aria-checked="true"] {
+  background: linear-gradient(rgb(79 174 134 / 0.07), rgb(79 174 134 / 0.07)), rgb(13 15 15 / 0.95);
+  box-shadow: inset 0 0 0 1px rgb(79 174 134 / 0.62), 0 0 0 4px rgb(79 174 134 / 0.06);
+}
+
+.bd-card:active {
+  scale: 0.995;
+}
+
+.bd-card:focus-visible {
+  outline: 2px solid var(--color-fg);
+  outline-offset: 2px;
+}
+
+.bd-card__kicker {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.bd-card__icon {
+  flex: none;
+  color: var(--color-fg-2);
+}
+
+.bd-card[aria-checked="true"] .bd-card__icon {
+  color: var(--emerald-bright);
+}
+
+.bd-card__name {
+  font-family: var(--font-label);
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-fg-2);
+}
+
+.bd-card[aria-checked="true"] .bd-card__name {
+  color: var(--color-fg);
+}
+
+/* new or changed since the last briefing */
+.bd-card__change {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 11px;
+  color: var(--color-accent-strong);
+  white-space: nowrap;
+}
+
+.bd-card__dot {
+  width: 0.375rem;
+  height: 0.375rem;
+  border-radius: 50%;
+  background: var(--emerald-bright);
+}
+
+@container card (max-width: 13.5rem) {
+  .bd-card__change-word {
+    display: none;
+  }
+}
+
+.bd-card__tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--color-fg-2);
+  white-space: nowrap;
+}
+
+.bd-card__tag:is([data-level="critical"], [data-level="high"], [data-status="awaiting-approval"]) {
+  color: var(--color-fg);
+}
+
+.bd-card__tag[data-status="unsuccessful"] {
+  color: var(--color-negative);
+}
+
+.bd-card__title {
+  font-family: var(--font-display);
+  font-size: 1.02rem;
+  font-weight: 300;
+  line-height: 1.25;
   color: var(--color-fg);
   text-wrap: balance;
 }
 
-.bd-center__evidence {
-  display: grid;
-  gap: 0.35rem;
-  margin-top: 0.75rem;
-  font-size: 12.5px;
+.bd-card__title,
+.bd-card__why,
+.bd-card__figure {
+  animation: bd-in 420ms var(--ease-out-soft) both;
+}
+
+.bd-card__why {
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--color-fg-2);
+  text-wrap: pretty;
+}
+
+.bd-card__figure {
+  min-width: 0;
+  font-size: 12px;
   line-height: 1.35;
   color: var(--color-fg-2);
-  text-wrap: balance;
+}
+
+/* a step's figure in one line: the value first, then what it counts */
+.bd-figure {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.bd-figure > svg {
+  flex: none;
+  align-self: center;
+}
+
+.bd-figure__value {
+  flex: none;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-fg);
+}
+
+.bd-figure__caption,
+.bd-figure__quote {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bd-figure__quote {
+  font-family: var(--font-serif);
+  font-style: italic;
+  color: var(--color-fg);
+}
+
+.bd-figure[data-kind="result"] > svg {
+  color: var(--emerald-bright);
 }
 
 .bd-link {
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
-  min-height: 2rem;
-  padding: 0.3rem 0.5rem;
+  min-height: 1.85rem;
+  padding: 0.25rem 0.5rem;
   border-radius: 999px;
-  font-size: 12px;
+  font-size: 11.5px;
   color: var(--color-fg-2);
+  white-space: nowrap;
   transition: color 200ms, background-color 200ms;
 }
 
@@ -4435,6 +4146,7 @@ html[data-vt="onboarding"]::view-transition-new(root) {
   border-radius: 2px;
   font-size: inherit;
   text-align: left;
+  white-space: normal;
   text-decoration: underline;
   text-decoration-color: rgb(255 255 255 / 0.25);
   text-underline-offset: 3px;
@@ -4446,51 +4158,70 @@ html[data-vt="onboarding"]::view-transition-new(root) {
 
 .bd-severity rect {
   fill: currentColor;
-  opacity: 0.25;
+  opacity: 0.3;
 }
 
 .bd-severity rect[data-on] {
   opacity: 1;
 }
 
-/* ---------- What changed ---------- */
-.bd-changes__title,
-.bd-actions__title {
-  font-family: var(--font-label);
-  font-size: 10.5px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--color-fg-3);
+/* ---------- Since your last briefing ----------
+   Two or three updates, most relevant first: a headline, its status in a word and a mark, a few
+   words if needed, and when. On a desktop it sits at the dial's lower right. */
+.bd-changes__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  column-gap: 0.75rem;
+  row-gap: 0.1rem;
+}
+
+.bd-changes__against {
+  font-size: 11.5px;
+  color: var(--color-fg-2);
+}
+
+.bd-changes__lead {
+  margin-top: 0.45rem;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 300;
+  line-height: 1.3;
+  color: var(--color-fg);
 }
 
 .bd-changes__first {
-  margin-top: 0.4rem;
-  font-size: 13.5px;
+  margin-top: 0.25rem;
+  font-size: 12px;
   line-height: 1.45;
   color: var(--color-fg-2);
+  text-wrap: pretty;
 }
 
 .bd-changes__list {
   display: grid;
-  margin-top: 0.5rem;
+  margin-top: 0.35rem;
+}
+
+.bd-changes__list > li + li {
+  border-top: 1px solid rgb(255 255 255 / 0.07);
 }
 
 .bd-change {
   display: grid;
-  grid-template-columns: 6.4rem minmax(0, 1fr) auto;
-  align-items: baseline;
-  gap: 0.75rem;
-  width: calc(100% + 1.2rem);
-  margin-inline: -0.6rem;
-  padding: 0.45rem 0.6rem;
-  border-radius: 8px;
-  font-size: 13.5px;
-  line-height: 1.4;
+  grid-template-columns: 1.6rem minmax(0, 1fr) auto;
+  align-items: start;
+  column-gap: 0.65rem;
+  width: calc(100% + 1rem);
+  margin-inline: -0.5rem;
+  padding: 0.42rem 0.5rem;
+  border-radius: 10px;
   text-align: left;
 }
 
 button.bd-change:hover {
-  background: rgb(255 255 255 / 0.04);
+  background: rgb(255 255 255 / 0.045);
 }
 
 button.bd-change:focus-visible {
@@ -4498,98 +4229,314 @@ button.bd-change:focus-visible {
   outline-offset: -2px;
 }
 
-.bd-change__kind {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 11.5px;
-  color: var(--color-fg-3);
+.bd-change__main {
+  display: grid;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.bd-change__title,
+.bd-change__detail {
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.bd-change__icon {
-  flex: none;
-  translate: 0 1px;
+.bd-change__title {
+  font-size: 13px;
+  line-height: 1.3;
+  color: var(--color-fg);
 }
 
-.bd-change__icon:is([data-kind="completed"], [data-kind="opportunity"], [data-kind="decided"]) {
-  color: var(--color-accent-strong);
+.bd-change__detail {
+  font-size: 11.5px;
+  line-height: 1.35;
+  color: var(--color-fg-3);
 }
 
-.bd-change__icon[data-kind="risk"] {
-  color: var(--color-caution);
-}
-
-.bd-change__text {
+.bd-change__status {
   color: var(--color-fg-2);
 }
 
+.bd-change__status:is([data-tone="completed"], [data-tone="sent"], [data-tone="decided"], [data-tone="opportunity"]) {
+  color: var(--color-accent-strong);
+}
+
+.bd-change__status:is([data-tone="awaiting-approval"], [data-tone="unresolved"], [data-tone="new"]) {
+  color: var(--color-fg);
+}
+
+.bd-change__status[data-tone="unsuccessful"] {
+  color: var(--color-negative);
+}
+
+.bd-change__status[data-tone="risk"] {
+  color: var(--color-caution);
+}
+
 .bd-change__at {
-  font-size: 11.5px;
+  padding-top: 0.15rem;
+  font-size: 11px;
   color: var(--color-fg-3);
 }
 
 .bd-changes__more {
-  margin-top: 0.2rem;
+  margin-top: 0.1rem;
   margin-left: -0.5rem;
 }
 
-/* ---------- What Syxoria is doing ---------- */
-.bd-actions {
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  padding: 1rem 1.1rem 0.4rem;
-  border-radius: 14px;
-  background: rgb(255 255 255 / 0.018);
-  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.07);
+.bd-changes:not([data-open]) .bd-changes__more:not([data-needed]) {
+  display: none;
 }
 
-.bd-actions__head {
+/* ---------- Follow through, and every action ---------- */
+.bd-bottom {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.bd-follow,
+.bd-autonomy {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  padding: 0.85rem 1.1rem;
+  border-radius: 16px;
+  background: rgb(255 255 255 / 0.022);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1);
+}
+
+.bd-follow {
+  container: follow / inline-size;
+}
+
+.bd-follow__head {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
 }
 
-.bd-actions__summary {
-  margin-top: 0.3rem;
-  font-family: var(--font-display);
-  font-size: 1.08rem;
-  font-weight: 300;
+/* where every action stands, most pressing first: it opens the list */
+.bd-counts {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 0.85rem;
+  min-height: 2rem;
+  padding: 0.25rem 0.55rem 0.25rem 0.85rem;
+  border-radius: 999px;
+  font-size: 11.5px;
+  color: var(--color-fg-2);
+  white-space: nowrap;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.16);
+  transition: color 200ms, background-color 200ms, box-shadow 200ms;
+}
+
+.bd-counts:hover {
+  color: var(--color-fg);
+  background: rgb(255 255 255 / 0.045);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.28);
+}
+
+.bd-counts:focus-visible {
+  outline: 2px solid var(--color-fg);
+  outline-offset: 2px;
+}
+
+.bd-counts__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.bd-counts__item[data-status="awaiting-approval"] {
   color: var(--color-fg);
 }
 
-.bd-mode {
-  display: inline-flex;
-  flex: none;
-  align-items: center;
-  gap: 0.45rem;
-  padding: 0.3rem 0.65rem;
-  border-radius: 999px;
-  font-size: 12px;
-  color: var(--color-fg-2);
-  white-space: nowrap;
-  box-shadow: inset 0 0 0 1px rgb(79 174 134 / 0.32);
+.bd-counts__item[data-status="unsuccessful"] {
+  color: var(--color-negative);
 }
 
-.bd-actions__limit {
-  margin-top: 0.45rem;
-  font-size: 12px;
-  line-height: 1.4;
+.bd-counts__all {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding-left: 0.8rem;
+  border-left: 1px solid rgb(255 255 255 / 0.14);
+  color: var(--color-fg);
+}
+
+@container follow (max-width: 62rem) {
+  .bd-counts__item:nth-child(n + 4) {
+    display: none;
+  }
+}
+
+@container follow (max-width: 40rem) {
+  .bd-counts__item:nth-child(n + 3) {
+    display: none;
+  }
+}
+
+@container follow (max-width: 30rem) {
+  .bd-follow__head {
+    flex-wrap: wrap;
+  }
+}
+
+.bd-follow__title {
+  margin-top: 0.25rem;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 300;
+  line-height: 1.3;
+  color: var(--color-fg);
+}
+
+/* named beside the panel's title: the steps that moved since the previous briefing */
+.bd-follow__key {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-left: 0.85rem;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  letter-spacing: 0;
+  text-transform: none;
   color: var(--color-fg-3);
 }
 
-.bd-actions__list {
+.bd-follow__dot,
+.bd-thread__step[data-moved] .bd-thread__node {
+  outline: 2.5px solid rgb(79 174 134 / 0.3);
+  outline-offset: 2px;
+}
+
+.bd-follow__dot {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: var(--emerald-bright);
+  outline-offset: 1.5px;
+}
+
+.bd-thread__step[data-moved] .bd-thread__when {
+  color: var(--color-accent-strong);
+}
+
+.bd-thread {
+  display: grid;
+  grid-template-columns: repeat(var(--n), minmax(0, 1fr));
+  margin-top: auto;
+  padding-top: 0.75rem;
+}
+
+.bd-thread__step {
+  position: relative;
+  display: grid;
+  justify-items: start;
+  align-content: start;
+  min-width: 0;
+  padding-right: 0.5rem;
+  animation: onb-word 500ms var(--ease-out-soft) both;
+  animation-delay: calc(var(--i, 0) * 70ms);
+}
+
+.bd-thread__step:not(:last-child)::before {
+  content: "";
+  position: absolute;
+  top: calc(0.525rem - 0.5px);
+  left: 1.5rem;
+  right: 0.45rem;
+  height: 1px;
+  background: rgb(255 255 255 / 0.22);
+}
+
+.bd-thread__step[data-state="done"]::before {
+  background: var(--color-accent-strong);
+}
+
+.bd-thread__step[data-state="now"]::before {
+  background: linear-gradient(90deg, rgb(255 255 255 / 0.5), rgb(255 255 255 / 0.1));
+}
+
+.bd-thread__node {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 1.05rem;
+  height: 1.05rem;
+  border-radius: 50%;
+  color: var(--color-canvas);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.4);
+}
+
+.bd-thread__step[data-state="done"] .bd-thread__node {
+  background: var(--emerald-bright);
+  box-shadow: 0 0 10px rgb(79 174 134 / 0.45);
+}
+
+.bd-thread__step[data-state="now"] .bd-thread__node {
+  background: radial-gradient(circle, var(--color-fg) 0 3px, transparent 3.6px);
+  box-shadow: inset 0 0 0 1.5px var(--color-fg);
+}
+
+.bd-thread__step[data-state="now"] .bd-thread__node::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.4);
+  animation: onb-breathe 2.4s var(--ease-in-out-soft) infinite;
+}
+
+.bd-thread__step[data-state="failed"] .bd-thread__node {
+  color: var(--color-negative);
+  box-shadow: inset 0 0 0 1.5px var(--color-negative);
+}
+
+.bd-thread__label {
+  margin-top: 0.5rem;
+  font-size: 12px;
+  line-height: 1.2;
+  color: var(--color-fg);
+  white-space: nowrap;
+}
+
+.bd-thread__step[data-state="next"] .bd-thread__label {
+  color: var(--color-fg-3);
+}
+
+.bd-thread__step[data-state="failed"] .bd-thread__label {
+  color: var(--color-negative);
+}
+
+.bd-thread__when,
+.bd-thread__detail {
+  margin-top: 0.1rem;
+  font-size: 11px;
+  line-height: 1.25;
+  color: var(--color-fg-3);
+  white-space: nowrap;
+}
+
+.bd-thread__when {
+  color: var(--color-fg-2);
+}
+
+.bd-actions {
+  display: grid;
   min-height: 0;
-  margin-top: 0.55rem;
+  margin-top: 0.6rem;
   overflow-y: auto;
-  border-top: 1px solid rgb(255 255 255 / 0.06);
   scrollbar-width: thin;
 }
 
-.bd-action + .bd-action {
-  border-top: 1px solid rgb(255 255 255 / 0.045);
+.bd-action {
+  border-top: 1px solid rgb(255 255 255 / 0.07);
 }
 
 .bd-action__row {
@@ -4598,8 +4545,8 @@ button.bd-change:focus-visible {
   align-items: center;
   gap: 0.65rem;
   width: 100%;
-  min-height: 2.75rem;
-  padding: 0.4rem 0;
+  min-height: 2.6rem;
+  padding: 0.3rem 0;
   text-align: left;
 }
 
@@ -4611,7 +4558,7 @@ button.bd-change:focus-visible {
 
 .bd-action__name {
   overflow: hidden;
-  font-size: 13.5px;
+  font-size: 13px;
   color: var(--color-fg);
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -4639,7 +4586,7 @@ button.bd-change:focus-visible {
   color: var(--color-fg);
 }
 
-.bd-action[data-status="completed"] .bd-action__status {
+.bd-action:is([data-status="completed"], [data-status="sent"]) .bd-action__status {
   color: var(--color-accent-strong);
 }
 
@@ -4647,9 +4594,7 @@ button.bd-change:focus-visible {
   color: var(--color-negative);
 }
 
-.bd-action[data-status="drafted"] .bd-action__status {
-  color: var(--color-fg-3);
-}
+
 
 .bd-action__chevron {
   color: var(--color-fg-3);
@@ -4663,8 +4608,8 @@ button.bd-change:focus-visible {
 .bd-action__more {
   display: grid;
   gap: 0.3rem;
-  padding: 0 1.5rem 0.75rem 2.25rem;
-  font-size: 12.5px;
+  padding: 0 1.5rem 0.7rem 2.25rem;
+  font-size: 12px;
   line-height: 1.4;
   color: var(--color-fg-2);
 }
@@ -4677,28 +4622,37 @@ button.bd-change:focus-visible {
   color: var(--color-fg);
 }
 
-/* each status in its own mark: a pen, a raised hand, a calendar, a turning circle, a check, an alert */
+/* each status in its own mark: a pen, a raised hand, a calendar, a turning circle, a paper plane,
+   a check, an alert. Drafted is dashed (not asked yet); sent is outlined in emerald (gone out, its
+   outcome still open); completed is filled */
 .bd-status {
   display: grid;
+  flex: none;
   place-items: center;
   width: 1.6rem;
   height: 1.6rem;
   border-radius: 50%;
   color: var(--color-fg-2);
-  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.14);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.24);
 }
 
 .bd-status[data-status="drafted"] {
-  color: var(--color-fg-3);
+  box-shadow: none;
+  outline: 1px dashed rgb(255 255 255 / 0.4);
+  outline-offset: -1px;
 }
 
-.bd-status[data-status="awaiting-approval"] {
+.bd-status:is([data-status="awaiting-approval"], [data-kind="new"], [data-kind="unresolved"]) {
   color: var(--color-fg);
-  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.45);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.55);
 }
 
-.bd-status[data-status="in-progress"],
-.bd-status[data-status="completed"] {
+.bd-status:is([data-status="sent"], [data-kind="decided"], [data-kind="opportunity"]) {
+  color: var(--color-accent-strong);
+  box-shadow: inset 0 0 0 1px var(--color-accent-line);
+}
+
+.bd-status:is([data-status="in-progress"], [data-status="completed"], [data-kind="completed"]) {
   color: var(--color-accent-strong);
   background: var(--color-accent-soft);
   box-shadow: inset 0 0 0 1px var(--color-accent-line);
@@ -4714,16 +4668,92 @@ button.bd-change:focus-visible {
   box-shadow: inset 0 0 0 1px rgb(217 138 124 / 0.35);
 }
 
+.bd-status[data-kind="risk"] {
+  color: var(--color-caution);
+  background: var(--color-caution-soft);
+  box-shadow: inset 0 0 0 1px rgb(217 184 119 / 0.35);
+}
+
+/* a status as a bare mark beside its word */
+.bd-status-glyph {
+  flex: none;
+}
+
+.bd-status-glyph:is([data-status="completed"], [data-status="sent"], [data-status="in-progress"]) {
+  color: var(--color-accent-strong);
+}
+
+.bd-status-glyph[data-status="unsuccessful"] {
+  color: var(--color-negative);
+}
+
+/* ---------- Autonomy ---------- */
+.bd-autonomy__mode {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.6rem;
+}
+
+.bd-autonomy .bd-autonomy__glyph {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: var(--emerald-bright);
+}
+
+.bd-autonomy__glyph circle {
+  stroke-width: 1.6;
+}
+
+.bd-autonomy__name {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 300;
+  line-height: 1.2;
+  color: var(--color-fg);
+}
+
+.bd-autonomy__promise {
+  margin-top: 0.15rem;
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--color-fg-2);
+}
+
+.bd-autonomy__limit {
+  margin-top: auto;
+  padding-top: 0.6rem;
+  font-size: 11.5px;
+  line-height: 1.4;
+  color: var(--color-fg-3);
+}
+
+/* while the briefing arrives (end of the onboarding): what is not said yet waits */
+.bd-card,
+.bd-point,
+.bd-center,
+.bd-stage__changes,
+.bd-bottom {
+  transition-property: opacity, scale, filter, color, box-shadow, background-color;
+  transition-duration: 650ms, 650ms, 650ms, 250ms, 250ms, 250ms;
+  transition-timing-function: var(--ease-out-soft);
+}
+
+:is(.bd-card, .bd-point, .bd-center, .bd-stage__changes, .bd-bottom)[data-pending] {
+  opacity: 0;
+  scale: 0.97;
+  filter: blur(3px);
+  pointer-events: none;
+}
+
+.bd-autonomy__cta {
+  margin-top: 0.75rem;
+}
+
 @keyframes bd-in {
   from {
     opacity: 0;
     translate: 0 6px;
-  }
-}
-
-@keyframes bd-fade {
-  from {
-    opacity: 0;
   }
 }
 
@@ -4733,166 +4763,315 @@ button.bd-change:focus-visible {
   }
 }
 
-/* DESKTOP — one screen: the dial the focal point, what changed and the actions beside it, the
-   actions bottom right */
-@container bd (min-width: 64rem) {
+@keyframes bd-draw {
+  from {
+    stroke-dasharray: 0 1;
+  }
+}
+
+@keyframes bd-why-in {
+  from {
+    opacity: 0;
+    scale: 0.97;
+  }
+}
+
+/* WIDE (desktop) — one screen. The bottom row takes what its content needs; the stage takes the
+   rest of the height and is a size container, so the ring, the cards and their type follow the
+   height it has (cqh) and the whole briefing is exactly one viewport, from a 13" laptop up.
+   The stage holds the dial, its cards around it, the greeting top
+   left with the day's briefings under it, and what changed since the last briefing bottom right,
+   beside the action and above the autonomy; the follow through and the autonomy along the bottom. */
+@container bd (min-width: 70rem) {
   .bd-grid {
-    grid-template-rows: auto minmax(0, 1fr);
-    gap: clamp(0.75rem, 2.4vh, 1.75rem);
+    grid-template-rows: minmax(0, 1fr) auto;
+    gap: clamp(0.75rem, 2vh, 1.25rem);
     height: var(--bd-h);
   }
 
-  .bd-body {
-    grid-template-columns: minmax(0, 1.3fr) minmax(21rem, 1fr);
-    column-gap: clamp(1.5rem, 3.5cqi, 4rem);
-  }
-
-  .bd-body__dial {
-    display: grid;
-    align-items: center;
+  .bd-stage {
+    /* the dial's measures, shared with what stands beside it. The cards stand half out of the
+       ring at the top and the bottom: room is kept for them */
+    --ring: clamp(13rem, calc(100cqh - 4.75rem), 31rem);
+    --card-w: clamp(15rem, 20cqi, 17.5rem);
+    --node: clamp(2.75rem, calc(var(--ring) * 0.14), 3.6rem);
+    position: relative;
+    place-items: center;
     min-height: 0;
+    container: bd-stage / size;
   }
 
-  .bd-dial {
-    --ring: min(100%, calc(var(--bd-h) - 12.5rem));
-    padding-block: 2.4rem;
+  .bd-greet {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1;
+    max-width: 28rem;
   }
 
-  .bd-body__side {
+  /* since the last briefing: in the corner right of the action card, under the insight */
+  .bd-stage__changes {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    z-index: 1;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    gap: 1.25rem;
-    min-height: 0;
-    padding-block: 0.5rem 0;
-  }
-
-  .bd-actions {
-    flex: 0 1 auto;
-  }
-}
-
-/* TABLET — the dial on its own row; what changed and the actions under it, side by side when there is room */
-@container bd (min-width: 52rem) and (max-width: 63.99rem) {
-  .bd-body__side {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: 2rem;
-  }
-}
-
-/* PHONE — a smaller ring, the four steps as a two by two choice under it */
-@container bd (max-width: 39.99rem) {
-  .bd-grid {
-    gap: 1.5rem;
-  }
-
-  .bd-periods {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    width: 100%;
-  }
-
-  .bd-periods__item {
-    padding-inline: 0.4rem;
-  }
-
-  .bd-periods__item > svg {
-    display: none;
-  }
-
-  .bd-dial {
-    --ring: min(100%, 22rem);
-    row-gap: 1rem;
-    padding: 0;
-  }
-
-  .bd-nodes {
-    grid-area: 2 / 1;
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.4rem;
-    width: 100%;
-    aspect-ratio: auto;
-    pointer-events: auto;
-  }
-
-  .bd-node {
-    position: static;
-    width: auto;
-    height: auto;
-    margin: 0;
-    min-height: 3.4rem;
-    padding: 0.55rem 0.75rem;
-    border-radius: 12px;
-    text-align: left;
-    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.07);
-  }
-
-  .bd-node[aria-checked="true"] {
-    background: rgb(255 255 255 / 0.06);
-    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.22);
-  }
-
-  .bd-node:focus-visible {
-    outline: 2px solid var(--color-fg);
-    outline-offset: 2px;
-  }
-
-  .bd-nodes .bd-node[data-dimension] .bd-node__label {
-    position: static;
-    translate: none;
-    justify-items: start;
-    padding: 0;
-  }
-
-  /* in the order of the reasoning: priority, insight, recommendation, action */
-  .bd-node[data-dimension="recommendation"] {
-    order: 3;
-  }
-
-  .bd-node[data-dimension="action"] {
-    order: 4;
-  }
-
-  .bd-node:focus-visible .bd-node__label {
-    outline: none;
-  }
-
-  .bd-node__name {
-    font-size: 10.5px;
-  }
-
-  .bd-center__body {
-    width: 70%;
-  }
-
-  .bd-center__detail,
-  .bd-center__was {
-    display: none;
+    justify-content: flex-end;
+    width: min(21rem, calc(50cqi - var(--node) / 2 - 0.75rem - var(--card-w) - 1.75rem));
+    max-height: 100%;
   }
 
   .bd-change {
-    grid-template-columns: minmax(0, 1fr) auto;
+    padding-block: clamp(0.25rem, 1cqh, 0.42rem);
   }
 
-  .bd-change__kind {
-    grid-column: 1 / -1;
+  /* a shorter stage keeps two updates, then one: the rest are a click away */
+  @container bd-stage (max-height: 32rem) {
+    .bd-changes:not([data-open]) .bd-changes__list > li:nth-child(n + 3) {
+      display: none;
+    }
+
+    .bd-changes:has(.bd-changes__list > li:nth-child(3)) .bd-changes__more {
+      display: inline-flex;
+    }
+  }
+
+  @container bd-stage (max-height: 24rem) {
+    .bd-changes:not([data-open]) .bd-changes__list > li:nth-child(n + 2) {
+      display: none;
+    }
+
+    .bd-changes:has(.bd-changes__list > li:nth-child(2)) .bd-changes__more {
+      display: inline-flex;
+    }
+  }
+
+  /* all of them: over the stage, growing upwards, nothing below moves */
+  .bd-stage__changes:has(.bd-changes[data-open]) {
+    z-index: 4;
+  }
+
+  .bd-changes[data-open] {
+    min-height: 0;
+    margin: -0.75rem -0.9rem;
+    padding: 0.75rem 0.9rem 0.6rem;
+    overflow-y: auto;
+    border-radius: 16px;
+    background: rgb(13 14 15 / 0.97);
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.14), 0 24px 60px -20px rgb(0 0 0 / 0.85);
+    scrollbar-width: thin;
+  }
+
+  .bd-dial {
+    --ring: inherit;
+    --card-w: inherit;
+    gap: 0;
+  }
+
+  /* the type follows the stage's height */
+  .bd-greet__title {
+    margin-top: clamp(0.25rem, 1cqh, 0.5rem);
+    font-size: clamp(1.3rem, 5.8cqh, 2.4rem);
+  }
+
+  .bd-greet__line {
+    margin-top: clamp(0.3rem, 1cqh, 0.55rem);
+    font-size: clamp(0.9rem, 2.9cqh, 1.2rem);
+  }
+
+  .bd-greet__periods {
+    margin-top: clamp(0.35rem, 2cqh, 1rem);
+  }
+
+  .bd-day__node {
+    margin-bottom: clamp(0.2rem, 0.9cqh, 0.35rem);
+  }
+
+  .bd-card {
+    gap: clamp(0.15rem, 0.7cqh, 0.3rem);
+    padding: clamp(0.5rem, 1.7cqh, 0.75rem) 0.85rem clamp(0.55rem, 1.9cqh, 0.85rem);
+  }
+
+  .bd-card__title {
+    font-size: clamp(0.85rem, 2.8cqh, 1rem);
+  }
+
+  .bd-card__why,
+  .bd-card__figure {
+    font-size: clamp(11px, 2cqh, 12px);
+  }
+
+  .bd-ring,
+  .bd-cards {
+    grid-area: 1 / 1;
+  }
+
+  .bd-cards {
+    position: relative;
+    display: block;
+    width: var(--ring);
+    aspect-ratio: 1;
+    pointer-events: none;
+  }
+
+  .bd-card {
+    position: absolute;
+    width: var(--card-w);
+    translate: 0 -50%;
+    pointer-events: auto;
+  }
+
+  /* each card beside its point, a short line between them */
+  .bd-card::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    width: 0.75rem;
+    height: 1px;
+    background: rgb(255 255 255 / 0.3);
+  }
+
+  .bd-card[aria-checked="true"]::before {
+    background: rgb(79 174 134 / 0.75);
+  }
+
+  .bd-card[data-dimension="priority"] {
+    left: calc(50% + var(--node) / 2 + 0.75rem);
+    top: 7%;
+  }
+
+  .bd-card[data-dimension="insight"] {
+    left: calc(93% + var(--node) / 2 + 0.75rem);
+    top: 50%;
+  }
+
+  .bd-card[data-dimension="action"] {
+    left: calc(50% + var(--node) / 2 + 0.75rem);
+    top: 93%;
+  }
+
+  .bd-card[data-dimension="recommendation"] {
+    right: calc(93% + var(--node) / 2 + 0.75rem);
+    top: 50%;
+  }
+
+  .bd-card:not([data-dimension="recommendation"])::before {
+    left: -0.75rem;
+  }
+
+  .bd-card[data-dimension="recommendation"]::before {
+    right: -0.75rem;
+  }
+
+  .bd-card:active {
+    scale: none;
+  }
+
+  .bd-bottom {
+    grid-template-columns: minmax(0, 1fr) minmax(17rem, 22rem);
+    min-height: 0;
+  }
+
+  /* every action at once: as many columns as fit, so the panel keeps its height */
+  .bd-actions {
+    grid-template-columns: repeat(auto-fill, minmax(14.25rem, 1fr));
+    column-gap: 1.75rem;
+    align-content: start;
+    margin-top: 0.45rem;
+  }
+
+  .bd-action__row {
+    min-height: 2.25rem;
+    padding-block: 0.1rem;
+  }
+}
+
+/* MEDIUM — the follow through and the autonomy side by side under the stacked stage */
+@container bd (min-width: 46rem) and (max-width: 69.99rem) {
+  .bd-dial {
+    --ring: min(100%, 28rem);
+  }
+
+  .bd-bottom {
+    grid-template-columns: minmax(0, 1fr) minmax(15rem, 20rem);
+  }
+}
+
+/* PHONE — one column; the thread runs down, one moment per line */
+@container bd (max-width: 39.99rem) {
+  .bd-grid,
+  .bd-stage {
+    gap: 1.5rem;
+  }
+
+  .bd-day {
+    grid-template-columns: repeat(var(--n), minmax(0, 1fr));
+    width: 100%;
+  }
+
+  .bd-dial {
+    --ring: min(100%, 21rem);
+  }
+
+  .bd-cards {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .bd-thread {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .bd-thread__step {
+    grid-template-columns: 1.05rem auto minmax(0, 1fr);
+    align-items: center;
+    column-gap: 0.75rem;
+    padding: 0 0 0.85rem;
+  }
+
+  .bd-thread__step:not(:last-child)::before {
+    top: 1.25rem;
+    bottom: 0.2rem;
+    left: calc(0.525rem - 0.5px);
+    right: auto;
+    width: 1px;
+    height: auto;
+  }
+
+  .bd-thread__label,
+  .bd-thread__when {
+    margin-top: 0;
+  }
+
+  .bd-thread__when {
+    justify-self: end;
+  }
+
+  .bd-thread__detail {
+    grid-column: 2 / -1;
+    margin-top: 0;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .bd-head__title,
+  .bd-card,
+  .bd-point,
+  .bd-center,
+  .bd-stage__changes,
+  .bd-bottom {
+    transition: none;
+  }
+
+  .bd-greet__line,
+  .bd-card__title,
+  .bd-card__why,
+  .bd-card__figure,
+  .bd-ring__progress,
+  .bd-why,
   .bd-center__body,
-  .bd-dial__pointer,
+  .bd-thread__step,
+  .bd-thread__node::after,
   .bd-status[data-status="in-progress"] svg {
     animation: none;
-  }
-}
-
-/* short desktop screens (13" laptops): the action lines sit a little closer */
-@media (min-width: 1024px) and (max-height: 820px) {
-  .bd-action__row {
-    min-height: 2.5rem;
-    padding-block: 0.3rem;
   }
 }

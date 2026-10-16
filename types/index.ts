@@ -415,15 +415,24 @@ export type BriefingDimension = "priority" | "insight" | "recommendation" | "act
 /** How pressing a priority is — always said in words and a mark, never by colour alone */
 export type BriefingSeverity = "critical" | "high" | "watch" | "routine";
 
-/** The one figure the centre of the dial can lead with, when the data has one */
-export type BriefingMetric = {
-  /** "€78,300" · "2 days" · "3 of 3" · "+18%": already formatted by the service */
-  value: string;
-  /** What the figure counts, read after it ("waiting on your reply") */
-  caption: string;
-  /** What sort of figure it is, so the dial can set it (a duration reads differently from money) */
-  kind: "money" | "count" | "duration" | "change" | "time";
-};
+/**
+ * What the centre of the dial leads with: a figure when the data has an honest one, or a message.
+ * Each kind is set in its own way (money is not a deadline, a client's words are not a number), so
+ * the dial never forces a situation into one oversized figure. Values come formatted by the service.
+ */
+export type BriefingMetric =
+  /** "€78,300" · "3" · "2 days" · "9:30": the figure, read with its caption */
+  | { kind: "money" | "count" | "duration" | "time"; value: string; caption: string }
+  /** A rise or a fall: "31%" from "62%", "2×" */
+  | { kind: "change"; value: string; caption: string; direction: "up" | "down"; from?: string }
+  /** Time left before a date that matters: "2 days", due "Friday 16 October" */
+  | { kind: "deadline"; value: string; caption: string; due: string }
+  /** How far towards a goal: "4 of 5", share 0.8 */
+  | { kind: "progress"; value: string; caption: string; share: number }
+  /** Something achieved: "Signed", "Paid" */
+  | { kind: "result"; value: string; caption: string }
+  /** A client's issue or an operational alert, in a few words, with its source and how urgent it is */
+  | { kind: "message"; value: string; caption: string; urgency: BriefingSeverity };
 
 /** How a step compares with the previous briefing of the day */
 export type BriefingStepChange = {
@@ -442,14 +451,19 @@ export type BriefingStep = {
   metric?: BriefingMetric;
   /** A secondary detail: a deadline, a comparison, a source */
   detail?: string;
-  /** The reasoning behind it, shown on demand: short evidence lines */
+  /** What it rests on, shown under "Why": facts from the connected data only, never a guess */
   evidence?: string[];
+  /** What it is meant to achieve (a recommendation, an action) */
+  outcome?: string;
+  /** The assumptions or gaps in the data worth knowing, when there are any */
+  limits?: string;
   change?: BriefingStepChange;
 };
 
 export type BriefingPriorityStep = BriefingStep & { dimension: "priority"; severity: BriefingSeverity };
 
-export type BriefingActionStatus = "drafted" | "awaiting-approval" | "scheduled" | "in-progress" | "completed" | "unsuccessful";
+/** Drafted (prepared, not asked yet) · awaiting approval · scheduled · in progress · sent (gone out, its outcome still open) · completed · unsuccessful */
+export type BriefingActionStatus = "drafted" | "awaiting-approval" | "scheduled" | "in-progress" | "sent" | "completed" | "unsuccessful";
 
 /** One thing Syxoria has prepared, planned, is doing or did */
 export type BriefingActionItem = {
@@ -470,14 +484,31 @@ export type BriefingActionItem = {
 
 export type BriefingChangeKind = "new" | "unresolved" | "decided" | "changed" | "in-progress" | "completed" | "risk" | "opportunity";
 
+/** One update since the previous briefing. A briefing lists them most relevant first */
 export type BriefingChange = {
   id: string;
   kind: BriefingChangeKind;
-  text: string;
+  /** What happened, in a few words ("Camille answered") */
+  title: string;
+  /** Only what is needed to understand it ("Atelier Rive wants to sign by Friday") */
+  detail?: string;
   /** When it happened, if that matters ("11:40") */
   at?: string;
   /** The step of the reasoning it concerns, to select it */
   dimension?: BriefingDimension;
+  /** The action it is about: its status is then read from the action, so the two never disagree */
+  actionId?: string;
+};
+
+/** One moment in the life of the priority, from the moment it was found to the deal closing */
+export type BriefingFollowStep = {
+  id: string;
+  label: string;
+  /** When it happened or will ("Today" · "10:00" · "Pending") */
+  when: string;
+  /** What it was about, in a few words ("3 messages") */
+  detail?: string;
+  state: "done" | "now" | "next" | "failed";
 };
 
 export type DailyBriefing = {
@@ -492,10 +523,12 @@ export type DailyBriefing = {
   recommendation: BriefingStep & { dimension: "recommendation"; id: string };
   action: BriefingStep & { dimension: "action" };
   actions: BriefingActionItem[];
-  /** Since the previous briefing of the day; null for the first one (nothing to compare with) */
+  /** The priority followed through, as far as it has gone; the panel under the dial */
+  followThrough: { title: string; steps: BriefingFollowStep[] };
+  /** Since the previous briefing, most relevant first; null for the very first one (nothing to compare with) */
   changes: BriefingChange[] | null;
-  /** The previous briefing it is compared with, for the change summary's words */
-  comparedWith: BriefingPeriod | "yesterday" | null;
+  /** The briefing it is compared with: the one before it today, or yesterday evening's for the morning */
+  comparedWith: { period: BriefingPeriod; preparedAt: string } | null;
 };
 
 /** The autonomy the owner has granted: what Syxoria may do on its own, and what still asks */
@@ -513,7 +546,11 @@ export type BriefingAutonomy = {
 export type DailyBriefingSet = {
   date: string;
   company: string;
+  /** Who the briefing is for, to greet them */
+  owner: { firstName: string };
   autonomy: BriefingAutonomy;
   /** The day's briefings so far, in order */
   briefings: DailyBriefing[];
+  /** Those still to come today, shown for what they are: not prepared yet */
+  upcoming?: { period: BriefingPeriod; time: string }[];
 };

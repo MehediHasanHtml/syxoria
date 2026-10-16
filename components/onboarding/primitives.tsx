@@ -105,7 +105,7 @@ export function QuietButton({ className, ...props }: ComponentProps<"button">) {
  * Demo-only help (test passwords, sample addresses). Kept out of the screens' design: a small
  * note in the corner, removed in production by setting NEXT_PUBLIC_DEMO=off.
  */
-export function DemoNote({ lines }: { lines: string[] }) {
+export function DemoNote({ lines, links = [] }: { lines: string[]; links?: { href: string; label: string }[] }) {
   if (process.env.NEXT_PUBLIC_DEMO === "off") return null;
   return (
     <details className="group fixed bottom-4 left-4 z-(--z-sticky) max-w-[17rem] text-[12px] text-fg-3">
@@ -116,6 +116,13 @@ export function DemoNote({ lines }: { lines: string[] }) {
       <ul className="mt-2 grid gap-1.5 rounded-lg border border-white/[0.08] bg-canvas-2/95 p-3 leading-snug backdrop-blur">
         {lines.map((l) => (
           <li key={l}>{l}</li>
+        ))}
+        {links.map((l) => (
+          <li key={l.href}>
+            <a href={l.href} className="text-fg-2 underline decoration-white/25 underline-offset-2 hover:text-fg">
+              {l.label}
+            </a>
+          </li>
         ))}
       </ul>
     </details>

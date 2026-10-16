@@ -15,9 +15,11 @@ export const metadata: Metadata = {
  * final screen. It sits in the onboarding's own environment, the Core in the bar at the top.
  *
  *   ?briefing=b_midday   open on another of the day's briefings (b_morning · b_midday · b_evening)
+ *   ?first=1             a brand new user's first day: the morning has nothing to be compared with
  */
 export default async function ExecutiveBriefingPreview({ searchParams }: PageProps<"/concept/executive-briefing">) {
-  const [{ briefing }, set] = await Promise.all([searchParams, getDailyBriefings("autonomous")]);
+  const { briefing, first } = await searchParams;
+  const set = await getDailyBriefings("autonomous", { first: first === "1" });
   return (
     <OnboardingShell
       layout="briefing"
@@ -26,7 +28,10 @@ export default async function ExecutiveBriefingPreview({ searchParams }: PagePro
       announcement="Executive briefing."
     >
       <DailyBriefingView set={set} initial={typeof briefing === "string" ? briefing : undefined} />
-      <DemoNote lines={["Preview: the whole day is open, so the three briefings can be compared.", "Approving and sending happen in the workspace, not here."]} />
+      <DemoNote
+        lines={["Preview: the whole day is open, so the three briefings can be compared.", "Approving and sending happen in the workspace, not here."]}
+        links={first === "1" ? [{ href: "/concept/executive-briefing", label: "Show a usual day (compared with yesterday evening)" }] : [{ href: "/concept/executive-briefing?first=1", label: "Show a new user's first briefing" }]}
+      />
     </OnboardingShell>
   );
 }

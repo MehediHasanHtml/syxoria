@@ -1,4 +1,5 @@
 import { knowledgeLabels } from "@/content/onboarding";
+import { spellNumber } from "@/lib/format";
 import type {
   AutonomyPolicy,
   Briefing,
@@ -514,13 +515,15 @@ export function buildBriefing(company: CompanyProfile, sources: DataSource[]): B
       detail: "In each of these deals, the last message came from them.",
     },
     insight: {
-      title: `Past ${threshold} quiet days, your deals close half as often.`,
+      title: `Past ${spellNumber(threshold)} quiet days, your deals close half as often.`,
+      stress: "half as often",
       detail: `All three are past that point. ${top[0].company}, your largest open deal, crossed it ${top[0].quietDays - threshold} days ago.`,
       quiet: { draftId: "d_0", threshold },
       curve: closeCurve(threshold),
     },
     recommendation: {
-      title: "Reply to all three this morning.",
+      title: "Reply this morning to double your chances.",
+      stress: "double your chances",
       detail: `Start with ${first}’s question on timing: it is the largest deal, and the quickest to answer.`,
     },
     impact: {

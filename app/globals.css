@@ -1529,7 +1529,7 @@ html.lenis {
   }
 
   .onb[data-layout="briefing"] .onb-stage {
-    max-width: 78rem;
+    max-width: 88rem;
   }
 
   .onb-memory-slot {
@@ -3036,15 +3036,22 @@ html.lenis {
   }
 }
 
-/* ---------- The executive briefing ----------
-   The finale of the onboarding, and the page the user returns to every morning. Four steps —
-   priority · insight · recommendation · action — but not four equal blocks:
-     THE PRIORITY leads, alone: one figure (what is waiting on the user) and who is waiting.
-     THE REASONING stands beside it as one drawing: the company's own curve, every deal on it
-     (insight), and in emerald where a reply takes them (recommendation).
-     THE ACTION lies below, the destination: what Syxoria is doing, within the mandate, and the
-     thread that follows the priority from the moment it was found to the deal closing.
-   One sentence per step on screen. White = what is · emerald = what Syxoria does about it. */
+/* ---------- The discovery (the executive briefing) ----------
+   The finale of the onboarding, and the page the user returns to every morning. Not a dashboard:
+   one discovery, told in four sentences beside the Core.
+     THE STAGE: the Core inside the ring of silence (components/onboarding/briefing-evidence.tsx).
+       A full turn is the company's own curve, the threshold splits it in two halves, each client
+       sits where their silence has taken them. In emerald: the half where deals still close, then
+       the Core reaching each client.
+     THE STORY, from the largest to the one to act on: what is waiting (priority) · why it matters
+       (insight) · what to do (recommendation) · what is already in hand, the thread it follows
+       from here, and the decision (action).
+   White = what is · emerald = what Syxoria does about it. On desktop the whole of it stays in one
+   viewport; its rhythm follows the height of the screen. */
+.onb-prelude {
+  min-height: 64vh;
+}
+
 .onb-prelude__core {
   width: clamp(7.5rem, 24vh, 12.5rem);
 }
@@ -3062,203 +3069,220 @@ html.lenis {
   filter: none;
 }
 
-/* its rhythm follows the height of the screen (13" laptop → large display), so the whole page
-   stays in one viewport without ever feeling packed */
-.onb-sheet {
-  --pad: 1.5rem;
-  --pad-y: clamp(0.95rem, 1.7vh + 0.2rem, 1.35rem);
-  --split: 3rem;
-  --gap: clamp(1rem, 5.5vh - 1.75rem, 2.25rem);
-  --step: clamp(0.55rem, 2.4vh - 0.6rem, 1rem);
-  --curve-h: clamp(7.5rem, 30vh - 6rem, 13.5rem);
-  display: grid;
-  gap: var(--gap);
-  margin-top: var(--gap);
+.onb-disc {
+  /* the height the page has to itself: one viewport in the onboarding, a fixed stage in the workspace */
+  --disc-h: 44rem;
+  /* one hundredth of that height: the story's type and spacing follow it, so it always fits */
+  --u: calc(var(--disc-h) / 100);
+  overflow-x: clip;
 }
 
-.onb-sheet__case,
-.onb-sheet__why {
+@media (min-width: 1024px) {
+  .onb-disc[data-variant="onboarding"] {
+    --disc-h: calc(100dvh - 4rem - clamp(1rem, 12vh - 3.5rem, 5rem) - clamp(1rem, 3vh, 2.5rem));
+  }
+}
+
+.onb-disc__grid {
   display: grid;
-  gap: 2.25rem;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: "head" "stage" "why" "act";
+  row-gap: 2.25rem;
+}
+
+.onb-disc__stage {
+  grid-area: stage;
   min-width: 0;
 }
 
-.onb-brief {
-  position: relative;
-  min-width: 0;
-  opacity: 0;
-  translate: 0 10px;
-  transition: opacity var(--flow-reveal) var(--ease-out-soft), translate var(--flow-reveal) var(--ease-out-soft);
+.onb-disc__head {
+  grid-area: head;
 }
 
-.onb-brief[data-shown] {
-  opacity: 1;
-  translate: 0 0;
+.onb-disc__why {
+  grid-area: why;
+  display: grid;
+  gap: 0.55rem;
 }
 
-/* a step's name, the question it answers in plain words, and opposite the action's the mandate it acts under */
-.onb-brief__label {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
+.onb-disc__act {
+  grid-area: act;
+}
+
+/* WIDE — the stage on the left, the story beside it, centred on it */
+@container (min-width: 56rem) {
+  .onb-disc__grid {
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    grid-template-areas: "stage ." "stage head" "stage why" "stage act" "stage .";
+    grid-template-rows: 1fr auto auto auto 1fr;
+    column-gap: clamp(1.5rem, 3.5cqi, 4rem);
+    row-gap: 0;
+    min-height: var(--disc-h);
+  }
+
+  .onb-disc__stage {
+    align-self: center;
+  }
+
+  .onb-disc__why {
+    margin-top: clamp(1.25rem, var(--u) * 5.4, 2.75rem);
+  }
+
+  .onb-disc__act {
+    margin-top: clamp(1.1rem, var(--u) * 4.8, 2.5rem);
+  }
+}
+
+/* the story */
+.onb-disc__intro {
+  margin-top: clamp(0.7rem, var(--u) * 2.6, 1.5rem);
+  font-family: var(--font-display);
+  font-size: clamp(1rem, var(--u) * 3.4, 1.45rem);
+  font-style: italic;
+  font-weight: 300;
   color: var(--color-fg-2);
+}
+
+.onb-disc__hero {
+  display: grid;
+  margin-top: 0.3rem;
+}
+
+.onb-disc__figure {
+  font-family: var(--font-display);
+  font-size: min(clamp(3rem, var(--u) * 13.6, 7rem), 21cqi);
+  font-weight: 200;
+  line-height: 0.98;
+  letter-spacing: -0.035em;
+  color: var(--color-fg);
+}
+
+.onb-disc__words {
+  margin-top: 0.25rem;
+  font-family: var(--font-display);
+  font-size: clamp(1.25rem, var(--u) * 4.5, 2.15rem);
+  font-weight: 300;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+  color: var(--color-fg);
+}
+
+.onb-disc__line {
+  font-family: var(--font-display);
+  font-size: clamp(1.05rem, var(--u) * 3.5, 1.45rem);
+  font-weight: 300;
+  line-height: 1.35;
+  color: var(--color-fg-2);
+  text-wrap: pretty;
+}
+
+.onb-disc__stress {
+  font-family: var(--font-serif);
+  font-style: normal;
+  color: var(--color-fg);
+}
+
+.onb-disc__stress[data-tone="accent"] {
+  font-style: italic;
+  color: var(--color-accent-strong);
+}
+
+/* the action: the one emerald surface of the page */
+.onb-disc__act {
+  position: relative;
+  padding: clamp(0.85rem, var(--u) * 2.6, 1.35rem) clamp(1.15rem, 2.2cqi, 1.5rem) clamp(0.85rem, var(--u) * 2.4, 1.3rem);
+  border: 1px solid rgb(79 174 134 / 0.32);
+  border-radius: 14px;
+  background: linear-gradient(160deg, rgb(29 122 85 / 0.16), rgb(29 122 85 / 0.04) 60%), rgb(8 9 10 / 0.6);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.02), 0 30px 60px -30px rgb(0 0 0 / 0.8), 0 0 60px -30px rgb(42 141 102 / 0.5);
+}
+
+.onb-disc__mandate {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 12px;
+  color: var(--color-fg-3);
   white-space: nowrap;
 }
 
-.onb-brief__gloss {
-  padding-left: 0.65rem;
-  border-left: 1px solid rgb(255 255 255 / 0.14);
-  font-family: var(--font-sans);
-  font-size: 12px;
-  line-height: 1;
-  letter-spacing: 0;
-  text-transform: none;
-  color: var(--color-fg-3);
-}
-
-.onb-brief__aside {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  margin-left: auto;
-  font-family: var(--font-sans);
-  font-size: 11.5px;
-  letter-spacing: 0;
-  text-transform: none;
-  color: var(--color-fg-2);
-}
-
-.onb-brief__aside .onb-glyph {
-  width: 0.85rem;
-  height: 0.85rem;
-}
-
-.onb-brief__aside .onb-glyph__arc {
-  stroke: var(--color-accent-strong);
-  opacity: 1;
-}
-
-/* what a step means, in one sentence: the brand's editorial voice */
-.onb-brief__statement {
-  margin-top: var(--step);
+.onb-disc__title {
+  margin-top: 0.7rem;
   font-family: var(--font-display);
-  font-size: clamp(1.12rem, 0.98rem + 0.4vw, 1.36rem);
+  font-size: clamp(1.05rem, var(--u) * 3.3, 1.45rem);
   font-weight: 300;
-  line-height: 1.22;
-  letter-spacing: -0.016em;
+  line-height: 1.25;
   color: var(--color-fg);
   text-wrap: balance;
 }
 
-/* ---- THE PRIORITY: the figure the page is about, finished as a sentence ---- */
-.onb-hero {
-  margin-top: calc(var(--step) + 0.2rem);
-}
-
-.onb-hero__figure {
-  display: block;
-  font-family: var(--font-display);
-  font-size: clamp(3.4rem, min(1.6rem + 6.4cqi, 14vh - 2rem), 6.5rem);
-  font-weight: 200;
-  line-height: 0.92;
-  letter-spacing: -0.045em;
-  color: var(--color-fg);
-  white-space: nowrap;
-}
-
-.onb-hero__words {
-  display: block;
-  margin-top: 0.55rem;
-  font-family: var(--font-display);
-  font-size: clamp(1.15rem, 1rem + 0.45vw, 1.45rem);
-  font-weight: 300;
-  letter-spacing: -0.015em;
+.onb-disc__note {
+  margin-top: 0.25rem;
+  font-size: 14px;
   color: var(--color-fg-2);
 }
 
-/* who is waiting, and what each is worth. The one in view is marked; choosing another moves the whole page to it */
-.onb-deals {
-  margin-top: calc(var(--step) + 0.5rem);
-  border-top: 1px solid rgb(255 255 255 / 0.07);
+.onb-disc__act .onb-follow {
+  margin-top: clamp(0.8rem, var(--u) * 2.8, 1.5rem);
 }
 
-.onb-deals__row {
-  display: grid;
-  grid-template-columns: minmax(0, 1.25fr) minmax(2rem, 1fr) 4.3rem 3.5rem;
-  align-items: center;
-  column-gap: 1rem;
-  width: 100%;
-  height: clamp(2.2rem, 2.6vh + 1rem, 2.75rem);
-  border-bottom: 1px solid rgb(255 255 255 / 0.06);
-  font-size: 13.5px;
-  text-align: left;
-  color: var(--color-fg-2);
-  cursor: pointer;
-  transition: color 300ms;
+.onb-disc__enter {
+  margin-top: clamp(0.8rem, var(--u) * 2.4, 1.25rem);
+  padding-top: clamp(0.8rem, var(--u) * 2.4, 1.25rem);
+  border-top: 1px solid rgb(79 174 134 / 0.16);
 }
 
-.onb-deals__row:hover,
-.onb-deals__row[aria-pressed="true"] {
-  color: var(--color-fg);
+/* REVEALED in the onboarding: one sentence at a time; the action arrives last, its emerald
+   welling up once. The workspace shows the same page at rest. */
+.onb-disc__head,
+.onb-disc__line,
+.onb-disc__act {
+  transition: opacity var(--flow-reveal) var(--ease-out-soft), translate var(--flow-reveal) var(--ease-out-soft), filter var(--flow-reveal), box-shadow 1200ms var(--ease-out-soft) 400ms, border-color 1200ms var(--ease-out-soft) 400ms;
 }
 
-.onb-deals__row:focus-visible {
-  outline: 2px solid var(--color-fg);
-  outline-offset: 2px;
+.onb-disc[data-variant="onboarding"] :is(.onb-disc__head, .onb-disc__line, .onb-disc__act):not([data-shown]) {
+  opacity: 0;
+  translate: 0 10px;
+  filter: blur(3px);
 }
 
-.onb-deals__weight {
-  height: 3px;
-  overflow: hidden;
-  border-radius: 2px;
-  background: rgb(255 255 255 / 0.06);
+.onb-disc[data-variant="onboarding"] .onb-disc__act:not([data-shown]) {
+  border-color: rgb(79 174 134 / 0.08);
+  box-shadow: none;
 }
 
-.onb-deals__weight>span {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: rgb(255 255 255 / 0.26);
-  transform-origin: left;
-  transition: background-color 300ms;
+.onb-disc[data-variant="onboarding"] .onb-disc__act[data-shown] .onb-follow__step {
+  animation: onb-word 500ms var(--ease-out-soft) both;
+  animation-delay: calc(700ms + var(--i, 0) * 140ms);
 }
 
-.onb-deals__row[aria-pressed="true"] .onb-deals__weight>span {
-  background: var(--color-fg);
+/* The ring of silence. Its words are laid over the drawing, so they keep a readable size at
+   every width; the drawing itself scales. */
+.onb-disc__stage .onb-silence,
+.onb-disc__core {
+  width: min(100%, 34rem);
+  margin-inline: auto;
 }
 
-.onb-deals__value {
-  text-align: right;
+@container (max-width: 55.99rem) {
+  .onb-disc__stage .onb-silence {
+    margin-bottom: 1.5rem;
+  }
 }
 
-.onb-deals__days {
-  text-align: right;
-  font-size: 12px;
-  color: var(--color-fg-3);
+@container (min-width: 56rem) {
+  .onb-disc__stage .onb-silence {
+    width: min(100%, calc(var(--disc-h) * 1.288));
+  }
 }
 
-/* ---- THE REASONING: the company's own curve, every deal on it, then what a reply changes ---- */
-.onb-curve {
-  display: grid;
-  gap: 0.5rem;
-  margin-top: calc(var(--step) + 0.15rem);
-}
-
-.onb-curve__rate,
-.onb-curve__axis {
-  font-size: 11px;
-  line-height: 1;
-  color: var(--color-fg-3);
-}
-
-.onb-curve__plot {
+.onb-silence {
   position: relative;
-  height: var(--curve-h);
-  color: var(--color-fg);
-  border-bottom: 1px solid rgb(255 255 255 / 0.14);
+  container-type: inline-size;
+  aspect-ratio: 760 / 590;
 }
 
-.onb-curve__svg {
+.onb-silence__svg {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -3266,351 +3290,272 @@ html.lenis {
   overflow: visible;
 }
 
-.onb-curve__line {
-  fill: none;
-  stroke: rgb(255 255 255 / 0.75);
-  stroke-width: 1.5;
-  stroke-linecap: round;
-}
-
-/* where an answered deal stands: the level a reply brings them back to — lit once it is suggested */
-.onb-curve__level {
-  stroke: var(--color-accent-strong);
-  stroke-width: 1;
-  stroke-dasharray: 2 5;
-  opacity: 0;
-  transition: opacity 700ms var(--ease-out-soft) 500ms;
-}
-
-.onb-curve[data-lifted] .onb-curve__level {
-  opacity: 0.7;
-}
-
-/* past the threshold: where deals slip */
-.onb-curve__zone {
+.onb-silence__core {
   position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  border-left: 1px dashed rgb(255 255 255 / 0.22);
-  background: repeating-linear-gradient(135deg, rgb(255 255 255 / 0.035) 0 1px, transparent 1px 7px);
-}
-
-/* named just before the line, so the deals past it stay clear */
-.onb-curve__zone>span {
-  position: absolute;
-  top: 0;
-  right: calc(100% + 0.55rem);
-  font-size: 11px;
-  line-height: 1;
-  color: var(--color-fg-3);
-  white-space: nowrap;
-}
-
-.onb-curve__value {
-  position: absolute;
-  translate: 0 calc(-100% - 0.4rem);
-  font-size: 11px;
-  line-height: 1;
-  color: var(--color-fg-2);
-  font-variant-numeric: tabular-nums;
-}
-
-.onb-curve[data-lifted] .onb-curve__value[data-at="high"] {
-  color: var(--color-accent-strong);
-}
-
-.onb-curve__axis {
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-/* a deal on the curve: where it stands today, as large as it is worth */
-.onb-curve__deal {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 0;
-}
-
-.onb-curve__dot {
-  position: absolute;
-  z-index: 2;
-  left: 0;
-  width: var(--s);
-  height: var(--s);
   translate: -50% -50%;
-  border-radius: 50%;
-  background: var(--color-canvas);
-  box-shadow: inset 0 0 0 1.5px rgb(255 255 255 / 0.7);
-  cursor: pointer;
-  transition: background-color 300ms, box-shadow 300ms;
+  aspect-ratio: 1;
 }
 
-.onb-curve__dot::after {
-  /* a larger target than it looks */
-  content: "";
-  position: absolute;
-  inset: -0.5rem;
-  border-radius: 50%;
-}
-
-.onb-curve__dot[aria-pressed="true"] {
-  background: var(--color-fg);
-  box-shadow: 0 0 0 4px rgb(255 255 255 / 0.08);
-}
-
-.onb-curve__dot:focus-visible {
-  outline: 2px solid var(--color-fg);
-  outline-offset: 3px;
-}
-
-/* the one in view, named under the line of days, where it sits */
-.onb-curve__name {
-  position: absolute;
-  top: calc(100% + 0.5rem);
-  left: 0;
-  translate: -50% 0;
-  font-size: 11px;
-  line-height: 1;
-  color: var(--color-fg);
-  white-space: nowrap;
+.onb-silence__tick {
+  stroke: var(--color-fg);
+  stroke-opacity: 0.22;
+  stroke-width: 1;
   opacity: 0;
-  transition: opacity 300ms;
+  transition: opacity 600ms var(--ease-out-soft) calc(var(--i, 0) * 40ms), stroke-opacity 700ms;
 }
 
-.onb-curve__deal[data-on] .onb-curve__name {
+.onb-silence__tick[data-edge] {
+  stroke-opacity: 0.3;
+  stroke-width: 1.25;
+}
+
+.onb-silence[data-drawn] .onb-silence__tick {
   opacity: 1;
 }
 
-/* in emerald: where a reply takes it — a line rising from the deal to where answered deals close */
-.onb-curve__lift {
-  position: absolute;
-  left: 0;
-  width: 1.5px;
-  translate: -50% 0;
-  background: linear-gradient(to top, rgb(79 174 134 / 0.1), var(--color-accent-strong));
-  transform-origin: bottom;
-  scale: 1 0;
-  transition: scale 900ms var(--ease-awaken) calc(var(--i, 0) * 140ms);
+.onb-silence[data-halves] .onb-silence__tick[data-edge] {
+  stroke-opacity: 0.75;
 }
 
-.onb-curve__target {
-  position: absolute;
-  z-index: 1;
-  left: 0;
-  width: 0.6rem;
-  height: 0.6rem;
-  translate: -50% -50%;
-  border-radius: 50%;
-  background: #0c1512;
-  box-shadow: inset 0 0 0 1.5px var(--color-accent-strong);
+/* the two halves, drawn clockwise like the days: answered in time, then left waiting */
+.onb-silence__half {
+  fill: none;
+  stroke: var(--color-fg);
+  stroke-opacity: 0.3;
+  stroke-width: 1.25;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  transition: stroke-dashoffset 900ms var(--ease-in-out-soft), stroke-opacity 900ms var(--ease-out-soft);
+}
+
+.onb-silence__half[data-side="late"] {
+  transition-delay: 800ms, 0ms;
+}
+
+.onb-silence[data-drawn] .onb-silence__half {
+  stroke-dashoffset: 0;
+}
+
+.onb-silence[data-halves] .onb-silence__half[data-side="in-time"] {
+  stroke-opacity: 0.5;
+}
+
+.onb-silence[data-halves] .onb-silence__half[data-side="late"] {
+  stroke-opacity: 0.14;
+}
+
+/* in emerald, where deals still close */
+.onb-silence__lit {
+  fill: none;
+  stroke: var(--emerald-bright);
+  stroke-width: 1.5;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  transition: stroke-dashoffset 1300ms var(--ease-awaken);
+}
+
+.onb-silence__lit--glow {
+  stroke-width: 5;
+  stroke-opacity: 0.55;
+}
+
+.onb-silence[data-lit] .onb-silence__lit {
+  stroke-dashoffset: 0;
+}
+
+/* each client lands on the ring */
+.onb-silence__dot {
+  fill: var(--color-fg);
   opacity: 0;
-  scale: 0.4;
-  transition: opacity 500ms var(--ease-out-soft) calc(650ms + var(--i, 0) * 140ms), scale 500ms var(--ease-spring) calc(650ms + var(--i, 0) * 140ms);
+  scale: 0.3;
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: opacity 500ms var(--ease-out-soft), scale 650ms var(--ease-spring);
+  transition-delay: calc(1500ms + var(--i, 0) * 170ms);
 }
 
-.onb-curve[data-lifted] .onb-curve__lift {
-  scale: 1 1;
-}
-
-.onb-curve[data-lifted] .onb-curve__target {
+.onb-silence[data-drawn] .onb-silence__dot {
   opacity: 1;
   scale: 1;
 }
 
-.onb-curve__deal[data-on] .onb-curve__target {
-  background: var(--emerald-bright);
-  box-shadow: 0 0 0 3px rgb(79 174 134 / 0.18), 0 0 12px var(--core-glow);
+/* the Core reaches each one: a line drawn out from it, a light that keeps running along it */
+.onb-silence__thread {
+  stroke-width: 1.25;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  transition: stroke-dashoffset 900ms var(--ease-awaken) calc(var(--i, 0) * 180ms);
 }
 
-/* what to do: one sentence, and opposite it what it changes, in emerald */
-.onb-brief[data-kind="recommendation"] {
-  padding-top: var(--step);
-  border-top: 1px solid rgb(255 255 255 / 0.07);
+.onb-silence[data-reach] .onb-silence__thread {
+  stroke-dashoffset: 0;
 }
 
-.onb-advice {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 0.5rem 1.5rem;
-  margin-top: var(--step);
-}
-
-.onb-advice .onb-brief__statement {
-  margin-top: 0;
-}
-
-.onb-advice__impact {
-  display: flex;
-  align-items: baseline;
-  gap: 0.65rem;
-}
-
-.onb-advice__figure {
-  font-family: var(--font-display);
-  font-size: clamp(1.9rem, 1.5rem + 1vw, 2.5rem);
-  font-weight: 200;
-  line-height: 0.9;
-  letter-spacing: -0.03em;
-  color: var(--color-accent-strong);
-}
-
-.onb-advice__label {
-  max-width: 15.5rem;
-  font-size: 12.5px;
-  line-height: 1.35;
-  color: var(--color-fg-2);
-}
-
-/* ---- THE ACTION: where understanding becomes execution — the page's destination ---- */
-.onb-brief[data-kind="action"] {
-  padding: var(--pad-y) var(--pad);
-  border-radius: 18px;
-  background: linear-gradient(180deg, rgb(42 141 102 / 0.11), rgb(42 141 102 / 0.03));
-  box-shadow: inset 0 0 0 1px var(--color-accent-line), 0 30px 60px -40px rgb(10 105 70 / 0.6);
-}
-
-.onb-brief[data-kind="action"] .onb-brief__label {
-  color: var(--color-accent-strong);
-}
-
-.onb-brief[data-kind="action"] .onb-brief__gloss {
-  border-left-color: var(--color-accent-line);
-  color: var(--color-fg-2);
-}
-
-.onb-brief[data-kind="action"]> :not(.onb-brief__fill) {
-  position: relative;
-}
-
-.onb-brief__fill {
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  overflow: hidden;
-  pointer-events: none;
-}
-
-.onb-brief__fill::before {
-  content: "";
-  position: absolute;
-  top: -10%;
-  bottom: -10%;
-  left: -10%;
-  width: 120%;
-  border-radius: 0 50% 50% 0 / 0 50% 50% 0;
-  background: linear-gradient(90deg, rgb(42 141 102 / 0), rgb(42 141 102 / 0.2) 72%, rgb(124 201 165 / 0.26));
-  translate: -101% 0;
+.onb-silence__spark {
+  stroke: var(--emerald-lit);
+  stroke-width: 1.5;
+  stroke-dasharray: 0.07 1;
+  stroke-dashoffset: 1;
   opacity: 0;
 }
 
-.onb-act {
+.onb-silence[data-reach] .onb-silence__spark {
+  opacity: 1;
+  animation: onb-spark 3.4s var(--ease-in-out-soft) calc(1.2s + var(--i, 0) * 0.45s) infinite both;
+}
+
+@keyframes onb-spark {
+  from {
+    stroke-dashoffset: 1;
+  }
+
+  to {
+    stroke-dashoffset: -0.07;
+  }
+}
+
+.onb-silence__halo {
+  fill: none;
+  stroke: var(--emerald-bright);
+  stroke-width: 1.25;
+  opacity: 0;
+  transition: opacity 600ms var(--ease-out-soft) calc(700ms + var(--i, 0) * 180ms);
+}
+
+.onb-silence[data-reach] .onb-silence__halo {
+  opacity: 1;
+}
+
+/* the words over the drawing */
+.onb-silence__name,
+.onb-silence__rate,
+.onb-silence__edge,
+.onb-silence__caption {
+  position: absolute;
+  opacity: 0;
+  transition: opacity 700ms var(--ease-out-soft);
+}
+
+.onb-silence__name {
   display: grid;
-  gap: 0.9rem;
-  margin-top: var(--step);
+  gap: 0.15em;
+  font-size: clamp(11px, 1.85cqi, 14px);
+  line-height: 1.25;
+  color: var(--color-fg-3);
+  transition-delay: calc(1750ms + var(--i, 0) * 170ms);
 }
 
-.onb-act__lead {
-  display: flex;
-  align-items: baseline;
-  gap: 0.8rem;
+.onb-silence__name> :last-child {
+  font-size: 0.86em;
 }
 
-.onb-act__figure {
+.onb-silence__name[data-side="left"] {
+  translate: -100% -50%;
+  text-align: right;
+}
+
+.onb-silence__name[data-side="right"] {
+  translate: 0 -50%;
+}
+
+.onb-silence__name[data-side="below"] {
+  translate: -50% 0;
+  text-align: center;
+}
+
+.onb-silence__name[data-side="above"] {
+  translate: -50% -100%;
+  text-align: center;
+}
+
+.onb-silence[data-drawn] .onb-silence__name {
+  opacity: 1;
+}
+
+.onb-silence__rate {
+  display: grid;
+  justify-items: center;
+  translate: -50% -50%;
+  font-size: clamp(9.5px, 1.5cqi, 12px);
+  line-height: 1.3;
+  text-align: center;
+  white-space: nowrap;
+  color: rgb(245 245 242 / 0.55);
+}
+
+.onb-silence__rate[data-side="late"] {
+  transition-delay: 250ms;
+}
+
+.onb-silence__figure {
+  margin-bottom: 0.2em;
   font-family: var(--font-display);
-  font-size: clamp(2rem, 1.6rem + 1vw, 2.6rem);
+  font-size: 2.85em;
   font-weight: 200;
-  line-height: 0.9;
-  letter-spacing: -0.03em;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  color: var(--color-fg);
+  transition: color 900ms var(--ease-out-soft);
+}
+
+.onb-silence[data-halves] .onb-silence__rate {
+  opacity: 1;
+}
+
+.onb-silence[data-halves] .onb-silence__rate[data-side="late"] {
+  opacity: 0.6;
+}
+
+.onb-silence[data-lit] .onb-silence__rate[data-side="in-time"] .onb-silence__figure {
   color: var(--color-accent-strong);
+}
+
+.onb-silence__edge {
+  translate: -50% -50%;
+  font-size: clamp(9px, 1.4cqi, 11px);
+  letter-spacing: 0.18em;
+  color: rgb(245 245 242 / 0.7);
   white-space: nowrap;
 }
 
-.onb-act__caption {
-  font-family: var(--font-display);
-  font-size: clamp(1.05rem, 0.95rem + 0.3vw, 1.25rem);
-  font-weight: 300;
-  letter-spacing: -0.012em;
-  color: var(--color-fg);
+.onb-silence[data-halves] .onb-silence__edge {
+  opacity: 1;
 }
 
-/* who each reply goes to, and where it stands */
-.onb-replies {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
+.onb-silence__caption {
+  translate: -50% -50%;
+  font-size: clamp(9px, 1.38cqi, 10.5px);
+  letter-spacing: 0.2em;
+  color: rgb(245 245 242 / 0.42);
+  white-space: nowrap;
+  transition-delay: 1200ms;
 }
 
-.onb-replies__item {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.55rem;
-  max-width: 13rem;
-  height: 2rem;
-  padding: 0 0.85rem 0 0.7rem;
-  border-radius: 999px;
-  background: rgb(42 141 102 / 0.06);
-  box-shadow: inset 0 0 0 1px rgb(79 174 134 / 0.2);
-  font-size: 12.5px;
-  color: var(--color-fg-2);
-  cursor: pointer;
-  transition: color 300ms, background-color 300ms, box-shadow 300ms;
+.onb-silence[data-drawn] .onb-silence__caption {
+  opacity: 1;
 }
 
-.onb-replies__item:hover,
-.onb-replies__item[aria-pressed="true"] {
-  color: var(--color-fg);
-}
+/* small stages: a name may take two lines rather than leave the drawing, and the caption sits
+   under it, clear of the names */
+@container (max-width: 30rem) {
+  .onb-silence__caption {
+    top: auto !important;
+    bottom: -1.5rem;
+    translate: -50% 0;
+  }
 
-.onb-replies__item[aria-pressed="true"] {
-  background: rgb(42 141 102 / 0.14);
-  box-shadow: inset 0 0 0 1px rgb(79 174 134 / 0.55);
-}
 
-.onb-replies__item:focus-visible {
-  outline: 2px solid var(--color-fg);
-  outline-offset: 2px;
-}
+  .onb-silence__name[data-side="left"] {
+    max-width: calc(var(--x) * 1cqi - 0.75rem);
+  }
 
-/* where a reply stands under the mandate: to do · waiting for approval · going out on its own */
-.onb-replies__node {
-  flex: none;
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  background: var(--color-canvas-2);
-  box-shadow: inset 0 0 0 1.5px rgb(255 255 255 / 0.5);
-}
-
-.onb-replies__node[data-status="awaiting-approval"] {
-  background: radial-gradient(circle, var(--emerald-bright) 0 1.6px, #0c1512 2.2px);
-  box-shadow: inset 0 0 0 1.5px var(--emerald-bright), 0 0 10px rgb(29 122 85 / 0.6);
-}
-
-.onb-replies__node[data-status="scheduled"] {
-  background: var(--emerald-bright);
-  box-shadow: 0 0 0 3px rgb(79 174 134 / 0.18), 0 0 12px var(--core-glow);
+  .onb-silence__name[data-side="right"] {
+    max-width: calc((100 - var(--x)) * 1cqi - 0.75rem);
+  }
 }
 
 /* the thread: the life of the priority from the moment it was found to the deal closing.
    Emerald = done or under way by Syxoria · white = waits on the user · grey = waits on the client */
-.onb-act__thread {
-  display: grid;
-  gap: 0.9rem;
-  margin-top: calc(var(--step) + 0.15rem);
-  padding-top: calc(var(--step) + 0.15rem);
-  border-top: 1px solid rgb(79 174 134 / 0.16);
-}
-
-.onb-act__follow {
-  color: var(--color-fg-3);
-  white-space: nowrap;
-}
-
 .onb-follow {
   display: grid;
   grid-template-columns: repeat(var(--n), minmax(0, 1fr));
@@ -3619,9 +3564,9 @@ html.lenis {
 .onb-follow__step {
   position: relative;
   display: grid;
-  justify-items: start;
+  justify-items: center;
   min-width: 0;
-  padding-right: 0.5rem;
+  text-align: center;
 }
 
 /* the line to the next moment */
@@ -3629,11 +3574,10 @@ html.lenis {
   content: "";
   position: absolute;
   top: calc(0.35rem - 0.5px);
-  left: 0.7rem;
-  right: 0;
+  left: calc(50% + 0.65rem);
+  right: calc(-50% + 0.65rem);
   height: 1px;
-  background: repeating-linear-gradient(90deg, rgb(255 255 255 / 0.2) 0 3px, transparent 3px 7px);
-  transform-origin: left;
+  background: rgb(255 255 255 / 0.14);
 }
 
 .onb-follow__step[data-state="done"]::before {
@@ -3659,7 +3603,7 @@ html.lenis {
 
 .onb-follow__step[data-state="done"] .onb-follow__node {
   background: var(--color-accent-strong);
-  box-shadow: none;
+  box-shadow: 0 0 10px rgb(79 174 134 / 0.55);
 }
 
 .onb-follow__step[data-state="now"] .onb-follow__node {
@@ -3690,28 +3634,24 @@ html.lenis {
 }
 
 .onb-follow__label {
-  margin-top: 0.6rem;
-  font-size: 12.5px;
+  margin-top: 0.55rem;
+  font-size: 12px;
   line-height: 1.2;
-  color: var(--color-fg-2);
+  color: var(--color-fg-3);
   white-space: nowrap;
 }
 
 .onb-follow__when {
   min-height: 1em;
   margin-top: 0.2rem;
-  font-size: 11.5px;
+  font-size: 11px;
   line-height: 1.2;
   color: var(--color-fg-3);
   white-space: nowrap;
 }
 
-.onb-follow__step[data-state="done"] .onb-follow__label {
+.onb-follow__step:is([data-state="done"], [data-state="now"]) .onb-follow__label {
   color: var(--color-fg);
-}
-
-.onb-follow__step[data-state="now"] .onb-follow__label {
-  color: var(--color-accent-strong);
 }
 
 /* the end of the thread carries what it all leads to */
@@ -3719,64 +3659,8 @@ html.lenis {
   color: var(--color-fg-2);
 }
 
-.onb-act__enter {
-  display: flex;
-  justify-content: flex-end;
-}
-
-/* WIDE — the priority and its reasoning side by side; below, the action across the page */
-@container (min-width: 56rem) {
-  .onb-sheet__case {
-    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
-    gap: 0;
-  }
-
-  .onb-brief[data-kind="priority"] {
-    padding-right: var(--split);
-  }
-
-  .onb-sheet__why {
-    gap: var(--step);
-    padding-left: var(--split);
-    border-left: 1px solid rgb(255 255 255 / 0.07);
-  }
-
-  .onb-act {
-    grid-template-columns: auto minmax(0, 1fr);
-    align-items: center;
-    column-gap: 2rem;
-  }
-
-  .onb-replies {
-    justify-content: flex-end;
-  }
-
-  .onb-act__thread {
-    grid-template-columns: auto minmax(0, 1fr) auto;
-    align-items: center;
-    column-gap: 2.25rem;
-  }
-
-  .onb-act__follow {
-    align-self: start;
-    margin-top: 0.05rem;
-  }
-}
-
-/* STACKED — one under the other */
-@container (max-width: 55.99rem) {
-  .onb-brief[data-kind="insight"] {
-    padding-top: 2rem;
-    border-top: 1px solid rgb(255 255 255 / 0.07);
-  }
-
-  .onb-brief[data-kind="recommendation"] {
-    padding-top: 1.25rem;
-  }
-}
-
-/* narrow: the thread runs down, one moment per line */
-@container (max-width: 40rem) {
+/* narrow: the thread runs down, one moment per line, and the decision takes the width */
+@container (max-width: 34rem) {
   .onb-follow {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -3785,7 +3669,8 @@ html.lenis {
     grid-template-columns: 0.7rem auto minmax(0, 1fr);
     align-items: center;
     column-gap: 0.85rem;
-    padding: 0 0 1rem;
+    padding: 0 0 0.9rem;
+    text-align: left;
   }
 
   .onb-follow__step:not(:last-child)::before {
@@ -3795,7 +3680,6 @@ html.lenis {
     right: auto;
     width: 1px;
     height: auto;
-    background: repeating-linear-gradient(180deg, rgb(255 255 255 / 0.2) 0 3px, transparent 3px 7px);
   }
 
   .onb-follow__step[data-state="now"]::before {
@@ -3811,183 +3695,9 @@ html.lenis {
     justify-self: end;
   }
 
-  .onb-act__enter {
-    justify-content: stretch;
-  }
-
-  .onb-act__enter>* {
+  .onb-disc__enter> * {
     width: 100%;
   }
-}
-
-@container (max-width: 34rem) {
-  .onb-deals__row {
-    grid-template-columns: minmax(0, 1fr) 4.3rem 3.5rem;
-    column-gap: 0.75rem;
-  }
-
-  .onb-deals__weight {
-    display: none;
-  }
-
-  .onb-brief__gloss {
-    display: none;
-  }
-
-  .onb-advice__label {
-    max-width: none;
-  }
-
-  /* the deal in view is named on its own line, clear of the axis's words */
-  .onb-curve__axis {
-    margin-top: 1.5rem;
-  }
-}
-
-/* short desktop screens (13" laptops): the rhythm is already fluid — here the type steps down too */
-@media (min-width: 1024px) and (max-height: 820px) {
-  .onb-brief__statement {
-    font-size: 1.1rem;
-  }
-
-  .onb-hero__words {
-    margin-top: 0.4rem;
-    font-size: 1.12rem;
-  }
-
-  .onb-deals__row {
-    font-size: 13px;
-  }
-
-  .onb-advice__figure,
-  .onb-act__figure {
-    font-size: 2rem;
-  }
-
-  .onb-act__caption {
-    font-size: 1.05rem;
-  }
-
-  .onb-act {
-    gap: 0.6rem;
-  }
-
-  .onb-act__thread {
-    gap: 0.6rem;
-  }
-}
-
-/* REVEALED in the onboarding (data-variant="onboarding"): each step gets its own moment — the one
-   just reached holds the attention while those before it settle back — and what it shows arrives
-   as it is read: the sum, then who is waiting, one by one · the company's curve drawn, the line
-   where deals slip, then each deal landing on it · in emerald, each lifted back to where answered
-   deals close · and the action, where the Core's emerald wells up, the replies arrive, and the
-   thread lights up to where things stand today. The workspace shows the same page at rest. */
-.onb-sheet[data-reading] .onb-brief[data-shown]:not([data-current]) {
-  opacity: 0.45;
-}
-
-.onb-sheet[data-variant="onboarding"] .onb-brief[data-shown] .onb-deals>li {
-  animation: onb-rise 600ms var(--ease-out-soft) both;
-  animation-delay: calc(650ms + var(--i, 0) * 110ms);
-}
-
-.onb-sheet[data-variant="onboarding"] .onb-brief[data-shown] .onb-deals__weight>span {
-  animation: onb-grow 900ms var(--ease-awaken) both;
-  animation-delay: calc(850ms + var(--i, 0) * 110ms);
-}
-
-@keyframes onb-grow {
-  from {
-    scale: 0 1;
-  }
-}
-
-.onb-sheet[data-variant="onboarding"] .onb-brief[data-shown] .onb-curve__line {
-  animation: onb-trace 1400ms var(--ease-in-out-soft) 250ms both;
-}
-
-/* drawn from the left, day after day */
-@keyframes onb-trace {
-  from {
-    clip-path: inset(-10% 100% -10% 0);
-  }
-
-  to {
-    clip-path: inset(-10% 0 -10% 0);
-  }
-}
-
-.onb-sheet[data-variant="onboarding"] .onb-brief[data-shown] .onb-curve__area,
-.onb-sheet[data-variant="onboarding"] .onb-brief[data-shown] .onb-curve__value {
-  animation: onb-fade 900ms var(--ease-out-soft) 900ms both;
-}
-
-.onb-sheet[data-variant="onboarding"] .onb-brief[data-shown] .onb-curve__zone {
-  animation: onb-fade 800ms var(--ease-out-soft) 1000ms both;
-}
-
-.onb-sheet[data-variant="onboarding"] .onb-brief[data-shown] .onb-curve__dot {
-  animation: onb-land 600ms var(--ease-spring) both;
-  animation-delay: calc(1300ms + var(--i, 0) * 140ms);
-}
-
-@keyframes onb-land {
-  from {
-    opacity: 0;
-    scale: 0.3;
-    translate: -50% -180%;
-  }
-}
-
-.onb-sheet[data-variant="onboarding"] .onb-brief[data-shown] .onb-curve__name {
-  animation: onb-fade 500ms var(--ease-out-soft) 1700ms both;
-}
-
-/* the action, last and strongest: the Core's emerald wells up through it once, its edge lights,
-   then the replies arrive, and the thread lights up to today */
-.onb-sheet[data-variant="onboarding"] .onb-brief[data-kind="action"][data-shown] .onb-brief__fill::before {
-  animation: onb-well 1500ms var(--ease-awaken) 150ms both;
-}
-
-@keyframes onb-well {
-  0% {
-    translate: -101% 0;
-    opacity: 1;
-  }
-
-  55% {
-    translate: 0 0;
-    opacity: 1;
-  }
-
-  100% {
-    translate: 0 0;
-    opacity: 0;
-  }
-}
-
-.onb-sheet[data-variant="onboarding"] .onb-brief[data-kind="action"] {
-  transition: opacity var(--flow-reveal) var(--ease-out-soft), translate var(--flow-reveal) var(--ease-out-soft), box-shadow 900ms var(--ease-out-soft) 450ms;
-}
-
-.onb-sheet[data-variant="onboarding"] .onb-brief[data-kind="action"]:not([data-shown]) {
-  box-shadow: inset 0 0 0 1px rgb(42 141 102 / 0.12);
-}
-
-.onb-sheet[data-variant="onboarding"] .onb-brief[data-shown] .onb-replies>li {
-  animation: onb-rise 500ms var(--ease-out-soft) both;
-  animation-delay: calc(500ms + var(--i, 0) * 110ms);
-}
-
-.onb-sheet[data-variant="onboarding"] .onb-brief[data-shown] .onb-follow__step {
-  animation: onb-word 500ms var(--ease-out-soft) both;
-  animation-delay: calc(850ms + var(--i, 0) * 150ms);
-}
-
-.onb-sheet[data-variant="onboarding"] .onb-brief[data-shown] .onb-follow__step::before {
-  animation: onb-grow 500ms var(--ease-awaken) both;
-  animation-delay: calc(950ms + var(--i, 0) * 150ms);
 }
 
 /* Segmented control (permission modes) */
@@ -4046,7 +3756,7 @@ html.lenis {
 }
 
 /* Shared elements between moments (View Transitions): the bar, the memory, the conversation,
-   the briefing's title — and the Core, which travels between the bar and the stage */
+   and the Core, which travels between the bar and the stage */
 .onb-bar {
   view-transition-name: onb-bar;
 }
@@ -4057,10 +3767,6 @@ html.lenis {
 
 .onb-conversation {
   view-transition-name: onb-conversation;
-}
-
-.onb-briefing__title {
-  view-transition-name: onb-briefing-title;
 }
 
 html[data-vt="onboarding"]::view-transition-group(*) {
@@ -4149,6 +3855,36 @@ html[data-vt="onboarding"]::view-transition-new(root) {
   animation: onb-rise 800ms var(--ease-out-soft) 700ms both;
 }
 
+/* one screen on a desktop: the shell's top bar (4rem and its line), its top padding (2rem) and
+   what is left of its bottom padding (1rem), the strip below; the briefing takes the rest */
+@media (min-width: 1280px) and (min-height: 600px) {
+  .arrival-fit {
+    --strip-h: 4.5rem;
+    --strip-gap: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    height: calc(100dvh - 4rem - 1px - 3rem);
+    margin-bottom: -3rem;
+  }
+
+  .arrival-fit__main {
+    display: grid;
+    flex: 1;
+    align-items: center;
+    min-height: 0;
+  }
+
+  .arrival-fit__strip {
+    flex: none;
+    height: var(--strip-h);
+    margin-top: var(--strip-gap);
+  }
+
+  .arrival-fit .onb-disc {
+    --disc-h: calc(100dvh - 4rem - 1px - 3rem - var(--strip-gap) - var(--strip-h));
+  }
+}
+
 @keyframes arrive-side {
   from {
     transform: translate3d(-100%, 0, 0);
@@ -4181,7 +3917,7 @@ html[data-vt="onboarding"]::view-transition-new(root) {
     animation: none;
   }
 
-  .onb-brief, .onb-prelude__line {
+  .onb-prelude__line, .onb-disc__head, .onb-disc__line, .onb-disc__act {
     transition: none;
   }
 
@@ -4197,15 +3933,37 @@ html[data-vt="onboarding"]::view-transition-new(root) {
     transition: none;
   }
 
-  .onb-brief__fill::before, .onb-deals>li, .onb-deals__weight>span, .onb-curve__line, .onb-curve__area, .onb-curve__value, .onb-curve__zone, .onb-curve__dot, .onb-curve__name, .onb-replies>li, .onb-follow__step, .onb-follow__step::before, .onb-follow__node::after {
+  .onb-follow__step, .onb-follow__node::after, .onb-silence__spark {
     animation: none !important;
   }
 
-  .onb-curve__lift, .onb-curve__target, .onb-curve__level {
+  .onb-silence :is(.onb-silence__tick, .onb-silence__half, .onb-silence__lit, .onb-silence__dot, .onb-silence__thread, .onb-silence__halo, .onb-silence__name, .onb-silence__rate, .onb-silence__edge, .onb-silence__caption) {
     transition: none;
   }
 
   .onb-priority::before, .onb-priority__hint, .onb-priority__more, .onb-priority__title {
     transition: none;
+  }
+}
+/* ==========================================================================
+   BRIEFING CONCEPT (app/concept/briefing) — a static study for review.
+   The spark that runs from the Core to each client it has drafted for.
+   ========================================================================== */
+.bc-spark {
+  stroke-dasharray: 0.07 1;
+  stroke-dashoffset: 1;
+  animation: bc-spark 3.4s var(--ease-in-out-soft) infinite;
+}
+
+@keyframes bc-spark {
+  to {
+    stroke-dashoffset: -0.07;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bc-spark {
+    animation: none;
+    opacity: 0;
   }
 }

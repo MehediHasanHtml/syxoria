@@ -363,6 +363,8 @@ export type Briefing = {
   insight: {
     title: string;
     detail: string;
+    /** The words of the title the screen leans on ("half as often") */
+    stress?: string;
     /** The silence it is about: the deal the briefing opens on, and after how many quiet days the company’s deals start to slip */
     quiet?: { draftId: string; threshold: number };
     /**
@@ -371,7 +373,7 @@ export type Briefing = {
      */
     curve?: number[];
   };
-  recommendation: { title: string; detail: string };
+  recommendation: { title: string; detail: string; stress?: string };
   /** What acting on it can achieve, measured on the company’s own history ("2×" · "as likely to close …") */
   impact?: { value: string; label: string };
   /** The replies the action is about — what Syxoria may do with them depends on the mandate and the tools */

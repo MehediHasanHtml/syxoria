@@ -27,6 +27,9 @@ const timeFmt = new Intl.DateTimeFormat(LOCALE, { hour: "2-digit", minute: "2-di
 export const formatCurrency = (value: number, precise = false) =>
   (precise ? currencyPreciseFmt : currencyFmt).format(value);
 export const formatNumber = (value: number) => numberFmt.format(value);
+const words = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen", "twenty"];
+/** Small counts as words, the way a sentence says them ("three replies"); figures above twenty */
+export const spellNumber = (value: number) => words[value] ?? formatNumber(value);
 export const formatCompact = (value: number) => compactFmt.format(value);
 export const formatPercent = (value: number, withSign = false) =>
   `${withSign && value > 0 ? "+" : ""}${value.toFixed(Math.abs(value) < 10 ? 1 : 0)}%`;

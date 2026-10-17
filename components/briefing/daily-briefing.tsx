@@ -4,7 +4,7 @@ import { useState, type ReactNode, type Ref } from "react";
 import { briefingTime, dailyBriefing as copy, sinceOf } from "@/content/briefing";
 import type { BriefingDimension, DailyBriefingSet } from "@/types";
 import { AutonomyCard } from "./autonomy-card";
-import { BriefingChanges } from "./briefing-changes";
+import { BriefingChanges, type HistoryGroup } from "./briefing-changes";
 import { BriefingDial } from "./briefing-dial";
 import { FollowThroughPanel } from "./briefing-follow";
 import { BriefingPeriods } from "./briefing-periods";
@@ -13,9 +13,10 @@ const dayOf = (date: string) => new Intl.DateTimeFormat("en-GB", { weekday: "lon
 
 /**
  * The executive briefing: one of the day's three briefings (morning, midday, evening). The
- * greeting, the briefing's one sentence and the day's briefings open it; the dial is the focal
- * point, its four steps readable at once around the figure that matters; what changed since the
- * last briefing sits at its right; and along the bottom, what Syxoria is doing about it (the
+ * greeting, the briefing's one sentence and the day's briefings (with where the day's main thread
+ * stood at each) open it; the dial is the focal
+ * point, its four steps readable at once around the figure that matters; at its top right, a small
+ * history of what happened since the last briefing; and along the bottom, what Syxoria is doing about it (the
  * follow through, every action on demand) and the autonomy it does it under. The morning is
  * compared with yesterday evening's briefing; the very first briefing with nothing.
  *
@@ -46,11 +47,21 @@ export function DailyBriefingView({
   const [selected, setSelected] = useState<BriefingDimension>("priority");
   const i = set.briefings.findIndex((b) => b.id === id);
   const briefing = set.briefings[i];
-  const since = briefing.changes ? sinceOf(briefing) : null;
+  const since = sinceOf(briefing);
   const compared = briefing.comparedWith;
   // the thread moved on from the previous briefing of the same day
   const previous = i > 0 && compared && set.briefings[i - 1].preparedAt === compared.preparedAt ? set.briefings[i - 1] : null;
   const against = since && compared ? copy.changes.against(copy.periods[compared.period], briefingTime(compared.preparedAt), compared.preparedAt.slice(0, 10) !== briefing.preparedAt.slice(0, 10)) : null;
+  // the full history: this briefing's updates, then each earlier one's, back to the first of the day
+  const history: HistoryGroup[] = set.briefings
+    .slice(0, i + 1)
+    .reverse()
+    .map((b) => ({
+      id: b.id,
+      label: b.comparedWith ? copy.changes.group(copy.periods[b.period], briefingTime(b.preparedAt)) : copy.changes.sinceConnected,
+      changes: b.changes ?? [],
+      actions: b.actions,
+    }));
   const doing = revealed >= 4;
 
   return (
@@ -82,7 +93,15 @@ export function DailyBriefingView({
             <BriefingDial briefing={briefing} selected={selected} onSelect={setSelected} since={since} revealed={revealed} />
           </div>
           <div className="bd-stage__changes" data-pending={!doing || undefined} inert={!doing || undefined}>
-            <BriefingChanges key={briefing.id} changes={briefing.changes} actions={briefing.actions} against={against} onSelect={setSelected} />
+            <BriefingChanges
+              key={briefing.id}
+              changes={briefing.changes}
+              actions={briefing.actions}
+              title={compared ? copy.changes.title : copy.changes.sinceConnected}
+              against={against}
+              history={history}
+              onSelect={setSelected}
+            />
           </div>
         </div>
 

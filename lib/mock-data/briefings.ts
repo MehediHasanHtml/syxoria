@@ -1,4 +1,4 @@
-import type { DailyBriefing } from "@/types";
+import type { BriefingChange, DailyBriefing } from "@/types";
 
 /**
  * One day of executive briefings for the demo company, in order. The morning is compared with
@@ -12,8 +12,9 @@ import type { DailyBriefing } from "@/types";
  *
  * The centre of the dial reads each step in its own way: money, a fall in a rate, a multiplier,
  * a count, a deadline, a result, a statement without a figure, a client's issue, a time, progress.
- * Updates are listed most relevant first; those about an action name it (actionId), so their
- * status is read from the action itself. The mandate is Autonomous: routine replies go out on
+ * Each briefing names where the day's main thread stands (stage: identified, in progress, completed).
+ * Updates are listed newest first, the two or three that matter most marked as highlights; those
+ * about an action name it (actionId), so their status is read from the action itself. The mandate is Autonomous: routine replies go out on
  * their own, while quotes, contracts and anything involving money still wait for the owner (see
  * mockAutonomyPolicy). The UI only reads this through services/briefings.ts.
  */
@@ -85,10 +86,12 @@ const morning: DailyBriefing = {
       { id: "closed", label: "Closed", when: "Pending", detail: "€78,300", state: "next" },
     ],
   },
+  stage: { state: "identified", label: "Three proposals waiting" },
   changes: [
-    { id: "c1", kind: "risk", title: "All three are now past ten quiet days", detail: "Maison Lenoir crossed the line overnight", at: "Overnight", dimension: "priority" },
-    { id: "c2", kind: "new", title: "Nora’s revised quote is ready", detail: "It waits for your approval", at: "7:45", dimension: "action", actionId: "quote_nora" },
-    { id: "c3", kind: "new", title: "Hugo reopened your proposal", detail: "Maison Lenoir, last night", at: "21:14", dimension: "insight" },
+    { id: "c1", kind: "new", title: "Nora’s revised quote is ready", detail: "It waits for your approval", at: "7:45", dimension: "action", actionId: "quote_nora", highlight: true },
+    { id: "c2", kind: "completed", title: "Replies drafted for Camille and Hugo", detail: "They go out on their own at 10:00", at: "7:40", dimension: "action", highlight: true },
+    { id: "c3", kind: "risk", title: "All three passed ten quiet days", detail: "Maison Lenoir crossed the line overnight", at: "Overnight", dimension: "priority", highlight: true },
+    { id: "c4", kind: "new", title: "Hugo reopened your proposal", detail: "Maison Lenoir, after a week without a word", at: "Yesterday 21:14", dimension: "insight" },
   ],
   comparedWith: { period: "evening", preparedAt: "2026-10-13T18:30:00" },
 };
@@ -173,12 +176,13 @@ const midday: DailyBriefing = {
       { id: "closed", label: "Signed", when: "By Friday", detail: "€42,000", state: "next" },
     ],
   },
+  stage: { state: "in-progress", label: "Contract drafted" },
   changes: [
-    { id: "c1", kind: "new", title: "Camille answered", detail: "Atelier Rive wants to sign by Friday", at: "11:40", dimension: "priority" },
-    { id: "c2", kind: "completed", title: "Both replies went out", detail: "To Camille and Hugo, as scheduled", at: "10:00", dimension: "action" },
-    { id: "c3", kind: "unresolved", title: "Nora’s quote still waits for you", detail: "Ready since 7:45", dimension: "action", actionId: "quote_nora" },
-    { id: "c4", kind: "changed", title: "The priority moved to the contract", detail: "This morning: reply to all three", dimension: "priority" },
-    { id: "c5", kind: "opportunity", title: "Hugo wants to start in March", detail: "A month earlier than planned", at: "12:15", dimension: "insight" },
+    { id: "c1", kind: "changed", title: "The priority moved to the contract", detail: "This morning: reply to all three", at: "12:50", dimension: "priority", highlight: true },
+    { id: "c2", kind: "opportunity", title: "Hugo wants to start in March", detail: "A month earlier than planned", at: "12:15", dimension: "insight" },
+    { id: "c3", kind: "new", title: "Camille replied", detail: "Atelier Rive wants to sign by Friday", at: "11:40", dimension: "priority", highlight: true },
+    { id: "c4", kind: "completed", title: "Both replies went out", detail: "To Camille and Hugo, as scheduled", at: "10:00", dimension: "action", highlight: true },
+    { id: "c5", kind: "unresolved", title: "Nora’s quote still waits for you", detail: "Ready since this morning", at: "7:45", dimension: "action", actionId: "quote_nora" },
   ],
   comparedWith: { period: "morning", preparedAt: "2026-10-14T08:00:00" },
 };
@@ -267,14 +271,26 @@ const evening: DailyBriefing = {
       { id: "closed", label: "Signed", when: "By Friday", detail: "€42,000", state: "next" },
     ],
   },
+  stage: { state: "completed", label: "Contract sent" },
   changes: [
-    { id: "c1", kind: "risk", title: "Nora’s quote was returned", detail: "Her address no longer receives mail", at: "14:12", dimension: "priority", actionId: "quote_nora" },
-    { id: "c2", kind: "completed", title: "The contract went to Atelier Rive", detail: "Camille opened it at 16:02", at: "14:10", dimension: "action", actionId: "contract_rive" },
-    { id: "c3", kind: "new", title: "A payment reminder is ready", detail: "Brasserie Ondine’s invoice is due Monday", at: "17:05", dimension: "action", actionId: "reminder_ondine" },
-    { id: "c4", kind: "decided", title: "You approved the contract and the quote", at: "14:05", dimension: "recommendation" },
-    { id: "c5", kind: "unresolved", title: "Côté Sud Hôtels is still waiting", detail: "15 days without news", dimension: "priority" },
+    { id: "c1", kind: "new", title: "A payment reminder is ready", detail: "Brasserie Ondine’s invoice is due Monday", at: "17:05", dimension: "action", actionId: "reminder_ondine", highlight: true },
+    { id: "c2", kind: "opportunity", title: "Camille opened the contract", detail: "Atelier Rive, signature due Friday", at: "16:02", dimension: "insight", highlight: true },
+    { id: "c3", kind: "risk", title: "Nora’s quote was returned", detail: "Her address no longer receives mail", at: "14:12", dimension: "priority", actionId: "quote_nora", highlight: true },
+    { id: "c4", kind: "completed", title: "The contract went to Atelier Rive", detail: "Sent as soon as you approved it", at: "14:10", dimension: "action", actionId: "contract_rive" },
+    { id: "c5", kind: "decided", title: "You approved the contract and the quote", at: "14:05", dimension: "recommendation" },
   ],
   comparedWith: { period: "midday", preparedAt: "2026-10-14T13:00:00" },
 };
 
 export const mockDailyBriefings: DailyBriefing[] = [morning, midday, evening];
+
+/**
+ * A brand new user's first briefing has no earlier briefing: its history is what Syxoria did since
+ * the tools were connected, a few minutes before.
+ */
+export const mockFirstDayChanges: BriefingChange[] = [
+  { id: "f1", kind: "completed", title: "Replies drafted for all three", detail: "Two go out on their own, one waits for you", at: "7:58", dimension: "action", highlight: true },
+  { id: "f2", kind: "risk", title: "Three proposals found waiting", detail: "€78,300 without an answer for ten days or more", at: "7:56", dimension: "priority", highlight: true },
+  { id: "f3", kind: "completed", title: "Two years of proposals read", detail: "128 proposals and their replies", at: "7:54", dimension: "insight", highlight: true },
+  { id: "f4", kind: "decided", title: "HubSpot and Gmail connected", detail: "Read only. Nothing was changed", at: "7:51" },
+];

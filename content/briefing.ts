@@ -1,4 +1,8 @@
-import type { AutonomyLevel, BriefingActionStatus, BriefingChangeKind, BriefingDimension, BriefingPeriod, BriefingSeverity, BriefingStepChange } from "@/types";
+import { spellNumber } from "@/lib/format";
+import type { AutonomyLevel, BriefingActionStatus, BriefingChangeKind, BriefingDimension, BriefingPeriod, BriefingSeverity, BriefingStageState, BriefingStepChange } from "@/types";
+
+/** A small count as a word, opening a sentence ("Three proposals") */
+const spell = (n: number) => spellNumber(n).replace(/^./, (c) => c.toUpperCase());
 
 /**
  * The executive briefing's own words (components/briefing). Business content comes from the
@@ -51,18 +55,27 @@ export const dailyBriefing = {
     history: "Your own history: it says what usually happens, not what will.",
     unmeasured: "Not measured yet: too few closed deals to put a figure on it.",
     average: "Your past average, not a promise for these deals.",
+    /** Where the thread stands, on the day's rail */
+    stage: (n: number) => (n === 1 ? "One proposal waiting" : `${spell(n)} proposals waiting`),
+    nothing: "Nothing pressing",
+    /** What Syxoria did since the tools were connected: the first briefing's history */
+    since: {
+      mandate: "Your mandate is set",
+      mode: (name: string, promise: string) => `${name}: ${promise}`,
+      found: (n: number) => (n === 1 ? "One proposal found waiting" : `${spell(n)} proposals found waiting`),
+      foundDetail: (worth: string) => `${worth} without an answer`,
+      read: "Your history read",
+      connected: (names: string[]) => `${names.length > 1 ? `${names.slice(0, -1).join(", ")} and ${names.at(-1)}` : names[0]} connected`,
+      readOnly: "Read only. Nothing was changed",
+    },
   },
   periods: { morning: "Morning", midday: "Midday", evening: "Evening" } satisfies Record<BriefingPeriod, string>,
   periodsLabel: "Today’s briefings",
   latest: "Latest",
-  /** The day line: what each briefing of the day brought, in a few words */
+  /** The day's briefings, and under them where the day's main thread stood at each one */
   day: {
-    first: "First briefing",
     upcoming: "Upcoming",
-    risk: (n: number) => `${n} ${n === 1 ? "risk" : "risks"}`,
-    new: (n: number) => `${n} new`,
-    done: (n: number) => `${n} completed`,
-    open: (n: number) => `${n} open`,
+    stages: { identified: "Identified", "in-progress": "In progress", completed: "Completed", blocked: "On hold" } satisfies Record<BriefingStageState, string>,
     /** The follow through's key: the steps that moved since the previous briefing */
     moved: (since: string) => `Moved since ${since}`,
     briefing: (period: string, time: string) => `${period} briefing, ${time}`,
@@ -99,12 +112,18 @@ export const dailyBriefing = {
   },
   changes: {
     title: "Since your last briefing",
+    /** The very first briefing: what Syxoria did since the tools were connected */
+    sinceConnected: "Since you connected",
     /** Which briefing the updates are counted from */
-    against: (period: string, time: string, yesterday: boolean) => (yesterday ? `Yesterday ${period.toLowerCase()}, ${time}` : `${period}, ${time}`),
+    against: (period: string, time: string, yesterday: boolean) => (yesterday ? `Yesterday, ${time}` : `${period}, ${time}`),
     first: "Your first briefing",
     firstNote: "It sets the baseline. From your next briefing, this shows what changed in between.",
-    more: (n: number) => `All ${n} updates`,
-    less: "Fewer updates",
+    more: "View full history",
+    /** The full history: the day's updates, briefing by briefing */
+    history: "Today’s history",
+    group: (period: string, time: string) => `${period} briefing · ${time}`,
+    count: (n: number) => `${n} ${n === 1 ? "update" : "updates"}`,
+    close: "Close the history",
     kinds: {
       new: "New",
       unresolved: "Still open",

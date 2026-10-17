@@ -1,12 +1,13 @@
 import { dailyBriefing as copy } from "@/content/briefing";
 import { formatCurrency } from "@/lib/format";
-import type { AutonomyPolicy, Briefing, BriefingActionItem, BriefingDraft, BriefingPeriod, DailyBriefing, DailyBriefingSet, DataSource, Mandate } from "@/types";
+import type { AutonomyPolicy, Briefing, BriefingActionItem, BriefingChange, BriefingDraft, BriefingPeriod, DailyBriefing, DailyBriefingSet, DataSource, Mandate } from "@/types";
 import { followThrough, reachOf, resolveBriefingAction, type BriefingAction } from "./mandate";
 
 /**
  * The first executive briefing, as the dial reads it (components/briefing): what the onboarding
  * found (the Briefing), worded by the mandate the user just gave and the tools connected. It is
- * the day's first briefing, so it has nothing to compare with; the briefings still to come today
+ * the day's first briefing, so it has nothing to compare with (its history is what happened since
+ * the tools were connected); the briefings still to come today
  * are listed as such, never filled in. The action and its lines only promise what the mandate
  * allows (resolveBriefingAction): with Guided, nothing goes out on its own.
  */
@@ -31,6 +32,27 @@ function actionsFor(action: BriefingAction, drafts: BriefingDraft[], recommendat
     case "list":
       return [{ id: "keep", name: copy.first.keep, status: "scheduled", timing, note: action.note, needsApproval: false, recommendationId }];
   }
+}
+
+/** "7:53", some minutes before `now` */
+const minutesBefore = (now: Date, m: number) => {
+  const t = new Date(now.getTime() - m * 60_000);
+  return `${t.getHours()}:${pad(t.getMinutes())}`;
+};
+
+/**
+ * The first briefing has no earlier briefing to be compared with: its history is what happened
+ * since the tools were connected, a few minutes before. Only what the onboarding did, newest first.
+ */
+function sinceConnected({ n, worth, basedOn, sources, mode, now }: { n: number; worth: string; basedOn: string; sources: DataSource[]; mode?: string; now: Date }): BriefingChange[] {
+  const since = copy.first.since;
+  const changes: (BriefingChange | false)[] = [
+    { id: "mandate", kind: "decided", title: since.mandate, detail: mode, at: minutesBefore(now, 0) },
+    n > 0 && { id: "found", kind: "risk", title: since.found(n), detail: since.foundDetail(worth), at: minutesBefore(now, 1), dimension: "priority", highlight: true },
+    { id: "read", kind: "completed", title: since.read, detail: basedOn, at: minutesBefore(now, 2), dimension: "insight", highlight: true },
+    sources.length > 0 && { id: "connected", kind: "completed", title: since.connected(sources.map((s) => s.name)), detail: since.readOnly, at: minutesBefore(now, 4), highlight: true },
+  ];
+  return changes.filter((c): c is BriefingChange => Boolean(c));
 }
 
 export function firstDailyBriefing({
@@ -117,7 +139,8 @@ export function firstDailyBriefing({
         state: s.state,
       })),
     },
-    changes: null,
+    stage: { state: "identified", label: n ? copy.first.stage(n) : copy.first.nothing },
+    changes: sinceConnected({ n, worth, basedOn: briefing.basedOn, sources, mode: level && copy.first.since.mode(level.name, copy.autonomy.promises[mandate.level]), now }),
     comparedWith: null,
   };
 

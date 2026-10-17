@@ -484,7 +484,10 @@ export type BriefingActionItem = {
 
 export type BriefingChangeKind = "new" | "unresolved" | "decided" | "changed" | "in-progress" | "completed" | "risk" | "opportunity";
 
-/** One update since the previous briefing. A briefing lists them most relevant first */
+/** Where the day's main thread stands at a briefing: found, being worked on, done, or stopped on something */
+export type BriefingStageState = "identified" | "in-progress" | "completed" | "blocked";
+
+/** One update since the previous briefing. A briefing lists them newest first */
 export type BriefingChange = {
   id: string;
   kind: BriefingChangeKind;
@@ -492,8 +495,10 @@ export type BriefingChange = {
   title: string;
   /** Only what is needed to understand it ("Atelier Rive wants to sign by Friday") */
   detail?: string;
-  /** When it happened, if that matters ("11:40") */
+  /** When it happened ("11:40" · "Overnight" · "Yesterday 21:14") */
   at?: string;
+  /** One of the two or three that matter most: shown at first, the rest in the full history */
+  highlight?: boolean;
   /** The step of the reasoning it concerns, to select it */
   dimension?: BriefingDimension;
   /** The action it is about: its status is then read from the action, so the two never disagree */
@@ -525,7 +530,15 @@ export type DailyBriefing = {
   actions: BriefingActionItem[];
   /** The priority followed through, as far as it has gone; the panel under the dial */
   followThrough: { title: string; steps: BriefingFollowStep[] };
-  /** Since the previous briefing, most relevant first; null for the very first one (nothing to compare with) */
+  /**
+   * Where the day's main thread stands at this briefing, in a word and a few words: what was
+   * identified in the morning is under way at midday and done by the evening
+   */
+  stage: { state: BriefingStageState; label: string };
+  /**
+   * Since the previous briefing, newest first. The very first briefing has no previous one: it
+   * lists what Syxoria did since the owner connected their tools, or null when there is nothing
+   */
   changes: BriefingChange[] | null;
   /** The briefing it is compared with: the one before it today, or yesterday evening's for the morning */
   comparedWith: { period: BriefingPeriod; preparedAt: string } | null;

@@ -82,6 +82,8 @@ export const dailyBriefing = {
     /** The follow through's key: the steps that moved since the previous briefing */
     moved: (since: string) => `Moved since ${since}`,
     briefing: (period: string, time: string) => `${period} briefing, ${time}`,
+    /** The briefing in view, on the day's choice */
+    name: (period: string) => `${period} briefing`,
   },
   dimensions: { priority: "Priority", insight: "Insight", recommendation: "Recommendation", action: "Action" } satisfies Record<BriefingDimension, string>,
   /** The question each dimension answers: the centre's heading, so each step says what it is for */
@@ -141,18 +143,34 @@ export const dailyBriefing = {
   actions: {
     title: "What Syxoria is doing",
     statuses: {
+      suggested: "Suggested",
       drafted: "Drafted",
       "awaiting-approval": "Awaiting approval",
+      approved: "Approved",
       scheduled: "Scheduled",
       "in-progress": "In progress",
       sent: "Sent",
       completed: "Completed",
       unsuccessful: "Unsuccessful",
     } satisfies Record<BriefingActionStatus, string>,
+    /** What each status means, and what it does not: the same everywhere an action appears */
+    meanings: {
+      suggested: "Recommended. Nothing is prepared yet.",
+      drafted: "Prepared by Syxoria. Not shown to you for approval yet.",
+      "awaiting-approval": "Prepared and waiting for your decision. Nothing has gone out.",
+      approved: "You said yes. It has not gone out yet.",
+      scheduled: "Set for a time. Not running yet.",
+      "in-progress": "Being carried out now.",
+      sent: "Gone out. Its outcome is still open.",
+      completed: "Done, with its result recorded.",
+      unsuccessful: "It did not go through. It stays here until it is resolved.",
+    } satisfies Record<BriefingActionStatus, string>,
     /** The panel's summary of where things stand, most pressing first */
     counts: {
       unsuccessful: (n: number) => `${n} unsuccessful`,
       "awaiting-approval": (n: number) => `${n} ${n === 1 ? "needs" : "need"} you`,
+      approved: (n: number) => `${n} approved`,
+      suggested: (n: number) => `${n} suggested`,
       drafted: (n: number) => `${n} drafted`,
       scheduled: (n: number) => `${n} scheduled`,
       "in-progress": (n: number) => `${n} in progress`,

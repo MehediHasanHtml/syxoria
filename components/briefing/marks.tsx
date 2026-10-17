@@ -1,4 +1,4 @@
-import { ArrowDownRight, ArrowUpRight, CalendarClock, Check, CheckCheck, CircleAlert, CircleDot, Hand, LoaderCircle, PenLine, Plus, Repeat2, Send, TrendingUp, TriangleAlert, type LucideIcon } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, BadgeCheck, CalendarClock, Check, CheckCheck, CircleAlert, CircleDot, Hand, Lightbulb, LoaderCircle, PenLine, Plus, Repeat2, Send, TrendingUp, TriangleAlert, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/cn";
 import type { BriefingActionStatus, BriefingChangeKind, BriefingSeverity } from "@/types";
 
@@ -22,8 +22,10 @@ export function SeverityMark({ level, className }: { level: BriefingSeverity; cl
 }
 
 const STATUS: Record<BriefingActionStatus, LucideIcon> = {
+  suggested: Lightbulb,
   drafted: PenLine,
   "awaiting-approval": Hand,
+  approved: BadgeCheck,
   scheduled: CalendarClock,
   "in-progress": LoaderCircle,
   sent: Send,
@@ -32,7 +34,10 @@ const STATUS: Record<BriefingActionStatus, LucideIcon> = {
 };
 
 /** The statuses, most pressing first: what failed, what waits for the owner, then what Syxoria is getting on with */
-export const STATUS_ORDER: BriefingActionStatus[] = ["unsuccessful", "awaiting-approval", "drafted", "in-progress", "scheduled", "sent", "completed"];
+export const STATUS_ORDER: BriefingActionStatus[] = ["unsuccessful", "awaiting-approval", "approved", "drafted", "suggested", "in-progress", "scheduled", "sent", "completed"];
+
+/** The same statuses in the order an action lives through them */
+export const LIFECYCLE: BriefingActionStatus[] = ["suggested", "drafted", "awaiting-approval", "approved", "scheduled", "in-progress", "sent", "completed", "unsuccessful"];
 
 /** An action's status as a mark: in a ring (`ring`) for lists, bare beside a word */
 export function StatusIcon({ status, ring = true, className }: { status: BriefingActionStatus; ring?: boolean; className?: string }) {

@@ -9,6 +9,7 @@ import { briefingTime, dailyBriefing as words } from "@/content/briefing";
 import { overview as copy } from "@/content/overview";
 import { cn } from "@/lib/cn";
 import type { BriefingActionItem, HomeOverview, HomeSignal } from "@/types";
+import { HomePresence } from "./home-presence";
 
 const dayOf = (iso: string) => new Intl.DateTimeFormat("en-GB", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" }).format(new Date(`${iso.slice(0, 10)}T00:00:00Z`));
 
@@ -17,8 +18,9 @@ const SIGNAL: Record<HomeSignal["kind"], LucideIcon> = { risk: TriangleAlert, op
 /**
  * The workspace home: the executive overview. It reads top to bottom as one line, from
  * understanding to action: where the business stands (the greeting, the latest briefing's sentence,
- * four figures), what matters most (the priority, with its recommended next step), what waits for
- * the owner and what deserves attention, then what Syxoria recommends and what it has done.
+ * four figures, and Syxoria itself: what it is doing right now), what matters most (the priority,
+ * with its recommended next step), what waits for the owner and what deserves attention, then
+ * what Syxoria recommends and what it has done.
  *
  * Everything comes from the latest briefing (services/overview.ts): the priority is its priority,
  * every status is read from its actions, the activity is its updates. So the home, the briefing and
@@ -61,10 +63,12 @@ export function HomeView({ data }: { data: HomeOverview }) {
             </Link>
           )}
         </div>
-        <ButtonLink href={briefingHref} variant="secondary" className="group shrink-0">
-          {copy.openBriefing}
-          <ArrowNudge />
-        </ButtonLink>
+        <HomePresence>
+          <ButtonLink href={briefingHref} variant="secondary" size="sm" className="group shrink-0">
+            {copy.openBriefing}
+            <ArrowNudge />
+          </ButtonLink>
+        </HomePresence>
       </header>
 
       {/* B. THE FIGURES THAT SAY HOW THE BUSINESS STANDS */}

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { StatusIcon } from "@/components/briefing/marks";
+import { LIFECYCLE, StatusIcon } from "@/components/briefing/marks";
+import { HeldMark } from "@/components/dashboard/automation/automation-status";
 import { PlannedAreaView } from "@/components/dashboard/planned-area";
 import { areas, planned } from "@/content/areas";
 import { dailyBriefing as words } from "@/content/briefing";
@@ -12,7 +13,7 @@ export const metadata: Metadata = { title: areas.actions.title };
 const GROUPS: { title: string; statuses: BriefingActionStatus[] }[] = [
   { title: "Waiting for you", statuses: ["awaiting-approval"] },
   { title: "Needs attention", statuses: ["unsuccessful"] },
-  { title: "Prepared or planned", statuses: ["drafted", "scheduled", "in-progress"] },
+  { title: "Prepared or planned", statuses: ["suggested", "drafted", "approved", "scheduled", "in-progress"] },
   { title: "Done", statuses: ["sent", "completed"] },
 ];
 
@@ -43,6 +44,7 @@ export default async function ActionsPage() {
                           {a.next && <> · {a.next}</>}
                         </span>
                       </span>
+                      <HeldMark actionId={a.id} />
                     </div>
                   </li>
                 ))}
@@ -50,6 +52,26 @@ export default async function ActionsPage() {
             </div>
           );
         })}
+      </section>
+
+      {/* one lifecycle for every action, on every screen: what each state means, and what it does not */}
+      <section aria-labelledby="pa-lifecycle" className="hm-panel pa-preview">
+        <div className="hm-panel__head">
+          <h2 id="pa-lifecycle" className="bd-label">
+            {planned.lifecycle}
+          </h2>
+        </div>
+        <ol className="pa-lifecycle">
+          {LIFECYCLE.map((s) => (
+            <li key={s}>
+              <StatusIcon status={s} />
+              <span className="min-w-0">
+                <span className="pa-lifecycle__name">{words.actions.statuses[s]}</span>
+                <span className="pa-lifecycle__means">{words.actions.meanings[s]}</span>
+              </span>
+            </li>
+          ))}
+        </ol>
       </section>
     </PlannedAreaView>
   );

@@ -3,7 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Tabs } from "@/components/ui/tabs";
-import type { NotificationPreferences, User, Workspace } from "@/types";
+import type { AutonomyPolicy, NotificationPreferences, User, Workspace } from "@/types";
+import { AutonomySettings } from "./autonomy-settings";
 import { NotificationSettings } from "./notification-settings";
 import { ProfileSettings } from "./profile-settings";
 import { SecuritySettings } from "./security-settings";
@@ -15,11 +16,13 @@ export function SettingsView({
   user,
   workspace,
   preferences,
+  policy,
 }: {
   initialTab: SettingsTab;
   user: User;
   workspace: Workspace;
   preferences: NotificationPreferences;
+  policy: AutonomyPolicy;
 }) {
   const router = useRouter();
   const [tab, setTab] = useState<SettingsTab>(initialTab);
@@ -39,6 +42,7 @@ export function SettingsView({
         className="w-full"
       />
       <div id={`settings-panel-${tab}`} role="tabpanel" aria-labelledby={`settings-tab-${tab}`} className="mt-8 max-w-3xl animate-fade-in" key={tab}>
+        {tab === "autonomy" && <AutonomySettings policy={policy} />}
         {tab === "account" && <ProfileSettings user={user} />}
         {tab === "workspace" && <WorkspaceSettings workspace={workspace} />}
         {tab === "notifications" && <NotificationSettings initial={preferences} />}
@@ -47,4 +51,3 @@ export function SettingsView({
     </>
   );
 }
-

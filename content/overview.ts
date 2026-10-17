@@ -9,6 +9,16 @@ export const overview = {
   briefing: (period: string, time: string) => `${period} briefing, ${time}`,
   since: (n: number, period: string) => `${n} ${n === 1 ? "update" : "updates"} since your ${period.toLowerCase()} briefing`,
   openBriefing: "Open today’s briefing",
+  /** Syxoria itself, in the header: what it is doing right now */
+  presence: {
+    mode: (name: string) => `${name} mode`,
+    running: "Watching your tools and acting on its own within your rules.",
+    partly: "Acting on its own, except what you paused.",
+    suspended: "Observing and preparing only. Nothing starts on its own.",
+    next: (name: string) => `Next on its own: ${name}`,
+    held: (n: number) => (n === 1 ? "1 action is held" : `${n} actions are held`),
+    resume: "Review and resume",
+  },
   figures: "Key figures",
   priority: {
     title: "Today’s priority",

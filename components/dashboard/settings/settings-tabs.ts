@@ -1,7 +1,8 @@
 /** Shared (server + client) settings tab definitions. */
-export type SettingsTab = "account" | "workspace" | "notifications" | "security";
+export type SettingsTab = "autonomy" | "account" | "workspace" | "notifications" | "security";
 
 export const settingsTabs: { value: SettingsTab; label: string }[] = [
+  { value: "autonomy", label: "Autonomy & safety" },
   { value: "account", label: "Account" },
   { value: "workspace", label: "Workspace" },
   { value: "notifications", label: "Notifications" },

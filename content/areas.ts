@@ -118,4 +118,6 @@ export const planned = {
   holds: "What it will hold",
   today: "Already in the workspace",
   preview: "From today’s briefing",
+  /** The lifecycle every action follows, on every screen */
+  lifecycle: "How an action moves",
 };

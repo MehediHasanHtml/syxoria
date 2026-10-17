@@ -3367,6 +3367,12 @@ html[data-vt="onboarding"]::view-transition-new(root) {
   color: var(--color-fg-3);
 }
 
+/* on the briefing itself the labels step back further, so the sentences lead */
+.bd .bd-label {
+  font-size: 10px;
+  letter-spacing: 0.18em;
+}
+
 .bd-grid {
   display: grid;
   gap: 2rem;
@@ -3429,145 +3435,145 @@ html[data-vt="onboarding"]::view-transition-new(root) {
 }
 
 /* ---------- The day's briefings ----------
-   Above, one clear choice: Morning · Midday · Evening in one quiet pill, the briefing in view
-   raised in it. Below, on the same columns, the rail: where the day's main thread stood at each
-   briefing, lit up to the briefing in view. The latest carries the Core's emerald. */
-.bd-days {
-  display: grid;
-  gap: 0.7rem;
+   One quiet pill naming the briefing in view, so the greeting and the dial keep the attention.
+   It opens the day: Morning · Afternoon · Evening, each with its time, the one in view checked,
+   the latest with the Core's emerald. Down their left side, the day's main thread: where it stood
+   at each briefing, lit up to the briefing in view. */
+.bd-period {
+  position: relative;
   width: max-content;
   max-width: 100%;
 }
 
-.bd-seg,
-.bd-rail {
-  display: grid;
-  grid-template-columns: repeat(var(--n), minmax(0, 8.75rem));
-}
-
-.bd-seg {
-  padding: 3px;
-  border-radius: 999px;
-  background: rgb(255 255 255 / 0.03);
-  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.13);
-}
-
-.bd-seg__item {
-  position: relative;
-  display: flex;
+.bd-period__trigger {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  gap: 0.4rem;
-  min-width: 0;
-  min-height: 2.15rem;
-  padding: 0.3rem 0.7rem;
+  gap: 0.45rem;
+  min-height: 2rem;
+  padding: 0.25rem 0.6rem 0.25rem 0.65rem;
   border-radius: 999px;
   font-size: 13px;
   color: var(--color-fg-2);
   white-space: nowrap;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.11);
   transition: color 250ms, background-color 250ms, box-shadow 250ms;
 }
 
-.bd-seg__icon {
+.bd-period__trigger:hover,
+.bd-period__trigger[aria-expanded="true"] {
+  color: var(--color-fg);
+  background: rgb(255 255 255 / 0.04);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.2);
+}
+
+.bd-period__trigger:focus-visible {
+  outline: 2px solid var(--color-fg);
+  outline-offset: 2px;
+}
+
+.bd-period__icon {
   flex: none;
-  width: 0.95rem;
-  height: 0.95rem;
-  color: var(--color-fg-3);
-  transition: color 250ms;
-}
-
-.bd-seg__time {
-  font-size: 12px;
-  color: var(--color-fg-3);
-}
-
-button.bd-seg__item:hover {
-  color: var(--color-fg);
-}
-
-.bd-seg__item[aria-checked="true"] {
-  color: var(--color-fg);
-  background: rgb(255 255 255 / 0.085);
-  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.16), 0 6px 18px -10px rgb(0 0 0 / 0.9);
-}
-
-.bd-seg__item[aria-checked="true"] .bd-seg__icon {
+  width: 0.9rem;
+  height: 0.9rem;
   color: var(--emerald-bright);
 }
 
-.bd-seg__item[aria-checked="true"] .bd-seg__time {
-  color: var(--color-fg-2);
+.bd-period__chevron {
+  flex: none;
+  width: 0.85rem;
+  height: 0.85rem;
+  color: var(--color-fg-3);
+  transition: rotate 250ms var(--ease-out-soft);
 }
 
-/* the latest briefing: a small emerald mark at its corner */
-.bd-seg__item[data-latest]::after {
-  content: "";
+.bd-period__trigger[aria-expanded="true"] .bd-period__chevron {
+  rotate: 180deg;
+}
+
+/* the day, under the pill */
+.bd-period__menu {
   position: absolute;
-  top: 0.4rem;
-  right: 0.55rem;
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--emerald-bright);
+  top: calc(100% + 0.45rem);
+  left: 0;
+  z-index: 5;
+  width: 17.5rem;
+  max-width: calc(100vw - 2rem);
+  padding: 0.65rem 0.35rem 0.35rem;
+  border-radius: 16px;
+  background: rgb(13 14 15 / 0.97);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.14), 0 24px 60px -20px rgb(0 0 0 / 0.85);
+  backdrop-filter: blur(10px);
+  transform-origin: top left;
+  animation: bd-why-in 220ms var(--ease-out-soft) both;
 }
 
-.bd-seg__item:focus-visible {
-  outline: 2px solid var(--color-fg);
-  outline-offset: 1px;
+.bd-period__head {
+  padding: 0 0.65rem 0.4rem;
 }
 
-.bd-seg__item[data-upcoming] {
-  cursor: default;
-}
-
-.bd-seg__item[data-upcoming],
-.bd-seg__item[data-upcoming] :is(.bd-seg__icon, .bd-seg__time) {
-  color: rgb(255 255 255 / 0.4);
-}
-
-/* the rail */
-.bd-rail__step {
+.bd-period__item {
   --dot: 0.75rem;
+  --row: 1.15rem;
   position: relative;
   display: grid;
-  justify-items: start;
-  align-content: start;
-  min-width: 0;
-  padding: 0 0.6rem 0 0.75rem;
-  cursor: pointer;
+  grid-template-columns: var(--dot) minmax(0, 1fr) auto;
+  grid-template-rows: var(--row) auto;
+  column-gap: 0.7rem;
+  row-gap: 0.1rem;
+  align-items: center;
+  width: 100%;
+  padding: 0.5rem 0.65rem 0.55rem;
+  border-radius: 10px;
+  text-align: left;
+  outline: none;
+  transition: background-color 200ms, box-shadow 200ms;
 }
 
-.bd-rail__step[data-upcoming] {
+.bd-period__item[aria-checked="true"] {
+  background: rgb(255 255 255 / 0.06);
+}
+
+button.bd-period__item:hover {
+  background: rgb(255 255 255 / 0.05);
+}
+
+button.bd-period__item:focus-visible {
+  background: rgb(255 255 255 / 0.07);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.4);
+}
+
+.bd-period__item[data-upcoming] {
   cursor: default;
 }
 
-/* the line on to the next briefing */
-.bd-rail__step[data-link]::before {
+/* the thread on to the next briefing, from this node down to the next */
+.bd-period__item[data-link]::before {
   content: "";
   position: absolute;
-  top: calc(var(--dot) / 2 - 0.5px);
-  left: calc(0.75rem + var(--dot) + 0.4rem);
-  right: 0.4rem;
-  height: 1px;
-  background: rgb(255 255 255 / 0.3);
+  z-index: 1;
+  top: calc(0.5rem + var(--row) / 2 + var(--dot) / 2 + 0.25rem);
+  bottom: calc(var(--dot) / 2 + 0.25rem - 0.5rem - var(--row) / 2);
+  left: calc(0.65rem + var(--dot) / 2 - 0.5px);
+  width: 1px;
+  background: rgb(255 255 255 / 0.22);
   transition: background-color 400ms var(--ease-out-soft);
 }
 
 /* the part of the day travelled to the briefing in view */
-.bd-rail__step[data-link="read"]::before {
+.bd-period__item[data-link="read"]::before {
   background: rgb(79 174 134 / 0.75);
 }
 
-.bd-rail__step[data-link="ahead"]::before {
-  background: linear-gradient(90deg, rgb(255 255 255 / 0.3), rgb(255 255 255 / 0.06));
+.bd-period__item[data-link="ahead"]::before {
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.22), rgb(255 255 255 / 0.05));
 }
 
-.bd-rail__node {
+.bd-period__node {
+  grid-area: 1 / 1;
   display: grid;
   place-items: center;
   width: var(--dot);
   height: var(--dot);
-  margin-bottom: 0.45rem;
   border-radius: 50%;
   color: var(--color-canvas);
   box-shadow: inset 0 0 0 1.5px rgb(255 255 255 / 0.6);
@@ -3575,71 +3581,114 @@ button.bd-seg__item:hover {
 }
 
 /* identified: a ring with a point · in progress: half lit · completed: emerald with its check */
-.bd-rail__step[data-state="identified"] .bd-rail__node {
+.bd-period__item[data-state="identified"] .bd-period__node {
   background: radial-gradient(circle, var(--color-fg) 0 2px, transparent 2.6px);
 }
 
-.bd-rail__step[data-state="in-progress"] .bd-rail__node {
+.bd-period__item[data-state="in-progress"] .bd-period__node {
   background: linear-gradient(90deg, var(--emerald-bright) 50%, transparent 50%);
   box-shadow: inset 0 0 0 1.5px var(--emerald-bright);
 }
 
-.bd-rail__step[data-state="completed"] .bd-rail__node {
+.bd-period__item[data-state="completed"] .bd-period__node {
   background: var(--emerald-bright);
   box-shadow: none;
 }
 
-.bd-rail__step[data-state="blocked"] .bd-rail__node {
+.bd-period__item[data-state="blocked"] .bd-period__node {
   color: var(--color-negative);
   box-shadow: none;
 }
 
-.bd-rail__step[data-on] .bd-rail__node {
+.bd-period__item[aria-checked="true"] .bd-period__node {
   outline: 3px solid rgb(79 174 134 / 0.22);
   outline-offset: 2px;
 }
 
-.bd-rail__step[data-upcoming] .bd-rail__node {
+.bd-period__item[data-upcoming] .bd-period__node {
   box-shadow: none;
   outline: 1px dashed rgb(255 255 255 / 0.35);
   outline-offset: -1px;
 }
 
-.bd-rail__state {
-  font-size: 12.5px;
-  line-height: 1.25;
+.bd-period__name {
+  grid-area: 1 / 2;
+  display: flex;
+  align-items: baseline;
+  gap: 0.45rem;
+  min-width: 0;
+  font-size: 13px;
+  line-height: var(--row);
   color: var(--color-fg);
-  transition: color 250ms;
+  white-space: nowrap;
 }
 
-.bd-rail__step[data-state="completed"] .bd-rail__state {
+.bd-period__time {
+  font-size: 12px;
+  color: var(--color-fg-3);
+}
+
+/* on the first day, a briefing that is an example of a usual day says so */
+.bd-period__example {
+  font-family: var(--font-serif);
+  font-size: 12.5px;
+  font-style: italic;
+  font-weight: 300;
+  color: var(--color-fg-2);
+}
+
+/* the latest briefing: a small emerald mark and its word */
+.bd-period__latest {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 11.5px;
   color: var(--color-accent-strong);
 }
 
-.bd-rail__label {
-  margin-top: 0.1rem;
+.bd-period__latest::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--emerald-bright);
+}
+
+.bd-period__stage {
+  grid-area: 2 / 2;
+  min-width: 0;
   font-size: 12px;
   line-height: 1.3;
   color: var(--color-fg-2);
   text-wrap: balance;
-  transition: color 250ms;
+}
+
+.bd-period__state {
+  color: var(--color-fg);
+}
+
+.bd-period__item[data-state="completed"] .bd-period__state {
+  color: var(--color-accent-strong);
+}
+
+.bd-period__check {
+  grid-area: 1 / 3 / span 2;
+  width: 0.95rem;
+  height: 0.95rem;
+  color: var(--emerald-bright);
 }
 
 /* later than the briefing in view: not yet, from where the reader stands */
-.bd-rail__step[data-ahead] :is(.bd-rail__state, .bd-rail__label) {
+.bd-period__item[data-ahead] :is(.bd-period__stage, .bd-period__state) {
   color: var(--color-fg-3);
 }
 
-.bd-rail__step[data-ahead] .bd-rail__node {
+.bd-period__item[data-ahead] .bd-period__node {
   opacity: 0.6;
 }
 
-.bd-rail__step[data-upcoming] :is(.bd-rail__state, .bd-rail__label) {
+.bd-period__item[data-upcoming] :is(.bd-period__name, .bd-period__time, .bd-period__stage) {
   color: rgb(255 255 255 / 0.4);
-}
-
-.bd-rail__step:not([data-upcoming], [data-on]):hover .bd-rail__state {
-  color: var(--color-fg);
 }
 
 /* ---------- The dial ---------- */
@@ -4043,12 +4092,13 @@ button.bd-seg__item:hover {
   display: grid;
   align-content: start;
   gap: 0.3rem;
-  padding: 0.75rem 0.9rem 0.85rem;
-  border-radius: 14px;
+  padding: 0.75rem 0.95rem 0.85rem;
+  border-radius: 16px;
   text-align: left;
-  background: rgb(13 14 15 / 0.9);
-  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.12);
-  transition: box-shadow 250ms, background-color 250ms;
+  /* a faint light from above, so the card reads as a surface, not a box */
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.03), rgb(255 255 255 / 0) 70%), rgb(13 14 15 / 0.9);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.09), 0 18px 40px -28px rgb(0 0 0 / 0.9);
+  transition: box-shadow 300ms var(--ease-out-soft), background-color 300ms;
   container: card / inline-size;
 }
 
@@ -4065,13 +4115,13 @@ button.bd-seg__item:hover {
 }
 
 .bd-card:hover {
-  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.26);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.2), 0 18px 40px -28px rgb(0 0 0 / 0.9);
 }
 
 /* the selected step, in the Core's emerald */
 .bd-card[aria-checked="true"] {
-  background: linear-gradient(rgb(79 174 134 / 0.07), rgb(79 174 134 / 0.07)), rgb(13 15 15 / 0.95);
-  box-shadow: inset 0 0 0 1px rgb(79 174 134 / 0.62), 0 0 0 4px rgb(79 174 134 / 0.06);
+  background: linear-gradient(180deg, rgb(79 174 134 / 0.1), rgb(79 174 134 / 0.04) 80%), rgb(13 15 15 / 0.95);
+  box-shadow: inset 0 0 0 1px rgb(79 174 134 / 0.5), 0 0 0 4px rgb(79 174 134 / 0.05), 0 18px 44px -26px rgb(79 174 134 / 0.28);
 }
 
 .bd-card:active {
@@ -4101,8 +4151,8 @@ button.bd-seg__item:hover {
 
 .bd-card__name {
   font-family: var(--font-label);
-  font-size: 11px;
-  letter-spacing: 0.15em;
+  font-size: 10px;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--color-fg-2);
 }
@@ -4116,7 +4166,7 @@ button.bd-seg__item:hover {
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
-  font-size: 12px;
+  font-size: 11.5px;
   color: var(--color-accent-strong);
   white-space: nowrap;
 }
@@ -4139,7 +4189,7 @@ button.bd-seg__item:hover {
   align-items: center;
   gap: 0.35rem;
   margin-left: auto;
-  font-size: 12px;
+  font-size: 11.5px;
   color: var(--color-fg-2);
   white-space: nowrap;
 }
@@ -4154,9 +4204,10 @@ button.bd-seg__item:hover {
 
 .bd-card__title {
   font-family: var(--font-display);
-  font-size: 1.02rem;
+  font-size: 0.94rem;
   font-weight: 300;
-  line-height: 1.25;
+  line-height: 1.3;
+  letter-spacing: -0.005em;
   color: var(--color-fg);
   text-wrap: balance;
 }
@@ -4168,15 +4219,15 @@ button.bd-seg__item:hover {
 }
 
 .bd-card__why {
-  font-size: 13px;
-  line-height: 1.4;
+  font-size: 12.5px;
+  line-height: 1.45;
   color: var(--color-fg-2);
   text-wrap: pretty;
 }
 
 .bd-card__figure {
   min-width: 0;
-  font-size: 13px;
+  font-size: 12.5px;
   line-height: 1.35;
   color: var(--color-fg-2);
 }
@@ -4502,9 +4553,9 @@ button.bd-change:focus-visible {
   min-width: 0;
   min-height: 0;
   padding: 0.85rem 1.1rem;
-  border-radius: 16px;
-  background: rgb(255 255 255 / 0.022);
-  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1);
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.028), rgb(255 255 255 / 0.012));
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.08);
 }
 
 .bd-follow {
@@ -4587,11 +4638,12 @@ button.bd-change:focus-visible {
 }
 
 .bd-follow__title {
-  margin-top: 0.25rem;
+  margin-top: 0.3rem;
   font-family: var(--font-display);
-  font-size: 0.95rem;
+  font-size: 0.88rem;
   font-weight: 300;
   line-height: 1.3;
+  letter-spacing: -0.005em;
   color: var(--color-fg);
 }
 
@@ -4841,6 +4893,21 @@ button.bd-change:focus-visible {
   outline-offset: -1px;
 }
 
+/* suggested: only an idea yet, fainter than a draft */
+.bd-status[data-status="suggested"] {
+  color: var(--color-fg-3);
+  box-shadow: none;
+  outline: 1px dotted rgb(255 255 255 / 0.32);
+  outline-offset: -1px;
+}
+
+/* approved: the owner's word, said in white and filled, before anything has gone out */
+.bd-status[data-status="approved"] {
+  color: var(--color-fg);
+  background: rgb(255 255 255 / 0.08);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.55);
+}
+
 .bd-status:is([data-status="awaiting-approval"], [data-kind="new"], [data-kind="unresolved"]) {
   color: var(--color-fg);
   box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.55);
@@ -4906,7 +4973,7 @@ button.bd-change:focus-visible {
 
 .bd-autonomy__name {
   font-family: var(--font-display);
-  font-size: 1.05rem;
+  font-size: 0.95rem;
   font-weight: 300;
   line-height: 1.2;
   color: var(--color-fg);
@@ -5076,26 +5143,13 @@ button.bd-change:focus-visible {
     margin-top: clamp(0.35rem, 2cqh, 1rem);
   }
 
-  .bd-days {
-    gap: clamp(0.45rem, 1.6cqh, 0.7rem);
+  /* the day's choice, while open, comes over the dial's cards */
+  .bd-greet:has(.bd-period__trigger[aria-expanded="true"]) {
+    z-index: 5;
   }
 
-  /* a tight stage (the workspace with its sidebar open): the day's choice gives up its icons, so
-     it stays clear of the ring; the times stay */
+  /* a tight stage (the workspace with its sidebar open) */
   @container bd-stage (max-width: 76rem) {
-    .bd-seg,
-    .bd-rail {
-      grid-template-columns: repeat(var(--n), minmax(0, 7.6rem));
-    }
-
-    .bd-seg__icon {
-      display: none;
-    }
-
-    .bd-seg__item {
-      padding-inline: 0.5rem;
-    }
-
     /* the history is narrower there, its lines wrap: two updates, the rest in the full history */
     .bd-changes > .bd-changes__list > li:nth-child(n + 3) {
       display: none;
@@ -5106,22 +5160,18 @@ button.bd-change:focus-visible {
     }
   }
 
-  .bd-rail__node {
-    margin-bottom: clamp(0.25rem, 1cqh, 0.45rem);
-  }
-
   .bd-card {
     gap: clamp(0.15rem, 0.7cqh, 0.3rem);
     padding: clamp(0.5rem, 1.7cqh, 0.75rem) 0.85rem clamp(0.55rem, 1.9cqh, 0.85rem);
   }
 
   .bd-card__title {
-    font-size: clamp(0.9rem, 2.9cqh, 1.05rem);
+    font-size: clamp(0.88rem, 2.6cqh, 0.95rem);
   }
 
   .bd-card__why,
   .bd-card__figure {
-    font-size: clamp(12px, 2.2cqh, 13px);
+    font-size: clamp(11.5px, 2.1cqh, 12.5px);
   }
 
   .bd-ring,
@@ -5225,24 +5275,6 @@ button.bd-change:focus-visible {
   .bd-grid,
   .bd-stage {
     gap: 1.5rem;
-  }
-
-  .bd-days {
-    width: 100%;
-  }
-
-  .bd-seg,
-  .bd-rail {
-    grid-template-columns: repeat(var(--n), minmax(0, 1fr));
-  }
-
-  /* the time is in the line above the greeting: each choice keeps its name */
-  .bd-seg__item {
-    padding-inline: 0.4rem;
-  }
-
-  .bd-seg__time {
-    display: none;
   }
 
   .bd-dial {
@@ -5389,6 +5421,124 @@ button.bd-change:focus-visible {
   border-radius: 50%;
   background: var(--emerald-bright);
   box-shadow: 0 0 0 3px rgb(79 174 134 / 0.18);
+}
+
+/* Syxoria itself, across from the greeting: the Core on stage, and beside it what it is doing,
+   with the way into the briefing under it */
+.hm-presence {
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+}
+
+.hm-presence__core {
+  flex: none;
+  width: 4.25rem;
+  height: 4.25rem;
+}
+
+.hm-presence__text {
+  min-width: 0;
+  max-width: 19rem;
+}
+
+.hm-presence__state {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.2rem 0.65rem;
+}
+
+.hm-presence__word {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 300;
+  line-height: 1.2;
+  color: var(--color-fg);
+}
+
+.hm-presence__mode {
+  font-family: var(--font-label);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-accent-strong);
+}
+
+.hm-presence[data-held="all"] .hm-presence__mode {
+  color: var(--color-fg-3);
+}
+
+.hm-presence__line,
+.hm-presence__next {
+  margin-top: 0.25rem;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--color-fg-2);
+  text-wrap: pretty;
+}
+
+.hm-presence__next {
+  color: var(--color-fg-3);
+}
+
+.hm-presence__resume {
+  margin-top: 0.3rem;
+  border-radius: 4px;
+  font-size: 12.5px;
+  color: var(--color-fg);
+  text-decoration: underline;
+  text-decoration-color: rgb(217 138 124 / 0.6);
+  text-underline-offset: 3px;
+}
+
+.hm-presence__resume:focus-visible {
+  outline: 2px solid var(--color-fg);
+  outline-offset: 2px;
+}
+
+.hm-presence__cta {
+  margin-top: 0.75rem;
+}
+
+/* a phone: the priority comes first, Syxoria stays a small signature */
+@container (max-width: 39.99rem) {
+  .hm-presence {
+    align-items: flex-start;
+    gap: 0.85rem;
+  }
+
+  .hm-presence__core {
+    width: 3.25rem;
+    height: 3.25rem;
+  }
+}
+
+/* wide: across from the greeting, the Core at the edge and its words turned towards the page */
+@container (min-width: 56rem) {
+  .hm-head {
+    align-items: center;
+  }
+
+  .hm-presence {
+    flex-direction: row-reverse;
+    gap: 1.5rem;
+    text-align: right;
+  }
+
+  .hm-presence__core {
+    width: 7.25rem;
+    height: 7.25rem;
+  }
+
+  .hm-presence__state {
+    justify-content: flex-end;
+  }
+
+  .hm-presence__cta {
+    display: flex;
+    justify-content: flex-end;
+  }
 }
 
 /* ---------- Four figures on one ledger ---------- */
@@ -6065,6 +6215,11 @@ button.bd-change:focus-visible {
   .app-briefing .bd {
     --bd-h: calc(100dvh - 4rem - 1px - 2rem - 1rem);
   }
+
+  /* while autonomous actions are suspended, the line under the top bar takes its share */
+  body:has(.ax-banner) .app-briefing .bd {
+    --bd-h: calc(100dvh - 4rem - 1px - 2rem - 1rem - var(--ax-banner-h) - 1px);
+  }
 }
 
 /* ==========================================================================
@@ -6260,4 +6415,651 @@ button.bd-change:focus-visible {
   .as-thinking > span {
     animation: none;
   }
+}
+
+/* ==========================================================================
+   AUTOMATION (components/dashboard/automation) — Syxoria's execution and
+   the controls over it: the top bar's status and the kill switch's
+   shortcut, the line across every page while autonomous actions are
+   suspended, the dialogs that suspend and resume, and the Autonomy &
+   safety settings.
+   Serious, never loud: the suspended state is said with a word, a mark and
+   a muted terracotta line, never a red block. Emerald stays what Syxoria
+   does; terracotta, what is held.
+   ========================================================================== */
+.ax-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 2.25rem;
+  padding: 0 0.65rem 0 0.25rem;
+  border-radius: 8px;
+  font-size: 12.5px;
+  color: var(--color-fg-2);
+  white-space: nowrap;
+  transition: color 200ms, background-color 200ms, box-shadow 200ms;
+}
+
+.ax-trigger:hover,
+.ax-trigger[aria-expanded="true"] {
+  color: var(--color-fg);
+  background: rgb(255 255 255 / 0.05);
+}
+
+.ax-trigger:focus-visible {
+  outline: 2px solid var(--color-fg);
+  outline-offset: 2px;
+}
+
+.ax-trigger[data-held="all"] {
+  color: var(--color-fg);
+  box-shadow: inset 0 0 0 1px rgb(217 138 124 / 0.38);
+}
+
+/* where the Core is on stage, the bar keeps only a point of light */
+.ax-trigger__dot {
+  width: 7px;
+  height: 7px;
+  margin: 0 0.3rem 0 0.55rem;
+  border-radius: 50%;
+  background: var(--emerald-bright);
+  box-shadow: 0 0 0 3px rgb(79 174 134 / 0.16);
+}
+
+.ax-trigger[data-held="all"] .ax-trigger__dot {
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px var(--color-negative);
+}
+
+.ax-trigger[data-held="some"] .ax-trigger__dot {
+  background: linear-gradient(90deg, var(--emerald-bright) 50%, transparent 50%);
+  box-shadow: inset 0 0 0 1.5px var(--emerald-bright);
+}
+
+.ax-panel {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  z-index: var(--z-overlay);
+  width: min(20.5rem, calc(100vw - 2rem));
+  padding: 1rem 1rem 0.85rem;
+  border-radius: 14px;
+  background: rgb(13 14 15 / 0.97);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.12), 0 24px 60px -20px rgb(0 0 0 / 0.85);
+  backdrop-filter: blur(10px);
+  transform-origin: top right;
+  animation: bd-why-in 220ms var(--ease-out-soft) both;
+}
+
+.ax-panel__state {
+  margin-top: 0.4rem;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 300;
+  line-height: 1.35;
+  color: var(--color-fg);
+}
+
+.ax-panel__since {
+  margin-top: 0.3rem;
+  font-size: 12px;
+  color: var(--color-fg-3);
+}
+
+.ax-panel__next {
+  margin-top: 0.9rem;
+  padding-top: 0.8rem;
+  border-top: 1px solid rgb(255 255 255 / 0.08);
+}
+
+.ax-panel__next ul {
+  display: grid;
+  gap: 0.35rem;
+  margin-top: 0.5rem;
+}
+
+.ax-panel__next li {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 13px;
+  color: var(--color-fg);
+}
+
+.ax-panel__next li svg {
+  flex: none;
+  width: 0.9rem;
+  height: 0.9rem;
+  color: var(--color-negative);
+}
+
+.ax-panel__next li[data-held] .ax-panel__name {
+  color: var(--color-fg-2);
+}
+
+.ax-panel__name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ax-panel__time {
+  margin-left: auto;
+  flex: none;
+  font-size: 12px;
+  color: var(--color-fg-3);
+}
+
+.ax-panel__muted {
+  margin-top: 0.4rem;
+  font-size: 12.5px;
+  color: var(--color-fg-3);
+}
+
+/* the one control: serious, set apart, never the brightest thing on the screen */
+.ax-kill {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  height: 2.35rem;
+  margin-top: 1rem;
+  border-radius: 9px;
+  font-size: 13px;
+  color: var(--color-fg);
+  background: rgb(217 138 124 / 0.07);
+  box-shadow: inset 0 0 0 1px rgb(217 138 124 / 0.4);
+  transition: background-color 200ms, box-shadow 200ms;
+}
+
+.ax-kill svg {
+  width: 1rem;
+  height: 1rem;
+  color: var(--color-negative);
+}
+
+.ax-kill:hover {
+  background: rgb(217 138 124 / 0.13);
+  box-shadow: inset 0 0 0 1px rgb(217 138 124 / 0.6);
+}
+
+.ax-kill[data-mode="resume"] {
+  background: rgb(255 255 255 / 0.04);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.2);
+}
+
+.ax-kill[data-mode="resume"]:hover {
+  background: rgb(255 255 255 / 0.07);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.32);
+}
+
+.ax-kill:focus-visible,
+.ax-banner__action:focus-visible,
+.ax-chip:focus-visible {
+  outline: 2px solid var(--color-fg);
+  outline-offset: 2px;
+}
+
+.ax-panel__links {
+  display: grid;
+  margin-top: 0.6rem;
+}
+
+.ax-panel__links a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 2rem;
+  padding-inline: 0.15rem;
+  border-radius: 6px;
+  font-size: 12.5px;
+  color: var(--color-fg-2);
+  transition: color 200ms;
+}
+
+.ax-panel__links a:hover {
+  color: var(--color-fg);
+}
+
+.ax-panel__links svg {
+  width: 0.85rem;
+  height: 0.85rem;
+  color: var(--color-fg-3);
+}
+
+/* while everything is held: one quiet line under the top bar, on every page */
+.ax-banner {
+  border-bottom: 1px solid rgb(217 138 124 / 0.22);
+  background: linear-gradient(180deg, rgb(217 138 124 / 0.07), rgb(217 138 124 / 0.03));
+  animation: bd-in 360ms var(--ease-out-soft) both;
+}
+
+.ax-banner__inner {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.65rem 1rem;
+}
+
+@media (min-width: 640px) {
+  .ax-banner__inner {
+    padding-inline: 1.5rem;
+  }
+}
+
+/* on a desktop, one line of a known height, so a one screen page can make room for it */
+@media (min-width: 1024px) {
+  :root {
+    --ax-banner-h: 3rem;
+  }
+
+  .ax-banner__inner {
+    height: var(--ax-banner-h);
+    padding-block: 0;
+    padding-inline: 2.5rem;
+  }
+
+  .ax-banner__inner > p {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.ax-banner__icon {
+  flex: none;
+  width: 1.1rem;
+  height: 1.1rem;
+  color: var(--color-negative);
+}
+
+.ax-banner__title {
+  margin-right: 0.6rem;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--color-fg);
+}
+
+.ax-banner__body {
+  font-size: 12.5px;
+  color: var(--color-fg-2);
+}
+
+.ax-banner__action {
+  flex: none;
+  height: 2rem;
+  margin-left: auto;
+  padding-inline: 0.9rem;
+  border-radius: 999px;
+  font-size: 12.5px;
+  color: var(--color-fg);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.22);
+  transition: background-color 200ms, box-shadow 200ms;
+}
+
+.ax-banner__action:hover {
+  background: rgb(255 255 255 / 0.05);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.35);
+}
+
+@media (max-width: 639px) {
+  .ax-banner__inner {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .ax-banner__inner > p {
+    flex: 1 1 calc(100% - 2rem);
+  }
+
+  .ax-banner__title {
+    display: block;
+  }
+
+  .ax-banner__action {
+    margin-left: 1.95rem;
+  }
+}
+
+/* ---------- The dialogs ---------- */
+.ax-split {
+  display: grid;
+  gap: 1.25rem;
+}
+
+@media (min-width: 560px) {
+  .ax-split {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.ax-list {
+  display: grid;
+  gap: 0.45rem;
+  margin-top: 0.55rem;
+}
+
+.ax-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--color-fg-2);
+}
+
+.ax-list li > svg {
+  flex: none;
+  width: 0.95rem;
+  height: 0.95rem;
+  margin-top: 0.15rem;
+}
+
+.ax-list[data-tone="stop"] li > svg {
+  color: var(--color-negative);
+}
+
+.ax-list[data-tone="go"] li > svg {
+  color: var(--color-accent-strong);
+}
+
+/* a named action under its line: what exactly is held or starts again */
+.ax-list__action {
+  justify-content: space-between;
+  padding: 0.4rem 0.6rem;
+  border-radius: 8px;
+  background: rgb(255 255 255 / 0.03);
+}
+
+.ax-list[data-tone="stop"] .ax-list__action {
+  margin-left: 1.45rem;
+}
+
+.ax-list__name {
+  color: var(--color-fg);
+}
+
+.ax-list__meta {
+  flex: none;
+  font-size: 12px;
+  color: var(--color-fg-3);
+}
+
+.ax-note {
+  margin-top: 1.1rem;
+  padding: 0.65rem 0.8rem;
+  border-radius: 10px;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--color-fg-2);
+  background: rgb(255 255 255 / 0.03);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.06);
+}
+
+.ax-chip {
+  height: 1.9rem;
+  padding-inline: 0.8rem;
+  border-radius: 999px;
+  font-size: 12.5px;
+  color: var(--color-fg-2);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.14);
+  transition: color 200ms, background-color 200ms, box-shadow 200ms;
+}
+
+.ax-chip:hover {
+  color: var(--color-fg);
+}
+
+.ax-chip.is-on {
+  color: var(--color-fg);
+  background: rgb(255 255 255 / 0.06);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.45);
+}
+
+.ax-muted {
+  margin-top: 0.45rem;
+  font-size: 13px;
+  color: var(--color-fg-3);
+}
+
+.ax-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  margin-top: 1.1rem;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--color-fg);
+  cursor: pointer;
+}
+
+.ax-check input {
+  flex: none;
+  width: 1rem;
+  height: 1rem;
+  margin-top: 0.1rem;
+  accent-color: var(--emerald-bright);
+}
+
+/* the prototype says what it is, wherever it holds something */
+.ax-preview {
+  margin-top: 1.1rem;
+  font-family: var(--font-serif);
+  font-size: 12.5px;
+  font-style: italic;
+  font-weight: 300;
+  color: var(--color-fg-3);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ax-panel,
+  .ax-banner {
+    animation: none;
+  }
+}
+
+/* an action a hold keeps from starting: a word and a ring, beside its status */
+.ax-held {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 11.5px;
+  color: var(--color-negative);
+  white-space: nowrap;
+}
+
+.ax-held::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1.5px var(--color-negative);
+}
+
+/* the briefing's autonomy card, while autonomous actions are suspended */
+.bd-autonomy__held {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 0.6rem;
+  padding: 0.05rem 0.55rem 0.1rem;
+  border-radius: 999px;
+  font-family: var(--font-sans);
+  font-size: 11.5px;
+  vertical-align: 0.15em;
+  color: var(--color-fg);
+  box-shadow: inset 0 0 0 1px rgb(217 138 124 / 0.45);
+}
+
+.bd-autonomy[data-held] .bd-autonomy__glyph {
+  opacity: 0.4;
+}
+
+/* ---------- Settings & Autonomy: Autonomy & safety ---------- */
+.ax-mode {
+  display: grid;
+  align-content: start;
+  gap: 0.45rem;
+  padding: 0.85rem 0.95rem 0.95rem;
+  border-radius: 12px;
+  text-align: left;
+  box-shadow: inset 0 0 0 1px var(--color-line);
+  transition: background-color 200ms, box-shadow 200ms;
+}
+
+.ax-mode:hover {
+  box-shadow: inset 0 0 0 1px var(--color-line-strong);
+}
+
+.ax-mode.is-on {
+  background: linear-gradient(180deg, rgb(79 174 134 / 0.08), rgb(79 174 134 / 0.03));
+  box-shadow: inset 0 0 0 1px rgb(79 174 134 / 0.5);
+}
+
+.ax-mode:focus-visible {
+  outline: 2px solid var(--color-fg);
+  outline-offset: 2px;
+}
+
+.ax-mode .ax-mode__glyph {
+  width: 1.1rem;
+  height: 1.1rem;
+  color: var(--emerald-bright);
+}
+
+.ax-mode__name {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 300;
+  color: var(--color-fg);
+}
+
+.ax-mode__current {
+  justify-self: start;
+  margin-top: 0.15rem;
+  padding: 0.05rem 0.5rem 0.1rem;
+  border-radius: 999px;
+  font-size: 11px;
+  color: var(--color-accent-strong);
+  box-shadow: inset 0 0 0 1px var(--color-accent-line);
+}
+
+.ax-mode__promise {
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--color-fg-3);
+}
+
+.ax-mode.is-on .ax-mode__promise {
+  color: var(--color-fg-2);
+}
+
+/* a rule's mode: on its own (emerald), asks you first (white), off (faint) */
+.ax-rule {
+  flex: none;
+  margin-top: 0.1rem;
+  padding: 0.1rem 0.55rem 0.15rem;
+  border-radius: 999px;
+  font-size: 11.5px;
+  white-space: nowrap;
+  color: var(--color-fg-2);
+  box-shadow: inset 0 0 0 1px var(--color-line-strong);
+}
+
+.ax-rule[data-mode="auto"] {
+  color: var(--color-accent-strong);
+  box-shadow: inset 0 0 0 1px var(--color-accent-line);
+}
+
+.ax-rule[data-mode="off"] {
+  color: var(--color-fg-3);
+  box-shadow: inset 0 0 0 1px var(--color-line);
+}
+
+/* the kill switch's own row */
+.ax-switch {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.9rem 1rem;
+  padding: 0.9rem 1rem;
+  border-radius: 12px;
+  box-shadow: inset 0 0 0 1px var(--color-line);
+}
+
+.ax-switch[data-held] {
+  background: rgb(217 138 124 / 0.05);
+  box-shadow: inset 0 0 0 1px rgb(217 138 124 / 0.32);
+}
+
+.ax-kill--inline {
+  width: auto;
+  height: 2rem;
+  margin-top: 0;
+  padding-inline: 0.85rem;
+  font-size: 12.5px;
+}
+
+/* a workflow or a tool: running, paused on its own, or held by the kill switch */
+.ax-run {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 12px;
+  color: var(--color-fg-2);
+  white-space: nowrap;
+}
+
+.ax-run::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--emerald-bright);
+}
+
+.ax-run[data-state="paused"],
+.ax-run[data-state="held"] {
+  color: var(--color-negative);
+}
+
+.ax-run[data-state="paused"]::before,
+.ax-run[data-state="held"]::before {
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px var(--color-negative);
+}
+
+/* the lifecycle every action follows: each state, what it means and what it does not */
+.pa-lifecycle {
+  display: grid;
+  gap: 0.15rem 1.5rem;
+  margin-top: 0.35rem;
+}
+
+@container (min-width: 48rem) {
+  .pa-lifecycle {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.pa-lifecycle li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  padding-block: 0.5rem;
+}
+
+.pa-lifecycle__name {
+  display: block;
+  font-size: 13px;
+  color: var(--color-fg);
+}
+
+.pa-lifecycle__means {
+  display: block;
+  margin-top: 0.1rem;
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--color-fg-3);
 }

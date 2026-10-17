@@ -4,6 +4,7 @@ import {
   History,
   Home,
   ListChecks,
+  MessagesSquare,
   Plug,
   ScrollText,
   SlidersHorizontal,
@@ -26,16 +27,19 @@ export type AppNavItem = {
 };
 
 /**
- * The product's navigation: the ten areas of the brief in four groups, so the sidebar reads as
+ * The product's navigation: the ten areas of the brief in six groups, so the sidebar reads as
  * a few clear places rather than ten. Single place to rename or reorder them.
  *
- *   Overview   what is happening and what waits for the owner
- *   Business   the company itself: its performance and its relationships
- *   Records    what Syxoria knows and what it has done
- *   Setup      how Syxoria is connected and what it may do
+ *   Overview      what is happening in the company, and what Syxoria wants the owner to know
+ *   Intelligence  Syxoria itself, to ask, to explore, to instruct
+ *   Business      the company: its performance and its relationships
+ *   Execution     what Syxoria proposes, prepares and carries out, under the owner's control
+ *   Knowledge     what Syxoria knows and what it has done
+ *   System        how Syxoria is connected, and what it may do
  *
- * The assistant is not in the list: it is reachable from everywhere (the sidebar's "Ask Syxoria"
- * and the field in the top bar, Ctrl K).
+ * The assistant is also reachable from every page (the field in the top bar, Ctrl K). The
+ * emergency control is not a destination: it lives in Settings & Autonomy, with a shortcut in the
+ * top bar.
  */
 export const appNav: { group: string; items: AppNavItem[] }[] = [
   {
@@ -43,8 +47,11 @@ export const appNav: { group: string; items: AppNavItem[] }[] = [
     items: [
       { label: "Home", href: "/app", icon: Home },
       { label: "Daily Briefings", href: "/app/briefings", icon: ScrollText },
-      { label: "Actions & Approvals", href: "/app/actions", icon: ListChecks, badgeKey: "approvals" },
     ],
+  },
+  {
+    group: "Intelligence",
+    items: [{ label: "Syxoria Assistant", href: "/app/assistant", icon: MessagesSquare }],
   },
   {
     group: "Business",
@@ -65,14 +72,18 @@ export const appNav: { group: string; items: AppNavItem[] }[] = [
     ],
   },
   {
-    group: "Records",
+    group: "Execution",
+    items: [{ label: "Actions & Approvals", href: "/app/actions", icon: ListChecks, badgeKey: "approvals" }],
+  },
+  {
+    group: "Knowledge",
     items: [
       { label: "Documents & Data", href: "/app/documents", icon: FileStack },
       { label: "History & Reports", href: "/app/history", icon: History },
     ],
   },
   {
-    group: "Setup",
+    group: "System",
     items: [
       { label: "Integrations", href: "/app/integrations", icon: Plug },
       { label: "Settings & Autonomy", href: "/app/settings", icon: SlidersHorizontal },
@@ -81,6 +92,9 @@ export const appNav: { group: string; items: AppNavItem[] }[] = [
 ];
 
 export const ASSISTANT_HREF = "/app/assistant";
+
+/** Where the autonomy, the permissions and the emergency control live */
+export const AUTONOMY_HREF = "/app/settings?tab=autonomy";
 
 export function isActive(pathname: string, item: { href: string; matchPrefix?: boolean }) {
   if (item.matchPrefix) return pathname === item.href || pathname.startsWith(`${item.href}/`);

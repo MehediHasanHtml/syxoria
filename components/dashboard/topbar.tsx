@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Bell, LogOut, Menu as MenuIcon, MessageSquareText, Settings, UserRound } from "lucide-react";
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { SyxoriaCore } from "@/components/brand/syxoria-core";
 import { Avatar } from "@/components/ui/avatar";
 import { Menu } from "@/components/ui/menu";
 import { cn } from "@/lib/cn";
@@ -12,6 +11,7 @@ import { formatRelative } from "@/lib/format";
 import { ASSISTANT_HREF } from "@/lib/app-nav";
 import { WORKSPACE_NOW } from "@/lib/mock-data/overview";
 import type { Notification, User } from "@/types";
+import { AutomationControl } from "./automation/automation-status";
 
 const NOW = new Date(WORKSPACE_NOW);
 
@@ -72,15 +72,8 @@ export function Topbar({ user, notifications, onOpenMenu }: { user: User; notifi
         </form>
 
         <div className="ml-auto flex items-center gap-1.5">
-          {/* the same Core as everywhere: here, simply at work */}
-          <Link
-            href="/app/briefings"
-            title="Syxoria is reading new activity. Open today’s briefings"
-            className="mr-1 hidden items-center gap-2 rounded-md py-1 pl-1 pr-2.5 text-[12.5px] text-fg-2 transition-colors hover:bg-white/5 hover:text-fg sm:flex"
-          >
-            <SyxoriaCore state="active" detail="mark" label="Syxoria" vtName="syx-core" className="size-7" />
-            Active
-          </Link>
+          {/* the same Core as everywhere, with what it is doing: the kill switch's shortcut */}
+          <AutomationControl />
           <NotificationsMenu notifications={notifications} />
           <Menu
             header={
@@ -90,7 +83,7 @@ export function Topbar({ user, notifications, onOpenMenu }: { user: User; notifi
               </div>
             }
             items={[
-              { label: "Profile", href: "/app/settings", icon: <UserRound aria-hidden="true" /> },
+              { label: "Profile", href: "/app/settings?tab=account", icon: <UserRound aria-hidden="true" /> },
               { label: "Settings", href: "/app/settings?tab=workspace", icon: <Settings aria-hidden="true" /> },
               { type: "separator" },
               { label: "Sign out", href: "/login", icon: <LogOut aria-hidden="true" /> },

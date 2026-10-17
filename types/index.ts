@@ -462,8 +462,15 @@ export type BriefingStep = {
 
 export type BriefingPriorityStep = BriefingStep & { dimension: "priority"; severity: BriefingSeverity };
 
-/** Drafted (prepared, not asked yet) · awaiting approval · scheduled · in progress · sent (gone out, its outcome still open) · completed · unsuccessful */
-export type BriefingActionStatus = "drafted" | "awaiting-approval" | "scheduled" | "in-progress" | "sent" | "completed" | "unsuccessful";
+/**
+ * One lifecycle for every action, on every screen (Home, the briefing, Actions & Approvals,
+ * History): suggested (recommended, nothing prepared yet) · drafted (prepared, not asked yet) ·
+ * awaiting approval · approved (the owner said yes, not gone out yet) · scheduled (set for a time,
+ * not running) · in progress · sent (gone out, its outcome still open) · completed · unsuccessful
+ * (failed or needs attention: it stays visible until it is resolved).
+ * Prepared is not approved, approved is not sent, sent is not completed.
+ */
+export type BriefingActionStatus = "suggested" | "drafted" | "awaiting-approval" | "approved" | "scheduled" | "in-progress" | "sent" | "completed" | "unsuccessful";
 
 /** One thing Syxoria has prepared, planned, is doing or did */
 export type BriefingActionItem = {
@@ -480,6 +487,8 @@ export type BriefingActionItem = {
   note?: string;
   /** The recommendation it carries out */
   recommendationId: string;
+  /** The workflow it runs in, when Syxoria carries it out on its own (a hold on it keeps it from starting) */
+  workflowId?: string;
 };
 
 export type BriefingChangeKind = "new" | "unresolved" | "decided" | "changed" | "in-progress" | "completed" | "risk" | "opportunity";
@@ -642,4 +651,60 @@ export type AssistantSample = {
   references: { label: string; href: string }[];
   /** The action it concerns: its status is read from the briefing's actions */
   actionId?: string;
+};
+
+/* ---------- Automation safety: holds, the kill switch ----------
+ * Syxoria's execution can be held at three scopes: everything it would start on its own (global),
+ * one workflow, or the actions in one tool. A hold stops NEW autonomous actions only: Syxoria keeps
+ * observing, analysing, preparing and answering, and what the owner approves one by one still goes.
+ * An action already handed to another service cannot be called back. Revoking a permission,
+ * disconnecting a tool and closing the account are different controls, kept apart.
+ */
+export type HoldScope = "global" | "workflow" | "integration";
+
+/** One hold in force: what it covers, since when, who placed it and why */
+export type AutomationHold = {
+  id: string;
+  scope: HoldScope;
+  /** The workflow or tool it covers (none for a global hold) */
+  targetId?: string;
+  /** Since when (ISO) */
+  since: string;
+  /** The owner, or Syxoria's own safety protection when the execution layer reported an incident */
+  by: "owner" | "safety";
+  /** Why, in a few words, when a reason was given */
+  reason?: string;
+};
+
+/** Something Syxoria carries out on its own under the mandate: it can be held by itself */
+export type AutomationWorkflow = {
+  id: string;
+  name: string;
+  /** What it does, in one line */
+  description: string;
+  /** The permission rule it runs under (AutonomyPolicy.rules) */
+  ruleId: string;
+  /** The tool it acts in */
+  integrationId: string;
+};
+
+/** A tool Syxoria acts in, not only reads */
+export type AutomationIntegration = { id: string; name: string; logo: string | null; acts: string };
+
+/** An incident the execution layer reported, and what it held. The prototype never invents one */
+export type SafetyIncident = { id: string; detectedAt: string; reason: string; held: string[] };
+
+export type AutomationState = { holds: AutomationHold[]; incident: SafetyIncident | null };
+
+/** What the workspace needs to show Syxoria's execution and to hold it */
+export type AutomationContext = {
+  level: AutonomyLevel;
+  levelName: string;
+  /** The workflows the mandate lets Syxoria run on its own under this level */
+  workflows: AutomationWorkflow[];
+  integrations: AutomationIntegration[];
+  /** Today's actions Syxoria would start or carry on by itself: what a hold keeps from starting */
+  pending: { id: string; name: string; timing: string; status: BriefingActionStatus; workflowId: string }[];
+  /** As the service last reported it; the workspace keeps it current */
+  state: AutomationState;
 };

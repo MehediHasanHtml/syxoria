@@ -2,7 +2,10 @@
 
 import { ArrowLeft, ArrowRight, Check, ChevronDown, CircleAlert } from "lucide-react";
 import { useState, type CSSProperties } from "react";
+import { useAutomationIfAny } from "@/components/dashboard/automation/automation-provider";
+import { automation as words } from "@/content/automation";
 import { dailyBriefing as copy } from "@/content/briefing";
+import { isHeld } from "@/lib/automation";
 import { cn } from "@/lib/cn";
 import type { BriefingActionItem, BriefingFollowStep, DailyBriefing } from "@/types";
 import { STATUS_ORDER, StatusIcon } from "./marks";
@@ -120,17 +123,21 @@ function ActionList({
   onShowRecommendation: () => void;
 }) {
   const [open, setOpen] = useState<string | null>(null);
+  // in the workspace, what a hold keeps from starting says so beside its status
+  const automation = useAutomationIfAny();
   return (
     <ul className="bd-actions">
       {actions.map((a) => {
         const expanded = open === a.id;
         const asks = a.needsApproval && (a.status === "awaiting-approval" || a.status === "drafted");
+        const held = automation ? isHeld(automation.state, automation.ctx, a.id) : false;
         return (
           <li key={a.id} className="bd-action" data-status={a.status} data-open={expanded || undefined}>
             <button type="button" className="bd-action__row" aria-expanded={expanded} aria-controls={`bd-action-${a.id}`} onClick={() => setOpen(expanded ? null : a.id)}>
               <StatusIcon status={a.status} />
               <span className="bd-action__name">{a.name}</span>
               <span className="bd-action__state">
+                {held && <span className="ax-held">{words.settings.targeted.paused}</span>}
                 <span className="bd-action__status">{copy.actions.statuses[a.status]}</span>
                 <span className="bd-action__timing tabular">{a.timing}</span>
               </span>

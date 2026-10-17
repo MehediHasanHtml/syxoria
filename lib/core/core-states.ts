@@ -18,7 +18,8 @@ export type CoreState =
   | "understanding"
   | "active"
   | "ready"
-  | "executing";
+  | "executing"
+  | "paused";
 
 export type CoreMotion = "still" | "breathe" | "scan" | "flow";
 export type CoreLook = { lit: number; light: number; open: number; motion: CoreMotion };
@@ -34,6 +35,8 @@ export const coreLooks: Record<CoreState, CoreLook> = {
   active: { lit: 1, light: 0.74, open: 0.22, motion: "still" },
   ready: { lit: 1, light: 0.86, open: 0.18, motion: "breathe" },
   executing: { lit: 1, light: 1, open: 0.26, motion: "flow" },
+  // it still understands everything, it simply does not act: fully lit, the light held low, still
+  paused: { lit: 1, light: 0.3, open: 0.1, motion: "still" },
 };
 
 /** Spoken names, for screen readers and tooltips */
@@ -48,6 +51,7 @@ export const coreStateNames: Record<CoreState, string> = {
   active: "Active",
   ready: "Ready",
   executing: "Executing",
+  paused: "Paused",
 };
 
 /** A look part-way from one state to the next, for a Core waking by degrees (0 = `from`, 1 = `to`) */

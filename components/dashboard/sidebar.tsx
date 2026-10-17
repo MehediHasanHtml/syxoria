@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, type FocusEvent, type MouseEvent } from "react";
-import { ArrowUpRight, ChevronDown, ChevronLeft, LifeBuoy, MessageSquareText } from "lucide-react";
+import { ArrowUpRight, ChevronDown, ChevronLeft, LifeBuoy } from "lucide-react";
 import { Logo, LogoMark } from "@/components/shared/logo";
-import { appNav, ASSISTANT_HREF, isActive, type AppNavItem } from "@/lib/app-nav";
+import { appNav, isActive, type AppNavItem } from "@/lib/app-nav";
 import { cn } from "@/lib/cn";
 import type { Workspace } from "@/types";
 
@@ -20,8 +20,8 @@ type SidebarProps = {
 type Tip = { label: string; top: number; left: number };
 
 /**
- * The product's navigation (lib/app-nav.ts): the company, then "Ask Syxoria" (the assistant,
- * reachable from everywhere), then the four groups. An area with sections (Business Management)
+ * The product's navigation (lib/app-nav.ts): the company, then the six groups (the assistant among
+ * them, under Intelligence; it is also asked from the top bar on every page). An area with sections (Business Management)
  * opens them under itself while it is the page in view, or on its chevron. Collapsed, the sidebar
  * keeps the icons, each named in a tooltip.
  */
@@ -47,7 +47,6 @@ export function Sidebar({ collapsed, onToggleCollapsed, onNavigate, badges, work
   }
 
   const itemBase = "group relative flex items-center rounded-md transition-[background-color,color] duration-200";
-  const asking = isActive(pathname, { href: ASSISTANT_HREF });
 
   const renderItem = (item: AppNavItem) => {
     const active = isActive(pathname, item);
@@ -192,33 +191,11 @@ export function Sidebar({ collapsed, onToggleCollapsed, onNavigate, badges, work
               </div>
             </div>
           )}
-
-          {/* the assistant, reachable from every page */}
-          <Link
-            href={ASSISTANT_HREF}
-            onClick={onNavigate}
-            aria-current={asking ? "page" : undefined}
-            aria-label={collapsed ? "Ask Syxoria" : undefined}
-            {...tipProps("Ask Syxoria")}
-            className={cn(
-              "group flex items-center rounded-md border transition-[background-color,border-color,color] duration-200",
-              collapsed ? "size-10 justify-center" : "h-9 gap-3 px-3",
-              asking ? "border-accent-line bg-accent-soft text-fg" : "border-line text-fg-2 hover:border-line-strong hover:bg-white/[0.03] hover:text-fg",
-            )}
-          >
-            <MessageSquareText className={cn("size-[17px] shrink-0", asking ? "text-accent-strong" : "text-fg-3 group-hover:text-accent-strong")} strokeWidth={1.6} aria-hidden="true" />
-            {!collapsed && (
-              <>
-                <span className="flex-1 text-[13.5px]">Ask Syxoria</span>
-                <kbd className="rounded-xs border border-line px-1.5 py-0.5 font-sans text-[10px] text-fg-3">Ctrl K</kbd>
-              </>
-            )}
-          </Link>
         </div>
 
         <nav aria-label="Application" className={cn("mt-5", collapsed ? "px-0" : "px-3")}>
           {appNav.map((group) => (
-            <div key={group.group} className="mb-5">
+            <div key={group.group} className="mb-4">
               {collapsed ? (
                 <div aria-hidden="true" className="mx-auto mb-2 h-px w-6 bg-line" />
               ) : (

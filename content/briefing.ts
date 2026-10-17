@@ -69,8 +69,11 @@ export const dailyBriefing = {
       readOnly: "Read only. Nothing was changed",
     },
   },
-  periods: { morning: "Morning", midday: "Midday", evening: "Evening" } satisfies Record<BriefingPeriod, string>,
+  periods: { morning: "Morning", midday: "Afternoon", evening: "Evening" } satisfies Record<BriefingPeriod, string>,
   periodsLabel: "Today’s briefings",
+  /** On the first day, the periods without a briefing yet open an example of a usual day */
+  example: "Example",
+  exampleNote: "An example of a usual day. Your own briefing for this time of day starts tomorrow.",
   latest: "Latest",
   /** The day's briefings, and under them where the day's main thread stood at each one */
   day: {

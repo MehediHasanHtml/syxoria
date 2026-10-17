@@ -1,5 +1,6 @@
 import { dailyBriefing as copy } from "@/content/briefing";
 import { formatCurrency } from "@/lib/format";
+import { mockDailyBriefings } from "@/lib/mock-data/briefings";
 import type { AutonomyPolicy, Briefing, BriefingActionItem, BriefingChange, BriefingDraft, BriefingPeriod, DailyBriefing, DailyBriefingSet, DataSource, Mandate } from "@/types";
 import { followThrough, reachOf, resolveBriefingAction, type BriefingAction } from "./mandate";
 
@@ -7,8 +8,8 @@ import { followThrough, reachOf, resolveBriefingAction, type BriefingAction } fr
  * The first executive briefing, as the dial reads it (components/briefing): what the onboarding
  * found (the Briefing), worded by the mandate the user just gave and the tools connected. It is
  * the day's first briefing, so it has nothing to compare with (its history is what happened since
- * the tools were connected); the briefings still to come today
- * are listed as such, never filled in. The action and its lines only promise what the mandate
+ * the tools were connected). The day's other two periods open an example of a usual day, marked
+ * as such, never passed off as the user's own. The action and its lines only promise what the mandate
  * allows (resolveBriefingAction): with Guided, nothing goes out on its own.
  */
 
@@ -32,6 +33,32 @@ function actionsFor(action: BriefingAction, drafts: BriefingDraft[], recommendat
     case "list":
       return [{ id: "keep", name: copy.first.keep, status: "scheduled", timing, note: action.note, needsApproval: false, recommendationId }];
   }
+}
+
+/** The same moment on `date` ("2026-10-17"), or on the day before it when the example compared with yesterday */
+const onDate = (iso: string, date: string, from: string) => {
+  if (iso.slice(0, 10) === from) return `${date}${iso.slice(10)}`;
+  const d = new Date(`${date}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() - 1);
+  return `${d.toISOString().slice(0, 10)}${iso.slice(10)}`;
+};
+
+/**
+ * The day's other briefings, before there are any: the example day's briefing for that period
+ * (TODO(api): an example served with the briefings), moved to today and marked as an example,
+ * so the three briefings can be switched between from the first day.
+ */
+function exampleFor(period: BriefingPeriod, date: string): DailyBriefing | null {
+  const b = mockDailyBriefings.find((e) => e.period === period);
+  if (!b) return null;
+  const from = b.preparedAt.slice(0, 10);
+  return {
+    ...b,
+    id: `example_${period}`,
+    preparedAt: onDate(b.preparedAt, date, from),
+    comparedWith: b.comparedWith && { ...b.comparedWith, preparedAt: onDate(b.comparedWith.preparedAt, date, from) },
+    example: true,
+  };
 }
 
 /** "7:53", some minutes before `now` */
@@ -155,7 +182,7 @@ export function firstDailyBriefing({
       promise: copy.autonomy.promises[mandate.level],
       limit: copy.autonomy.limit,
     },
-    briefings: [first],
-    upcoming: PERIODS.slice(PERIODS.indexOf(period) + 1).map((p) => ({ period: p, time: copy.times[p] })),
+    // the user's own briefing in its period, an example of a usual day in the other two
+    briefings: PERIODS.map((p) => (p === period ? first : exampleFor(p, date))).filter((b): b is DailyBriefing => b !== null),
   };
 }

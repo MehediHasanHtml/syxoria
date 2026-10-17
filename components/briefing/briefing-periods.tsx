@@ -28,7 +28,8 @@ export function BriefingPeriods({
 }) {
   const refs = useRef<Record<string, HTMLButtonElement | null>>({});
   const at = briefings.findIndex((b) => b.id === current);
-  const latest = briefings.length - 1;
+  // the latest of the user's own briefings (on the first day, the others are examples)
+  const latest = briefings.findLastIndex((b) => !b.example);
   const onKey = (e: KeyboardEvent) => {
     const go = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
     if (!go) return;
@@ -56,10 +57,11 @@ export function BriefingPeriods({
               type="button"
               role="radio"
               aria-checked={on}
-              aria-label={`${copy.day.briefing(copy.periods[b.period], time)}. ${stageOf(b)}${isLatest ? `. ${copy.latest}` : ""}`}
+              aria-label={`${copy.day.briefing(copy.periods[b.period], time)}${b.example ? ` (${copy.example.toLowerCase()})` : ""}. ${stageOf(b)}${isLatest ? `. ${copy.latest}` : ""}`}
               tabIndex={on ? 0 : -1}
               className="bd-seg__item"
               data-latest={isLatest || undefined}
+              data-example={b.example || undefined}
               onClick={() => onChoose(b.id)}
             >
               <Icon aria-hidden="true" className="bd-seg__icon" strokeWidth={1.7} />
@@ -90,7 +92,7 @@ export function BriefingPeriods({
             data-state={b.stage.state}
             data-on={i === at || undefined}
             data-ahead={i > at || undefined}
-            data-link={i < latest ? (i < at ? "read" : "day") : upcoming.length ? "ahead" : undefined}
+            data-link={i < briefings.length - 1 ? (i < at ? "read" : "day") : upcoming.length ? "ahead" : undefined}
             onClick={() => onChoose(b.id)}
           >
             <span className="bd-rail__node">

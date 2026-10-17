@@ -3389,6 +3389,24 @@ html[data-vt="onboarding"]::view-transition-new(root) {
   color: var(--color-fg);
 }
 
+/* on the first day, a briefing that is an example of a usual day says so beside its time */
+.bd-example {
+  display: inline-block;
+  margin-left: 0.55rem;
+  padding: 0 0.55rem 0.05rem;
+  border-radius: 999px;
+  font-family: var(--font-serif);
+  font-size: 12.5px;
+  font-style: italic;
+  font-weight: 300;
+  letter-spacing: 0;
+  line-height: 1.35;
+  text-transform: none;
+  color: var(--color-fg-2);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.2);
+  animation: bd-in 420ms var(--ease-out-soft) both;
+}
+
 .bd-greet__name {
   font-family: var(--font-serif);
   font-style: italic;
@@ -4988,6 +5006,11 @@ button.bd-change:focus-visible {
     left: 0;
     z-index: 1;
     max-width: 28rem;
+  }
+
+  /* the line above the greeting stays one line, the Example tag with it */
+  .bd-greet > .bd-label {
+    white-space: nowrap;
   }
 
   /* since the last briefing: at the top right of the stage, across from the greeting, beside the

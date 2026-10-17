@@ -542,6 +542,8 @@ export type DailyBriefing = {
   changes: BriefingChange[] | null;
   /** The briefing it is compared with: the one before it today, or yesterday evening's for the morning */
   comparedWith: { period: BriefingPeriod; preparedAt: string } | null;
+  /** An example of a usual day, shown on a new user's first day for the periods they have no briefing for yet */
+  example?: boolean;
 };
 
 /** The autonomy the owner has granted: what Syxoria may do on its own, and what still asks */

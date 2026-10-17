@@ -63,7 +63,7 @@ export function TransitionToSaaS({ shell, snapshot, sources, policy }: Props) {
               <SyxoriaCore state="executing" detail="mark" className="size-9" />
               <div className="min-w-0">
                 <p className="text-[11px] font-medium text-fg-3">Active</p>
-                <p className="mt-1 truncate text-[13px] text-fg-2" title={`Syxoria keeps reading new activity at ${company.name} and prepares this briefing morning, midday and evening.`}>
+                <p className="mt-1 truncate text-[13px] text-fg-2" title={`Syxoria keeps reading new activity at ${company.name} and prepares this briefing morning, afternoon and evening.`}>
                   Three briefings a day
                 </p>
               </div>

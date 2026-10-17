@@ -43,18 +43,22 @@ export function DailyBriefingView({
   /** The greeting, to receive the focus when the briefing arrives */
   headingRef?: Ref<HTMLHeadingElement>;
 }) {
-  const [id, setId] = useState(initial && set.briefings.some((b) => b.id === initial) ? initial : set.briefings[0].id);
+  // opens on the briefing asked for, or the user's own (on the first day, the others are examples)
+  const [id, setId] = useState(initial && set.briefings.some((b) => b.id === initial) ? initial : (set.briefings.find((b) => !b.example) ?? set.briefings[0]).id);
   const [selected, setSelected] = useState<BriefingDimension>("priority");
   const i = set.briefings.findIndex((b) => b.id === id);
   const briefing = set.briefings[i];
   const since = sinceOf(briefing);
   const compared = briefing.comparedWith;
   // the thread moved on from the previous briefing of the same day
-  const previous = i > 0 && compared && set.briefings[i - 1].preparedAt === compared.preparedAt ? set.briefings[i - 1] : null;
+  // an example and the user's own briefing never count as one before the other
+  const sameKind = (b: { example?: boolean }) => Boolean(b.example) === Boolean(briefing.example);
+  const previous = i > 0 && compared && set.briefings[i - 1].preparedAt === compared.preparedAt && sameKind(set.briefings[i - 1]) ? set.briefings[i - 1] : null;
   const against = since && compared ? copy.changes.against(copy.periods[compared.period], briefingTime(compared.preparedAt), compared.preparedAt.slice(0, 10) !== briefing.preparedAt.slice(0, 10)) : null;
   // the full history: this briefing's updates, then each earlier one's, back to the first of the day
   const history: HistoryGroup[] = set.briefings
     .slice(0, i + 1)
+    .filter(sameKind)
     .reverse()
     .map((b) => ({
       id: b.id,
@@ -71,6 +75,11 @@ export function DailyBriefingView({
           <header className="bd-greet">
             <p className="bd-label">
               {copy.eyebrow} · {dayOf(set.date)} · <span className="tabular">{briefingTime(briefing.preparedAt)}</span>
+              {briefing.example && (
+                <span key={briefing.id} className="bd-example" title={copy.exampleNote}>
+                  {copy.example}
+                </span>
+              )}
             </p>
             <h1 ref={headingRef} tabIndex={headingRef ? -1 : undefined} className="bd-greet__title outline-none">
               {copy.greeting[briefing.period]}

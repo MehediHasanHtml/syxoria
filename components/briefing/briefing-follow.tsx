@@ -28,6 +28,7 @@ export function FollowThroughPanel({
   previous,
   since,
   onShowRecommendation,
+  onViewChange,
 }: {
   briefing: DailyBriefing;
   /** The previous briefing's thread, to show what moved since */
@@ -35,8 +36,14 @@ export function FollowThroughPanel({
   /** The previous briefing's time */
   since: string | null;
   onShowRecommendation: () => void;
+  /** Told before every action opens or closes, so the page can make room for the list */
+  onViewChange?: (all: boolean) => void;
 }) {
-  const [all, setAll] = useState(false);
+  const [all, setOpen] = useState(false);
+  const setAll = (open: boolean) => {
+    onViewChange?.(open);
+    setOpen(open);
+  };
   const { actions, followThrough } = briefing;
   const before = new Map(previous?.map((s) => [s.id, s.state]));
   const moved = (s: BriefingFollowStep) => Boolean(previous && since) && s.state !== "next" && before.get(s.id) !== s.state;

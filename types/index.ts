@@ -173,6 +173,8 @@ export type Notification = {
   createdAt: string;
   read: boolean;
   href: string | null;
+  /** What it is about: urgent, waits for approval, a client reply, done, a connection, a briefing */
+  kind?: "urgent" | "approval" | "reply" | "completed" | "connection" | "briefing";
 };
 
 /* ---------- Integrations ---------- */

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, CalendarClock, Lightbulb, TrendingDown, TrendingUp, TriangleAlert, type LucideIcon } from "lucide-react";
+import { ArrowRight, CalendarClock, Lightbulb, MessagesSquare, TrendingDown, TrendingUp, TriangleAlert, type LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import { FigureLine } from "@/components/briefing/briefing-figure";
 import { Timeline } from "@/components/briefing/briefing-changes";
@@ -9,6 +9,8 @@ import { briefingTime, dailyBriefing as words } from "@/content/briefing";
 import { overview as copy } from "@/content/overview";
 import { cn } from "@/lib/cn";
 import type { BriefingActionItem, HomeOverview, HomeSignal } from "@/types";
+import type { CalendarEvent, WorkspaceAction } from "@/types/workspace";
+import { ActionState } from "@/components/dashboard/ws/kit";
 import { HomePresence } from "./home-presence";
 
 const dayOf = (iso: string) => new Intl.DateTimeFormat("en-GB", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" }).format(new Date(`${iso.slice(0, 10)}T00:00:00Z`));
@@ -27,7 +29,7 @@ const SIGNAL: Record<HomeSignal["kind"], LucideIcon> = { risk: TriangleAlert, op
  * Actions & Approvals never disagree. Nothing here approves or sends anything.
  * Layout by container queries on the main column (the shell sets `@container`). Styles: "HOME".
  */
-export function HomeView({ data }: { data: HomeOverview }) {
+export function HomeView({ data, events, workspaceActions }: { data: HomeOverview; events: CalendarEvent[]; workspaceActions: WorkspaceAction[] }) {
   const { briefing, previous, owner } = data;
   const { priority, recommendation, actions } = briefing;
   const action = (id?: string) => (id ? actions.find((a) => a.id === id) : undefined);
@@ -36,6 +38,8 @@ export function HomeView({ data }: { data: HomeOverview }) {
   const failed = actions.filter((a) => a.status === "unsuccessful");
   const briefingHref = `/app/briefings?briefing=${briefing.id}`;
   const updates = briefing.changes?.length ?? 0;
+  // what Syxoria is carrying out or about to: approved, scheduled or running
+  const moving = workspaceActions.filter((a) => a.status === "approved" || a.status === "scheduled" || a.status === "in-progress").slice(0, 4);
 
   return (
     <div className="hm">
@@ -95,6 +99,22 @@ export function HomeView({ data }: { data: HomeOverview }) {
         ))}
       </section>
 
+      {/* quick access to the assistant and the briefing */}
+      <form action="/app/assistant" className="hm-ask">
+        <label htmlFor="hm-ask" className="sr-only">
+          {copy.ask.label}
+        </label>
+        <MessagesSquare aria-hidden="true" className="hm-ask__icon" />
+        <input id="hm-ask" name="q" type="text" autoComplete="off" placeholder={copy.ask.placeholder} />
+        <span className="hm-ask__prompts">
+          {copy.ask.prompts.map((p) => (
+            <Link key={p} href={`/app/assistant?q=${encodeURIComponent(p)}`}>
+              {p}
+            </Link>
+          ))}
+        </span>
+      </form>
+
       {/* two columns that run on their own: on a narrow screen, one column in the order the brief asks
           for (priority, alerts, recommendations, approvals, activity) */}
       <div className="hm-grid">
@@ -148,7 +168,7 @@ export function HomeView({ data }: { data: HomeOverview }) {
           </section>
 
           {/* E. WHAT SYXORIA RECOMMENDS NEXT */}
-          <Panel title={copy.recommendations.title} className="hm-recs">
+          <Panel title={copy.recommendations.title} tier="attention" className="hm-recs">
             <ol className="hm-rec-list">
               {data.recommendations.map((r) => {
                 const a = action(r.actionId);
@@ -174,11 +194,30 @@ export function HomeView({ data }: { data: HomeOverview }) {
               })}
             </ol>
           </Panel>
+
+          {/* WHAT SYXORIA IS PREPARING OR CARRYING OUT */}
+          <Panel title={copy.motion.title} tier="info" link={{ href: "/app/actions", label: copy.motion.all }}>
+            <ul className="hm-rows">
+              {moving.map((a) => (
+                <li key={a.id}>
+                  <Link href={`/app/actions?action=${a.id}`} className="hm-row" data-status={a.status}>
+                    <StatusIcon status={a.status} />
+                    <span className="min-w-0">
+                      <span className="hm-row__name">{a.title}</span>
+                      <span className="hm-row__meta">
+                        <ActionState status={a.status} /> · {a.updated}
+                      </span>
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </Panel>
         </div>
 
         <div className="hm-col">
           {/* F. WHAT WAITS FOR THE OWNER */}
-          <Panel title={copy.approvals.title} link={{ href: "/app/actions", label: copy.approvals.open }} className="hm-approvals">
+          <Panel title={copy.approvals.title} tier="decision" link={{ href: "/app/actions", label: copy.approvals.open }} className="hm-approvals">
             {waiting.length > 0 ? (
               <p className="hm-count">
                 <span className="hm-count__n tabular">{waiting.length}</span>
@@ -202,7 +241,7 @@ export function HomeView({ data }: { data: HomeOverview }) {
           </Panel>
 
           {/* D. WHAT DESERVES ATTENTION, BEYOND THE PRIORITY */}
-          <Panel title={copy.signals.title} className="hm-alerts">
+          <Panel title={copy.signals.title} tier="attention" className="hm-alerts">
             <ul className="hm-signals">
               {data.signals.map((s) => {
                 const Icon = SIGNAL[s.kind];
@@ -227,8 +266,29 @@ export function HomeView({ data }: { data: HomeOverview }) {
             </ul>
           </Panel>
 
+          {/* COMING UP: meetings, deadlines, follow ups, scheduled actions */}
+          <Panel title={copy.agenda.title} tier="info" link={{ href: "/app/clients", label: copy.agenda.all }}>
+            <ul className="ws-agenda">
+              {events.slice(0, 5).map((e) => (
+                <li key={e.id}>
+                  <Link href={e.href} className="ws-agenda__item">
+                    <span className="ws-agenda__when">
+                      <span>{e.day}</span>
+                      <span className="tabular">{e.time}</span>
+                    </span>
+                    <span className="min-w-0">
+                      <span className="ws-row__title">{e.title}</span>
+                      <span className="ws-row__detail">{[e.with, e.note].filter(Boolean).join(" · ")}</span>
+                    </span>
+                    <span className="ws-agenda__kind">{copy.agenda.kinds[e.kind]}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </Panel>
+
           {/* G. WHAT SYXORIA HAS DONE */}
-          <Panel title={copy.activity.title} link={{ href: "/app/history", label: copy.activity.all }} className="hm-activity">
+          <Panel title={copy.activity.title} tier="info" link={{ href: "/app/history", label: copy.activity.all }} className="hm-activity">
             {briefing.changes && <Timeline changes={briefing.changes.slice(0, 4)} actions={actions} />}
           </Panel>
         </div>
@@ -237,11 +297,16 @@ export function HomeView({ data }: { data: HomeOverview }) {
   );
 }
 
-function Panel({ title, link, className, children }: { title: string; link?: { href: string; label: string }; className?: string; children: ReactNode }) {
+const TIER = { decision: "Needs your decision", attention: "Worth your attention", info: "For your information" } as const;
+
+function Panel({ title, link, tier, className, children }: { title: string; link?: { href: string; label: string }; tier?: keyof typeof TIER; className?: string; children: ReactNode }) {
   return (
-    <section aria-label={title} className={cn("hm-panel", className)}>
+    <section aria-label={title} className={cn("hm-panel", className)} data-tier={tier}>
       <div className="hm-panel__head">
-        <h2 className="bd-label">{title}</h2>
+        <h2 className="bd-label">
+          {title}
+          {tier && <span className="hm-tier">{TIER[tier]}</span>}
+        </h2>
         {link && (
           <Link href={link.href} className="hm-link">
             {link.label}

@@ -20,6 +20,18 @@ export const overview = {
     resume: "Review and resume",
   },
   figures: "Key figures",
+  /** Quick access to the assistant */
+  ask: {
+    label: "Ask Syxoria",
+    placeholder: "Ask Syxoria about your business",
+    prompts: ["What needs my attention today?", "Where does Atelier Rive stand?", "Why did Nora’s quote fail?"],
+  },
+  motion: { title: "In motion", all: "All actions" },
+  agenda: {
+    title: "Coming up",
+    all: "Clients and meetings",
+    kinds: { meeting: "Meeting", call: "Call", deadline: "Deadline", "follow-up": "Follow up", action: "Scheduled" },
+  },
   priority: {
     title: "Today’s priority",
     since: (time: string) => `Since ${time}`,

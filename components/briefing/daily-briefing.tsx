@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode, type Ref } from "react";
+import { useRef, useState, type CSSProperties, type ReactNode, type Ref } from "react";
 import { briefingTime, dailyBriefing as copy, sinceOf } from "@/content/briefing";
 import type { BriefingDimension, DailyBriefingSet } from "@/types";
 import { AutonomyCard } from "./autonomy-card";
@@ -67,11 +67,14 @@ export function DailyBriefingView({
       actions: b.actions,
     }));
   const doing = revealed >= 4;
+  // while every action is listed, the page grows to hold them and the stage keeps the height it had
+  const stageRef = useRef<HTMLDivElement>(null);
+  const [listed, setListed] = useState<number | null>(null);
 
   return (
     <div className="bd editorial-type @container w-full">
-      <div className="bd-grid">
-        <div className="bd-stage">
+      <div className="bd-grid" data-list={listed !== null || undefined} style={listed !== null ? ({ "--stage-h": `${listed}px` } as CSSProperties) : undefined}>
+        <div ref={stageRef} className="bd-stage">
           <header className="bd-greet">
             <p className="bd-label">
               {copy.eyebrow} · {dayOf(set.date)} · <span className="tabular">{briefingTime(briefing.preparedAt)}</span>
@@ -115,7 +118,13 @@ export function DailyBriefingView({
         </div>
 
         <div className="bd-bottom" data-pending={!doing || undefined} inert={!doing || undefined}>
-          <FollowThroughPanel briefing={briefing} previous={previous?.followThrough.steps} since={previous ? since : null} onShowRecommendation={() => setSelected("recommendation")} />
+          <FollowThroughPanel
+            briefing={briefing}
+            previous={previous?.followThrough.steps}
+            since={previous ? since : null}
+            onShowRecommendation={() => setSelected("recommendation")}
+            onViewChange={(open) => setListed(open ? (stageRef.current?.offsetHeight ?? null) : null)}
+          />
           <AutonomyCard autonomy={set.autonomy}>{cta}</AutonomyCard>
         </div>
       </div>

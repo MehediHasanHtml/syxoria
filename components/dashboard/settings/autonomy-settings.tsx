@@ -14,6 +14,9 @@ import { globalHold, heldActions, holdFor } from "@/lib/automation";
 import { cn } from "@/lib/cn";
 import { effectiveMode, reachOfLevel } from "@/lib/onboarding/mandate";
 import type { AutomationHold, AutonomyLevel, AutonomyPolicy, PermissionRule } from "@/types";
+import type { ApprovalRequirement, OperationalLimit, SafetyStop } from "@/types/workspace";
+
+export type SafetySettings = { approvals: ApprovalRequirement[]; limits: OperationalLimit[]; restricted: string[]; stops: SafetyStop[] };
 import { SettingsSection } from "./settings-section";
 
 const GROUPS: PermissionRule["group"][] = ["understand", "prepare", "act"];
@@ -25,25 +28,97 @@ const WHERE: Record<string, string | undefined> = { Integrations: "/app/integrat
  * switch, a pause for one workflow or one tool, the safety protection, and what each control does
  * and does not do. Every hold reads and writes the workspace's one automation state.
  */
-export function AutonomySettings({ policy }: { policy: AutonomyPolicy }) {
+export function AutonomySettings({ policy, safety }: { policy: AutonomyPolicy; safety: SafetySettings }) {
   const { ctx } = useAutomation();
   const [compare, setCompare] = useState<AutonomyLevel>(ctx.level);
+  const [switched, setSwitched] = useState<string | null>(null);
   const level = policy.levels.find((l) => l.id === compare) ?? policy.levels[0];
 
   return (
     <>
       <SettingsSection title={copy.settings.mode.title} description={copy.settings.mode.description}>
         <ModePicker policy={policy} current={ctx.level} value={compare} onChange={setCompare} />
-        <p className="mt-3 text-[12.5px] leading-relaxed text-fg-3">{copy.settings.mode.change}</p>
+        <div className="mt-3 flex flex-wrap items-center gap-3">
+          {compare !== ctx.level && (
+            <Button size="sm" variant="secondary" onClick={() => setSwitched(`Preview: in the product, ${level.name} applies from the next action, and Syxoria tells you what changed.`)}>
+              Switch to {level.name}
+            </Button>
+          )}
+          <p className="text-[12.5px] leading-relaxed text-fg-3">{switched ?? "Your mode was set during onboarding. Compare the others, and switch when you are ready."}</p>
+        </div>
       </SettingsSection>
 
       <SettingsSection title={copy.settings.reach.title} description={copy.settings.reach.description(level.name)}>
         <Reach policy={policy} level={compare} />
       </SettingsSection>
 
+      <SettingsSection title="Approval requirements" description="What waits for your approval under each mode. Some actions always wait, whatever the mode.">
+        <div className="ws-table-wrap">
+          <table className="ws-table ax-matrix">
+            <thead>
+              <tr>
+                <th scope="col">Action</th>
+                {(["guided", "assisted", "autonomous"] as const).map((m) => (
+                  <th key={m} scope="col" data-current={m === ctx.level || undefined}>
+                    {policy.levels.find((l) => l.id === m)?.name}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {safety.approvals.map((a) => (
+                <tr key={a.id}>
+                  <td>
+                    <span className="ws-cell-title">{a.action}</span>
+                    {a.locked && (
+                      <span className="ws-cell-sub">
+                        <Lock aria-hidden="true" className="mr-1 inline size-3" strokeWidth={1.8} />
+                        {a.locked}
+                      </span>
+                    )}
+                  </td>
+                  {(["guided", "assisted", "autonomous"] as const).map((m) => (
+                    <td key={m} data-current={m === ctx.level || undefined} data-label={policy.levels.find((l) => l.id === m)?.name}>
+                      <span className="ax-rule" data-mode={a[m]}>
+                        {copy.settings.reach.modes[a[m]]}
+                      </span>
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </SettingsSection>
+
+      <SettingsSection title="Operational and financial limits" description="The boundaries Syxoria works within, even in Autonomous mode. Anything beyond them waits for you.">
+        <ul className="divide-y divide-line rounded-lg border border-line">
+          {safety.limits.map((l) => (
+            <li key={l.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
+              <span className="min-w-0">
+                <span className="block text-[13px] text-fg">{l.label}</span>
+                <span className="block text-[12.5px] text-fg-3">{l.detail}</span>
+              </span>
+              <span className="ax-limit tabular">{l.value}</span>
+            </li>
+          ))}
+        </ul>
+      </SettingsSection>
+
+      <SettingsSection title="Sensitive and restricted actions" description="Never done by Syxoria, in any mode, whatever the instruction.">
+        <ul className="grid gap-2 sm:grid-cols-2">
+          {safety.restricted.map((r) => (
+            <li key={r} className="ax-restricted">
+              <ShieldCheck aria-hidden="true" />
+              {r}
+            </li>
+          ))}
+        </ul>
+      </SettingsSection>
+
       <KillSwitch />
       <Targeted />
-      <Safety />
+      <Safety stops={safety.stops} />
 
       <SettingsSection title={copy.settings.controls.title} description={copy.settings.controls.description}>
         <dl className="divide-y divide-line rounded-lg border border-line">
@@ -148,18 +223,6 @@ function Reach({ policy, level }: { policy: AutonomyPolicy; level: AutonomyLevel
         </div>
       ))}
 
-      <div>
-        <p className="bd-label">{copy.settings.reach.never}</p>
-        <ul className="mt-2 grid gap-1.5 sm:grid-cols-2">
-          {policy.never.map((n) => (
-            <li key={n} className="flex items-center gap-2 text-[13px] text-fg-2">
-              <ShieldCheck aria-hidden="true" className="size-3.5 shrink-0 text-fg-3" strokeWidth={1.8} />
-              {n}
-            </li>
-          ))}
-        </ul>
-      </div>
-
       {ctx.integrations.length > 0 && level === ctx.level && (
         <div>
           <p className="bd-label">{copy.settings.reach.tools}</p>
@@ -186,7 +249,7 @@ function KillSwitch() {
     <SettingsSection title={copy.settings.kill.title} description={copy.settings.kill.description}>
       <div className="ax-switch" data-held={all ? "" : undefined}>
         <SyxoriaCore state={all ? "paused" : "active"} detail="mark" className="size-10 shrink-0" />
-        <div className="min-w-0 flex-1">
+        <div className="ax-switch__text">
           <p className="text-[14px] text-fg">{all ? copy.settings.kill.suspended : copy.settings.kill.running}</p>
           <p className="mt-0.5 text-[12.5px] text-fg-3">
             {all
@@ -282,11 +345,20 @@ function Targeted() {
   );
 }
 
-function Safety() {
+function Safety({ stops }: { stops: SafetySettings["stops"] }) {
   const { state } = useAutomation();
   const incident = state.incident;
   return (
     <SettingsSection title={copy.settings.safety.title} description={copy.settings.safety.description}>
+      <ul className="ax-rules-list">
+        {["Messages bounce or are rejected", "An unusual volume of actions in a few minutes", "A tool returns errors repeatedly", "An amount above your limits appears in a draft"].map((r) => (
+          <li key={r}>
+            <ShieldCheck aria-hidden="true" />
+            {r}
+          </li>
+        ))}
+      </ul>
+      <p className="mt-3 mb-4 text-[12.5px] text-fg-3">When one of these happens, only the work concerned is held. Syxoria says what was held, what was already on its way, and what must happen before it resumes.</p>
       {incident ? (
         <div className="ax-switch" data-held="">
           <CirclePause aria-hidden="true" className="size-5 shrink-0 text-negative" strokeWidth={1.7} />
@@ -300,9 +372,34 @@ function Safety() {
       ) : (
         <p className="flex items-center gap-2 text-[13px] text-fg-2">
           <ShieldCheck aria-hidden="true" className="size-4 text-accent-strong" strokeWidth={1.8} />
-          {copy.settings.safety.none}
+          No incident in progress.
         </p>
       )}
+      <p className="bd-label mt-5">Recent safety stops</p>
+      <ul className="mt-2 grid gap-2">
+        {stops.map((s) => (
+          <li key={s.id} className="ax-stop">
+            <p className="ax-stop__head">
+              <span>{s.reason}</span>
+              <span className="ws-cell-sub">{s.at}</span>
+            </p>
+            <dl className="ax-stop__facts">
+              <div>
+                <dt>Held</dt>
+                <dd>{s.held}</dd>
+              </div>
+              <div>
+                <dt>Already on its way</dt>
+                <dd>{s.inFlight}</dd>
+              </div>
+              <div>
+                <dt>To resume</dt>
+                <dd>{s.resolved}</dd>
+              </div>
+            </dl>
+          </li>
+        ))}
+      </ul>
     </SettingsSection>
   );
 }

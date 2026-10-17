@@ -139,6 +139,35 @@ export function AutomationControl() {
   );
 }
 
+/**
+ * The kill switch's discreet shortcut at the foot of the navigation: one quiet line, never a red
+ * block. It suspends (with the same confirmation as everywhere) or, while suspended, opens the
+ * review before resuming.
+ */
+export function KillSwitchShortcut({ collapsed }: { collapsed?: boolean }) {
+  const { state, requestSuspend, requestResume } = useAutomation();
+  const all = globalHold(state);
+  return (
+    <button
+      type="button"
+      onClick={() => (all ? requestResume(all) : requestSuspend())}
+      className="ks"
+      data-held={all ? "" : undefined}
+      data-collapsed={collapsed || undefined}
+      aria-label={all ? `${copy.status.suspended}. ${copy.panel.review}` : `Kill switch: ${copy.panel.suspend}`}
+      title={collapsed ? (all ? copy.panel.review : copy.panel.suspend) : undefined}
+    >
+      <span aria-hidden="true" className="ks__dot" />
+      {!collapsed && (
+        <span className="min-w-0 text-left">
+          <span className="ks__title">{all ? "Execution suspended" : "Kill switch"}</span>
+          <span className="ks__sub">{all ? copy.panel.review : "Suspend autonomous execution"}</span>
+        </span>
+      )}
+    </button>
+  );
+}
+
 /** Beside an action's status, on a server page: "Paused" when a hold keeps it from starting */
 export function HeldMark({ actionId }: { actionId: string }) {
   const { ctx, state } = useAutomation();

@@ -1,12 +1,23 @@
 import type { Metadata } from "next";
-import { AssistantPreview } from "@/components/dashboard/assistant/assistant-preview";
+import { AssistantWorkspace } from "@/components/dashboard/assistant/assistant-workspace";
 import { getAssistantSamples } from "@/services/assistant";
-import { getHomeOverview } from "@/services/overview";
+import { getConversations, getMemory, getWorkspaceActions } from "@/services/workspace";
 
-export const metadata: Metadata = { title: "Ask Syxoria" };
+export const metadata: Metadata = { title: "Syxoria Assistant" };
 
-/** The assistant. ?q= the question asked from the top bar */
+/** The assistant. ?q= a question asked from the top bar or a document, ?c= an earlier conversation */
 export default async function AssistantPage({ searchParams }: PageProps<"/app/assistant">) {
-  const [{ q }, samples, { briefing }] = await Promise.all([searchParams, getAssistantSamples(), getHomeOverview()]);
-  return <AssistantPreview key={typeof q === "string" ? q : ""} samples={samples} actions={briefing.actions} initial={typeof q === "string" ? q : undefined} />;
+  const [{ q, c }, samples, { conversations, prompts }, actions, memory] = await Promise.all([searchParams, getAssistantSamples(), getConversations(), getWorkspaceActions(), getMemory()]);
+  return (
+    <AssistantWorkspace
+      key={typeof q === "string" ? q : ""}
+      conversations={conversations}
+      prompts={prompts}
+      samples={samples}
+      actions={actions}
+      memory={memory}
+      initialQuestion={typeof q === "string" ? q : undefined}
+      initialConversation={typeof c === "string" ? c : undefined}
+    />
+  );
 }

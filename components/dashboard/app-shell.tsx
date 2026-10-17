@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { cn } from "@/lib/cn";
 import type { AutomationContext, Notification, User, Workspace } from "@/types";
+import type { CalendarEvent, SearchItem } from "@/types/workspace";
 import { AutomationProvider } from "./automation/automation-provider";
 import { AutomationBanner } from "./automation/automation-status";
 import { Sidebar } from "./sidebar";
@@ -46,6 +47,9 @@ export type ShellContext = {
   badges: { approvals: number };
   /** What Syxoria runs on its own and the holds on it: the top bar's status and the kill switch */
   automation: AutomationContext;
+  /** What global search can find, and the agenda in the top bar */
+  searchIndex?: SearchItem[];
+  events?: CalendarEvent[];
 };
 
 /**
@@ -104,7 +108,7 @@ export function AppShell({ children, ...ctx }: ShellContext & { children: ReactN
         </dialog>
   
         <div className={cn("flex min-h-dvh flex-col transition-[padding] duration-300 ease-out-soft", collapsed ? "lg:pl-[4.5rem]" : "lg:pl-64")}>
-          <Topbar user={ctx.user} notifications={ctx.notifications} onOpenMenu={() => setMobileOpen(true)} />
+          <Topbar user={ctx.user} notifications={ctx.notifications} searchIndex={ctx.searchIndex ?? []} events={ctx.events ?? []} onOpenMenu={() => setMobileOpen(true)} />
           <AutomationBanner />
           <main id="app-main" tabIndex={-1} className="flex-1 outline-none">
             <div className="@container w-full px-4 pb-16 pt-6 sm:px-6 lg:px-8 lg:pt-8 2xl:px-10">{children}</div>

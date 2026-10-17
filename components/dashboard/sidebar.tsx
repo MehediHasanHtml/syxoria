@@ -8,6 +8,7 @@ import { Logo, LogoMark } from "@/components/shared/logo";
 import { appNav, isActive, type AppNavItem } from "@/lib/app-nav";
 import { cn } from "@/lib/cn";
 import type { Workspace } from "@/types";
+import { KillSwitchShortcut } from "./automation/automation-status";
 
 type SidebarProps = {
   collapsed: boolean;
@@ -208,6 +209,7 @@ export function Sidebar({ collapsed, onToggleCollapsed, onNavigate, badges, work
       </div>
 
       <div className={cn("shrink-0 border-t border-line", collapsed ? "flex flex-col items-center gap-1 py-3" : "p-3")}>
+        <KillSwitchShortcut collapsed={collapsed} />
         <div className={cn("flex", collapsed ? "flex-col items-center gap-1" : "items-center gap-1")}>
           <a
             href="mailto:hello@syxoria.com"

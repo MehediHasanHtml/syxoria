@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { AppShell } from "@/components/dashboard/app-shell";
-import { getInsights } from "@/services/insights";
-import { getProjects } from "@/services/projects";
+import { getPendingApprovals } from "@/services/overview";
 import { getCurrentUser, getNotifications, getWorkspace } from "@/services/user";
 
 export const metadata: Metadata = {
@@ -12,24 +11,10 @@ export const metadata: Metadata = {
 
 export default async function AppLayout({ children }: LayoutProps<"/app">) {
   // TODO(auth): verify the session here (or in proxy.ts) and redirect to /login.
-  const [user, workspace, notifications, insights, projects] = await Promise.all([
-    getCurrentUser(),
-    getWorkspace(),
-    getNotifications(),
-    getInsights(),
-    getProjects(),
-  ]);
+  const [user, workspace, notifications, approvals] = await Promise.all([getCurrentUser(), getWorkspace(), getNotifications(), getPendingApprovals()]);
 
   return (
-    <AppShell
-      user={user}
-      workspace={workspace}
-      notifications={notifications}
-      badges={{ insights: insights.filter((i) => i.status === "new").length }}
-      projects={projects
-        .filter((p) => p.status !== "completed")
-        .map(({ id, name, status }) => ({ id, name, status }))}
-    >
+    <AppShell user={user} workspace={workspace} notifications={notifications} badges={{ approvals }}>
       {children}
     </AppShell>
   );

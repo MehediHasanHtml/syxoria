@@ -2,38 +2,41 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Bell, LogOut, Menu as MenuIcon, Search, Settings, UserRound } from "lucide-react";
+import { Bell, LogOut, Menu as MenuIcon, MessageSquareText, Settings, UserRound } from "lucide-react";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { SyxoriaCore } from "@/components/brand/syxoria-core";
 import { Avatar } from "@/components/ui/avatar";
 import { Menu } from "@/components/ui/menu";
 import { cn } from "@/lib/cn";
 import { formatRelative } from "@/lib/format";
-import { REFERENCE_NOW } from "@/lib/mock-data/series";
+import { ASSISTANT_HREF } from "@/lib/app-nav";
+import { WORKSPACE_NOW } from "@/lib/mock-data/overview";
 import type { Notification, User } from "@/types";
 
-const NOW = new Date(REFERENCE_NOW);
+const NOW = new Date(WORKSPACE_NOW);
 
 export function Topbar({ user, notifications, onOpenMenu }: { user: User; notifications: Notification[]; onOpenMenu: () => void }) {
   const router = useRouter();
-  const searchRef = useRef<HTMLInputElement>(null);
+  const askRef = useRef<HTMLInputElement>(null);
 
-  // ⌘K / Ctrl+K focuses search
+  // ⌘K / Ctrl+K: ask Syxoria, from any page
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
-        searchRef.current?.focus();
+        askRef.current?.focus();
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  function onSearch(e: FormEvent<HTMLFormElement>) {
+  // the question goes to the assistant's page, which keeps the conversation
+  function onAsk(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const q = new FormData(e.currentTarget).get("q")?.toString().trim() ?? "";
-    router.push(q ? `/app/projects?q=${encodeURIComponent(q)}` : "/app/projects");
+    router.push(q ? `${ASSISTANT_HREF}?q=${encodeURIComponent(q)}` : ASSISTANT_HREF);
+    e.currentTarget.reset();
   }
 
   return (
@@ -48,17 +51,18 @@ export function Topbar({ user, notifications, onOpenMenu }: { user: User; notifi
           <MenuIcon className="size-5" aria-hidden="true" />
         </button>
 
-        <form role="search" onSubmit={onSearch} className="relative max-w-md flex-1">
-          <label htmlFor="app-search" className="sr-only">
-            Search projects
+        <form onSubmit={onAsk} className="relative max-w-md flex-1">
+          <label htmlFor="app-ask" className="sr-only">
+            Ask Syxoria
           </label>
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-fg-3" aria-hidden="true" />
+          <MessageSquareText className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-fg-3" strokeWidth={1.6} aria-hidden="true" />
           <input
-            ref={searchRef}
-            id="app-search"
+            ref={askRef}
+            id="app-ask"
             name="q"
-            type="search"
-            placeholder="Search projects…"
+            type="text"
+            enterKeyHint="send"
+            placeholder="Ask Syxoria about your business"
             autoComplete="off"
             className="h-9 w-full rounded-md border border-line bg-canvas-2 pl-9 pr-14 text-sm text-fg placeholder:text-fg-3 transition-[border-color,box-shadow] duration-200 hover:border-line-strong focus:border-fg-3 focus:outline-none focus:ring-4 focus:ring-white/[0.04]"
           />
@@ -70,8 +74,8 @@ export function Topbar({ user, notifications, onOpenMenu }: { user: User; notifi
         <div className="ml-auto flex items-center gap-1.5">
           {/* the same Core as everywhere: here, simply at work */}
           <Link
-            href="/app/insights"
-            title="Syxoria is reading new activity"
+            href="/app/briefings"
+            title="Syxoria is reading new activity. Open today’s briefings"
             className="mr-1 hidden items-center gap-2 rounded-md py-1 pl-1 pr-2.5 text-[12.5px] text-fg-2 transition-colors hover:bg-white/5 hover:text-fg sm:flex"
           >
             <SyxoriaCore state="active" detail="mark" label="Syxoria" vtName="syx-core" className="size-7" />

@@ -18,30 +18,31 @@ export const mockWorkspace: Workspace = {
   region: "eu-west",
 };
 
+/** The demo day's notifications (the story of lib/mock-data/briefings.ts), newest first */
 export const mockNotifications: Notification[] = [
   {
     id: "n_01",
-    title: "New insight on cash collection",
-    body: "Nexo found 4 invoices that can be followed up automatically.",
-    createdAt: "2026-09-24T08:52:00.000Z",
+    title: "Your evening briefing is ready",
+    body: "The contract is out. Nora’s quote did not reach her.",
+    createdAt: "2026-10-14T18:30:00",
     read: false,
-    href: "/app/insights",
+    href: "/app/briefings?briefing=b_evening",
   },
   {
     id: "n_02",
-    title: "Client onboarding reached 80%",
-    body: "Inès completed the contract milestone.",
-    createdAt: "2026-09-24T07:10:00.000Z",
+    title: "Hugo’s March timeline waits for you",
+    body: "A change to a quote: drafted at 17:20, sent as soon as you approve.",
+    createdAt: "2026-10-14T17:20:00",
     read: false,
-    href: "/app/projects/p_onboarding",
+    href: "/app/actions",
   },
   {
     id: "n_03",
-    title: "Weekly digest is ready",
-    body: "6h 42m saved this week across 12 automations.",
-    createdAt: "2026-09-22T06:00:00.000Z",
+    title: "Nora’s quote was returned",
+    body: "Her address no longer receives mail. 9:30 tomorrow is held for a call.",
+    createdAt: "2026-10-14T14:12:00",
     read: true,
-    href: "/app/analytics",
+    href: "/app/briefings?briefing=b_evening",
   },
 ];
 

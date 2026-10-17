@@ -569,3 +569,77 @@ export type DailyBriefingSet = {
   /** Those still to come today, shown for what they are: not prepared yet */
   upcoming?: { period: BriefingPeriod; time: string }[];
 };
+
+/* ---------- Workspace home (the dashboard's overview) ----------
+ * Built on the latest briefing: its priority, its actions (the one source of their status) and its
+ * updates. What the briefing does not carry (the business indicators, the alerts beyond the
+ * priority, the recommendations beyond its own) comes alongside, each pointing at the action it
+ * concerns when there is one, so a status reads the same on every screen.
+ */
+
+/** One figure that says how the business stands, with what it compares with when that is honest */
+export type BusinessIndicator = {
+  id: string;
+  label: string;
+  /** Formatted by the service: "€64,200" · "36%" */
+  value: string;
+  /** What the figure is, in a few words ("invoiced in October") */
+  caption: string;
+  /** Against the previous period, when there is one */
+  trend?: { direction: "up" | "down"; text: string; good: boolean };
+  /** A line of context when there is no honest comparison ("€3,200 due Monday") */
+  note?: string;
+  /** Progress towards a goal, 0 to 1 */
+  progress?: number;
+  /** Where it is explored (Business Management) */
+  href: string;
+};
+
+/** Something worth the owner's attention beyond the priority: a risk, an opportunity, a deadline, a decline */
+export type HomeSignal = {
+  id: string;
+  kind: "risk" | "opportunity" | "deadline" | "decline";
+  level: BriefingSeverity;
+  title: string;
+  detail: string;
+  /** What is at stake, when it can be said ("€42,000") */
+  stake?: string;
+  /** When it falls due ("Friday") */
+  due?: string;
+  href: string;
+};
+
+/** What Syxoria recommends next; its status is read from the action it concerns, or "suggested" when nothing is prepared yet */
+export type HomeRecommendation = {
+  id: string;
+  title: string;
+  why: string;
+  outcome?: string;
+  actionId?: string;
+  href: string;
+};
+
+export type HomeOverview = {
+  /** The moment the overview describes (after the latest briefing) */
+  now: string;
+  owner: { firstName: string };
+  /** The latest briefing: its priority leads the page, its actions and updates feed the rest */
+  briefing: DailyBriefing;
+  /** The briefing before it, to say how many updates came in since */
+  previous: { period: BriefingPeriod; preparedAt: string } | null;
+  indicators: BusinessIndicator[];
+  signals: HomeSignal[];
+  recommendations: HomeRecommendation[];
+};
+
+/* ---------- The assistant (a preview until the AI is connected) ---------- */
+/** A prepared answer to a suggested question, always shown as a sample: nothing is generated */
+export type AssistantSample = {
+  id: string;
+  question: string;
+  answer: string;
+  /** Where the answer comes from, to open it */
+  references: { label: string; href: string }[];
+  /** The action it concerns: its status is read from the briefing's actions */
+  actionId?: string;
+};

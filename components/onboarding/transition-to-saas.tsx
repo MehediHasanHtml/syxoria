@@ -67,8 +67,8 @@ export function TransitionToSaaS({ shell, snapshot, sources, policy }: Props) {
                   Three briefings a day
                 </p>
               </div>
-              <Link href="/app/insights" className="ml-auto inline-flex shrink-0 items-center gap-1 text-xs text-fg-2 transition-colors hover:text-fg">
-                Insights <ArrowRight className="size-3.5" aria-hidden="true" />
+              <Link href="/app/briefings" className="ml-auto inline-flex shrink-0 items-center gap-1 text-xs text-fg-2 transition-colors hover:text-fg">
+                Briefings <ArrowRight className="size-3.5" aria-hidden="true" />
               </Link>
             </div>
             <div className="flex min-w-0 items-center bg-canvas-2 px-5 py-4">

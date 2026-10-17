@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { cn } from "@/lib/cn";
 import type { Notification, User, Workspace } from "@/types";
-import { Sidebar, type SidebarProject } from "./sidebar";
+import { Sidebar } from "./sidebar";
 import { Topbar } from "./topbar";
 
 const STORAGE_KEY = "syx.sidebar.collapsed";
@@ -40,13 +40,14 @@ export type ShellContext = {
   user: User;
   workspace: Workspace;
   notifications: Notification[];
-  badges: { insights: number };
-  projects: SidebarProject[];
+  /** What waits for the owner, beside Actions & Approvals */
+  badges: { approvals: number };
 };
 
 /**
  * Application shell: collapsible sidebar (persisted per device), mobile drawer
  * (native <dialog>), top bar. Content is rendered by server pages as children.
+ * Set in the editorial type, like the website, the onboarding and the briefing.
  */
 export function AppShell({ children, ...ctx }: ShellContext & { children: ReactNode }) {
   const collapsed = useSyncExternalStore(sidebarStore.subscribe, sidebarStore.get, () => false);
@@ -63,7 +64,7 @@ export function AppShell({ children, ...ctx }: ShellContext & { children: ReactN
   }, [mobileOpen]);
 
   return (
-    <div data-theme="dark" className="product-type min-h-dvh bg-canvas">
+    <div data-theme="dark" className="editorial-type min-h-dvh bg-canvas">
       <a
         href="#app-main"
         className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-3 focus:z-(--z-toast) focus:rounded-md focus:bg-fg focus:px-3 focus:py-2 focus:text-sm focus:text-canvas"
@@ -78,7 +79,7 @@ export function AppShell({ children, ...ctx }: ShellContext & { children: ReactN
           collapsed ? "w-[4.5rem]" : "w-64",
         )}
       >
-        <Sidebar collapsed={collapsed} onToggleCollapsed={toggleCollapsed} badges={ctx.badges} workspace={ctx.workspace} projects={ctx.projects} />
+        <Sidebar collapsed={collapsed} onToggleCollapsed={toggleCollapsed} badges={ctx.badges} workspace={ctx.workspace} />
       </aside>
 
       {/* Mobile drawer */}
@@ -93,7 +94,7 @@ export function AppShell({ children, ...ctx }: ShellContext & { children: ReactN
         onClick={(e) => e.target === e.currentTarget && setMobileOpen(false)}
         className="drawer-motion m-0 h-dvh max-h-none w-72 max-w-[85vw] border-r border-line bg-canvas-2 p-0 text-fg"
       >
-        <Sidebar collapsed={false} badges={ctx.badges} workspace={ctx.workspace} projects={ctx.projects} onNavigate={() => setMobileOpen(false)} />
+        <Sidebar collapsed={false} badges={ctx.badges} workspace={ctx.workspace} onNavigate={() => setMobileOpen(false)} />
       </dialog>
 
       <div className={cn("flex min-h-dvh flex-col transition-[padding] duration-300 ease-out-soft", collapsed ? "lg:pl-[4.5rem]" : "lg:pl-64")}>

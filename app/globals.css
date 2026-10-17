@@ -5080,6 +5080,32 @@ button.bd-change:focus-visible {
     gap: clamp(0.45rem, 1.6cqh, 0.7rem);
   }
 
+  /* a tight stage (the workspace with its sidebar open): the day's choice gives up its icons, so
+     it stays clear of the ring; the times stay */
+  @container bd-stage (max-width: 76rem) {
+    .bd-seg,
+    .bd-rail {
+      grid-template-columns: repeat(var(--n), minmax(0, 7.6rem));
+    }
+
+    .bd-seg__icon {
+      display: none;
+    }
+
+    .bd-seg__item {
+      padding-inline: 0.5rem;
+    }
+
+    /* the history is narrower there, its lines wrap: two updates, the rest in the full history */
+    .bd-changes > .bd-changes__list > li:nth-child(n + 3) {
+      display: none;
+    }
+
+    .bd-changes > .bd-changes__list > li:nth-child(2)::before {
+      display: none;
+    }
+  }
+
   .bd-rail__node {
     margin-bottom: clamp(0.25rem, 1cqh, 0.45rem);
   }
@@ -5281,6 +5307,957 @@ button.bd-change:focus-visible {
   .bd-thread__step,
   .bd-thread__node::after,
   .bd-status[data-status="in-progress"] svg {
+    animation: none;
+  }
+}
+
+/* ==========================================================================
+   HOME (components/dashboard/home) — the workspace's executive overview.
+   One reading line, from understanding to action: the greeting and the
+   latest briefing's sentence, four figures on one ledger, then the priority
+   (the focal point, the only surface touched with emerald) beside what waits
+   for the owner, then what Syxoria recommends and what it has done.
+   The briefing's language throughout: Spectral for what is said, the small
+   uppercase label, its status marks. Layout by container queries on the
+   main column.
+   ========================================================================== */
+.hm {
+  /* the briefing's reading tones: secondary lines read clearly on the dark */
+  --color-fg-2: #c8cbcd;
+  --color-fg-3: #a5a9ac;
+  display: grid;
+  gap: clamp(1.5rem, 3vh, 2.25rem);
+  max-width: 88rem;
+  margin-inline: auto;
+}
+
+/* ---------- Where things stand ---------- */
+.hm-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.25rem 2rem;
+  animation: bd-in 500ms var(--ease-out-soft) both;
+}
+
+.hm-title {
+  margin-top: 0.55rem;
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 1.5rem + 1.6vw, 2.75rem);
+  font-weight: 200;
+  line-height: 1.06;
+  letter-spacing: -0.025em;
+  color: var(--color-fg);
+}
+
+.hm-title__name {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 300;
+}
+
+.hm-lead {
+  margin-top: 0.5rem;
+  font-family: var(--font-display);
+  font-size: clamp(1.05rem, 0.95rem + 0.4vw, 1.25rem);
+  font-weight: 300;
+  line-height: 1.35;
+  color: var(--color-fg-2);
+  text-wrap: balance;
+}
+
+/* there is something new: said quietly, with the Core's emerald */
+.hm-news {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.85rem;
+  border-radius: 4px;
+  font-size: 13px;
+  color: var(--color-fg-2);
+  transition: color 200ms;
+}
+
+.hm-news:hover {
+  color: var(--color-fg);
+}
+
+.hm-news__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--emerald-bright);
+  box-shadow: 0 0 0 3px rgb(79 174 134 / 0.18);
+}
+
+/* ---------- Four figures on one ledger ---------- */
+.hm-figures {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border-block: 1px solid rgb(255 255 255 / 0.09);
+  animation: bd-in 500ms 80ms var(--ease-out-soft) both;
+}
+
+.hm-figure {
+  position: relative;
+  display: grid;
+  align-content: start;
+  gap: 0.2rem;
+  padding: 1.1rem 1.25rem 1.15rem;
+  transition: background-color 200ms;
+}
+
+.hm-figure:hover {
+  background: rgb(255 255 255 / 0.025);
+}
+
+.hm-figure:focus-visible {
+  outline: 2px solid var(--color-fg);
+  outline-offset: -2px;
+}
+
+/* the hairlines between the figures: two by two */
+.hm-figure:nth-child(even)::before,
+.hm-figure:nth-child(n + 3)::after {
+  content: "";
+  position: absolute;
+  background: rgb(255 255 255 / 0.09);
+}
+
+.hm-figure:nth-child(even)::before {
+  top: 1rem;
+  bottom: 1rem;
+  left: 0;
+  width: 1px;
+}
+
+.hm-figure:nth-child(n + 3)::after {
+  top: 0;
+  left: 1.25rem;
+  right: 1.25rem;
+  height: 1px;
+}
+
+.hm-figure__value {
+  margin-top: 0.35rem;
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 1.3rem + 0.9vw, 2.1rem);
+  font-weight: 300;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  color: var(--color-fg);
+}
+
+.hm-figure__caption {
+  font-size: 13px;
+  color: var(--color-fg-2);
+}
+
+.hm-figure__trend,
+.hm-figure__note {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: 0.35rem;
+  font-size: 12.5px;
+  line-height: 1.35;
+  color: var(--color-fg-3);
+}
+
+.hm-figure__trend[data-good] .bd-direction {
+  color: var(--emerald-bright);
+}
+
+.hm-figure__bar {
+  height: 3px;
+  margin-top: 0.5rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.1);
+}
+
+.hm-figure__bar > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--emerald-bright);
+}
+
+/* four in a row: a hairline before each but the first */
+@container (min-width: 56rem) {
+  .hm-figures {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .hm-figure:nth-child(n + 2)::before {
+    content: "";
+    position: absolute;
+    top: 1rem;
+    bottom: 1rem;
+    left: 0;
+    width: 1px;
+    background: rgb(255 255 255 / 0.09);
+  }
+
+  .hm-figure:nth-child(n + 3)::after {
+    display: none;
+  }
+}
+
+/* ---------- The grid below ---------- */
+.hm-grid {
+  display: grid;
+  gap: 1.25rem;
+  align-items: start;
+}
+
+/* one column: the panels in the brief's order for a small screen */
+.hm-col {
+  display: contents;
+}
+
+.hm-priority {
+  order: 1;
+}
+
+.hm-alerts {
+  order: 2;
+}
+
+.hm-recs {
+  order: 3;
+}
+
+.hm-approvals {
+  order: 4;
+}
+
+.hm-activity {
+  order: 5;
+}
+
+/* two columns, each running on its own: the priority and what Syxoria recommends on the left;
+   what waits, what deserves attention and what was done on the right */
+@container (min-width: 62rem) {
+  .hm-grid {
+    grid-template-columns: minmax(0, 1.65fr) minmax(20rem, 1fr);
+  }
+
+  .hm-col {
+    display: grid;
+    gap: 1.25rem;
+    align-content: start;
+    min-width: 0;
+  }
+
+  /* within a column, the order of the page */
+  .hm-col > * {
+    order: 0;
+  }
+}
+
+/* ---------- Today's priority: the focal point ---------- */
+.hm-priority {
+  position: relative;
+  padding: clamp(1.25rem, 1rem + 1vw, 2rem) clamp(1.25rem, 1rem + 1.2vw, 2.25rem);
+  border-radius: 20px;
+  background:
+    radial-gradient(120% 90% at 0% 0%, rgb(79 174 134 / 0.085), transparent 55%),
+    rgb(255 255 255 / 0.02);
+  box-shadow: inset 0 0 0 1px rgb(79 174 134 / 0.28), 0 30px 60px -40px rgb(0 0 0 / 0.9);
+  animation: bd-in 550ms 140ms var(--ease-out-soft) both;
+}
+
+.hm-priority__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.hm-priority__label,
+.hm-next__label {
+  color: var(--color-accent-strong);
+}
+
+.hm-severity {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 12.5px;
+  color: var(--color-fg-2);
+}
+
+.hm-severity:is([data-level="critical"], [data-level="high"]) {
+  color: var(--color-fg);
+}
+
+.hm-priority__title {
+  max-width: 26ch;
+  margin-top: 0.85rem;
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 1.25rem + 1.1vw, 2.25rem);
+  font-weight: 300;
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  color: var(--color-fg);
+  text-wrap: balance;
+}
+
+.hm-priority__why {
+  max-width: 54ch;
+  margin-top: 0.6rem;
+  font-size: 14.5px;
+  line-height: 1.5;
+  color: var(--color-fg-2);
+}
+
+.hm-priority__facts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 1.25rem;
+  margin-top: 0.85rem;
+  font-size: 13px;
+  color: var(--color-fg-2);
+}
+
+.hm-next {
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgb(255 255 255 / 0.09);
+}
+
+.hm-next__title {
+  margin-top: 0.5rem;
+  font-family: var(--font-display);
+  font-size: clamp(1.15rem, 1.05rem + 0.35vw, 1.35rem);
+  font-weight: 300;
+  line-height: 1.25;
+  color: var(--color-fg);
+}
+
+.hm-next__why {
+  margin-top: 0.3rem;
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--color-fg-2);
+}
+
+.hm-next__outcome {
+  margin-top: 0.55rem;
+  font-family: var(--font-serif);
+  font-size: 14px;
+  font-style: italic;
+  color: var(--color-fg-2);
+}
+
+.hm-next__outcome > span {
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  font-style: normal;
+  color: var(--color-fg-3);
+}
+
+.hm-priority__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+}
+
+/* ---------- Panels ---------- */
+.hm-panel {
+  min-width: 0;
+  padding: 1.05rem 1.25rem 1.15rem;
+  border-radius: 16px;
+  background: rgb(255 255 255 / 0.02);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1);
+  animation: bd-in 550ms 200ms var(--ease-out-soft) both;
+}
+
+.hm-panel__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.25rem 1rem;
+  margin-bottom: 0.6rem;
+}
+
+.hm-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  border-radius: 4px;
+  font-size: 12.5px;
+  color: var(--color-fg-2);
+  transition: color 200ms;
+}
+
+.hm-link:hover {
+  color: var(--color-fg);
+}
+
+.hm-muted {
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--color-fg-2);
+}
+
+.hm-foot {
+  margin-top: 0.6rem;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--color-fg-3);
+}
+
+/* what waits for the owner */
+.hm-count {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  font-size: 13.5px;
+  color: var(--color-fg-2);
+}
+
+.hm-count__n {
+  font-family: var(--font-display);
+  font-size: 2.4rem;
+  font-weight: 300;
+  line-height: 1;
+  color: var(--color-fg);
+}
+
+.hm-rows,
+.hm-signals,
+.hm-rec-list {
+  display: grid;
+}
+
+.hm-rows {
+  margin-top: 0.5rem;
+}
+
+.hm-rows > li + li,
+.hm-signals > li + li,
+.hm-rec-list > li + li {
+  border-top: 1px solid rgb(255 255 255 / 0.07);
+}
+
+.hm-row,
+.hm-signal,
+.hm-rec {
+  display: grid;
+  align-items: start;
+  width: calc(100% + 1rem);
+  margin-inline: -0.5rem;
+  padding: 0.65rem 0.5rem;
+  border-radius: 10px;
+  transition: background-color 200ms;
+}
+
+.hm-row:hover,
+.hm-signal:hover,
+.hm-rec:hover {
+  background: rgb(255 255 255 / 0.035);
+}
+
+:is(.hm-row, .hm-signal, .hm-rec, .hm-link, .hm-news):focus-visible {
+  outline: 2px solid var(--color-fg);
+  outline-offset: -2px;
+}
+
+.hm-row {
+  grid-template-columns: 1.6rem minmax(0, 1fr) auto;
+  column-gap: 0.75rem;
+}
+
+.hm-row__label {
+  display: block;
+  font-size: 11.5px;
+  color: var(--color-fg-3);
+}
+
+.hm-row__name {
+  display: block;
+  font-size: 13.5px;
+  line-height: 1.3;
+  color: var(--color-fg);
+}
+
+.hm-row__meta {
+  display: block;
+  margin-top: 0.1rem;
+  overflow: hidden;
+  font-size: 12px;
+  color: var(--color-fg-3);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hm-row__status {
+  color: var(--color-fg-2);
+}
+
+.hm-row[data-status="awaiting-approval"] .hm-row__status {
+  color: var(--color-fg);
+}
+
+.hm-row[data-status="unsuccessful"] .hm-row__status {
+  color: var(--color-negative);
+}
+
+.hm-review {
+  align-self: center;
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  font-size: 12px;
+  color: var(--color-accent-strong);
+  box-shadow: inset 0 0 0 1px var(--color-accent-line);
+}
+
+/* alerts and opportunities: each in its own mark, never by colour alone */
+.hm-signal {
+  grid-template-columns: 1.1rem minmax(0, 1fr) auto;
+  column-gap: 0.75rem;
+}
+
+.hm-signal__icon {
+  width: 1rem;
+  height: 1rem;
+  margin-top: 0.15rem;
+  color: var(--color-fg-2);
+}
+
+.hm-signal[data-kind="opportunity"] .hm-signal__icon {
+  color: var(--emerald-bright);
+}
+
+.hm-signal:is([data-kind="deadline"], [data-kind="decline"]) .hm-signal__icon {
+  color: var(--color-caution);
+}
+
+.hm-signal[data-kind="risk"] .hm-signal__icon {
+  color: var(--color-negative);
+}
+
+.hm-signal__kind {
+  display: block;
+  font-size: 11.5px;
+  color: var(--color-fg-3);
+}
+
+.hm-signal__title {
+  display: block;
+  margin-top: 0.05rem;
+  font-size: 13.5px;
+  line-height: 1.3;
+  color: var(--color-fg);
+}
+
+.hm-signal__detail {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--color-fg-2);
+}
+
+.hm-signal__stake {
+  font-size: 13px;
+  color: var(--color-fg);
+}
+
+/* recommended next */
+.hm-rec {
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: 1.25rem;
+  padding-block: 0.8rem;
+}
+
+.hm-rec__title {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 300;
+  line-height: 1.25;
+  color: var(--color-fg);
+}
+
+.hm-rec__why {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--color-fg-2);
+}
+
+.hm-rec__outcome {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 12.5px;
+  color: var(--color-fg-3);
+}
+
+.hm-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.2rem;
+  font-size: 12.5px;
+  color: var(--color-fg-2);
+  white-space: nowrap;
+}
+
+.hm-state[data-status="awaiting-approval"] {
+  color: var(--color-fg);
+}
+
+.hm-state:is([data-status="completed"], [data-status="sent"]) {
+  color: var(--color-accent-strong);
+}
+
+.hm-state[data-status="unsuccessful"] {
+  color: var(--color-negative);
+}
+
+.hm-activity .bd-changes__list {
+  margin-top: 0;
+}
+
+/* narrow: the status goes under the recommendation, the stakes stay in the words */
+@container (max-width: 30rem) {
+  .hm-rec {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .hm-signal__stake {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hm-head,
+  .hm-figures,
+  .hm-priority,
+  .hm-panel {
+    animation: none;
+  }
+}
+
+/* ==========================================================================
+   PLANNED AREA (components/dashboard/planned-area.tsx) — an area that arrives
+   in a later phase, in the home's language: what it will hold, where its
+   information already lives. Also the workspace's briefing page.
+   ========================================================================== */
+.pa-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 0.6rem;
+  border-radius: 50%;
+  vertical-align: 1px;
+  box-shadow: inset 0 0 0 1.25px var(--color-fg-3);
+}
+
+.pa-grid {
+  display: grid;
+  gap: 1.25rem;
+  align-items: start;
+}
+
+@container (min-width: 56rem) {
+  .pa-grid {
+    grid-template-columns: minmax(0, 1.6fr) minmax(18rem, 1fr);
+  }
+}
+
+.pa-holds {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.pa-holds > li {
+  display: grid;
+  grid-template-columns: 1rem minmax(0, 1fr);
+  gap: 0.65rem;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--color-fg-2);
+}
+
+.pa-holds svg {
+  margin-top: 0.2rem;
+  color: var(--color-fg-3);
+}
+
+.pa-links {
+  display: grid;
+  gap: 0.5rem;
+}
+
+/* sections of an area (Business Management) */
+.pa-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  width: max-content;
+  max-width: 100%;
+  padding: 3px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.03);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.13);
+}
+
+.pa-tabs a {
+  padding: 0.4rem 0.95rem;
+  border-radius: 999px;
+  font-size: 13px;
+  color: var(--color-fg-2);
+  transition: color 200ms, background-color 200ms;
+}
+
+.pa-tabs a:hover {
+  color: var(--color-fg);
+}
+
+.pa-tabs a[aria-current="page"] {
+  color: var(--color-fg);
+  background: rgb(255 255 255 / 0.085);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.16);
+}
+
+.pa-tabs a:focus-visible {
+  outline: 2px solid var(--color-fg);
+  outline-offset: 1px;
+}
+
+/* a read only preview of what already exists for the area */
+.pa-preview .hm-rows {
+  margin-top: 0;
+}
+
+.pa-group + .pa-group {
+  margin-top: 0.85rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid rgb(255 255 255 / 0.08);
+}
+
+.pa-group__title {
+  font-size: 12px;
+  color: var(--color-fg-3);
+}
+
+/* the briefing, inside the workspace: one screen under the top bar on a desktop, and a little of
+   the shell's side padding given back, so a 1440 screen with the sidebar open keeps the dial */
+@media (min-width: 1024px) {
+  .app-briefing {
+    margin-inline: -0.5rem;
+  }
+
+  /* the shell's bottom padding is given back too: the page is exactly one screen */
+  .app-briefing {
+    margin-bottom: -3rem;
+  }
+
+  .app-briefing .bd {
+    --bd-h: calc(100dvh - 4rem - 1px - 2rem - 1rem);
+  }
+}
+
+/* ==========================================================================
+   ASSISTANT (components/dashboard/assistant) — one quiet conversation:
+   the owner's words on the right in a soft pill, Syxoria's answers on the
+   left in Spectral, each tagged for what it is (a prepared sample, or not
+   connected yet), with where it comes from and the action it concerns.
+   ========================================================================== */
+.as {
+  max-width: 46rem;
+  gap: 1.5rem;
+}
+
+.as-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  animation: bd-in 500ms var(--ease-out-soft) both;
+}
+
+.as-core {
+  flex: none;
+  width: 2.75rem;
+  height: 2.75rem;
+  margin-top: 0.2rem;
+}
+
+.as-thread {
+  display: grid;
+  gap: 1.1rem;
+}
+
+.as-thread:empty {
+  display: none;
+}
+
+.as-you {
+  justify-self: end;
+  max-width: 80%;
+  padding: 0.6rem 0.95rem;
+  border-radius: 16px 16px 4px 16px;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--color-fg);
+  background: rgb(255 255 255 / 0.06);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1);
+  animation: bd-in 300ms var(--ease-out-soft) both;
+}
+
+.as-reply {
+  display: grid;
+  gap: 0.6rem;
+  padding-left: 1rem;
+  border-left: 1px solid rgb(79 174 134 / 0.45);
+  animation: bd-in 420ms var(--ease-out-soft) both;
+}
+
+.as-tag {
+  font-size: 11.5px;
+  color: var(--color-fg-3);
+}
+
+.as-text {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 300;
+  line-height: 1.45;
+  color: var(--color-fg);
+  text-wrap: pretty;
+}
+
+.as-action {
+  width: 100%;
+  margin-inline: 0;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1);
+}
+
+.as-refs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1.25rem;
+}
+
+.as-thinking {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 13px;
+  color: var(--color-fg-3);
+}
+
+.as-thinking > span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--emerald-bright);
+  animation: pulse-soft 1.2s var(--ease-in-out-soft) infinite;
+}
+
+.as-suggest {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.as-suggest ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.as-suggest button {
+  padding: 0.45rem 0.9rem;
+  border-radius: 999px;
+  font-size: 13px;
+  color: var(--color-fg-2);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.16);
+  transition: color 200ms, background-color 200ms, box-shadow 200ms;
+}
+
+.as-suggest button:hover:not(:disabled) {
+  color: var(--color-fg);
+  background: rgb(255 255 255 / 0.04);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.28);
+}
+
+.as-suggest button:focus-visible {
+  outline: 2px solid var(--color-fg);
+  outline-offset: 2px;
+}
+
+.as-form {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+  padding: 0.45rem 0.45rem 0.45rem 1rem;
+  border-radius: 18px;
+  background: rgb(255 255 255 / 0.03);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.14);
+  transition: box-shadow 200ms;
+}
+
+.as-form:focus-within {
+  box-shadow: inset 0 0 0 1px rgb(79 174 134 / 0.55), 0 0 0 4px rgb(79 174 134 / 0.08);
+}
+
+.as-form textarea {
+  flex: 1;
+  min-height: 2.25rem;
+  max-height: 10rem;
+  padding: 0.45rem 0;
+  resize: none;
+  field-sizing: content;
+  font-size: 14.5px;
+  line-height: 1.45;
+  color: var(--color-fg);
+  background: none;
+  outline: none;
+}
+
+.as-form textarea::placeholder {
+  color: var(--color-fg-3);
+}
+
+.as-form button {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  color: var(--color-canvas);
+  background: var(--color-fg);
+  transition: opacity 200ms;
+}
+
+.as-form button:disabled {
+  opacity: 0.4;
+}
+
+.as-form button:focus-visible {
+  outline: 2px solid var(--color-fg);
+  outline-offset: 2px;
+}
+
+.as-note {
+  margin-top: -0.75rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .as-head,
+  .as-you,
+  .as-reply,
+  .as-thinking > span {
     animation: none;
   }
 }

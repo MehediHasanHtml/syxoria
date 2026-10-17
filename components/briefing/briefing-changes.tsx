@@ -142,8 +142,12 @@ export function BriefingChanges({
   );
 }
 
-/** Updates on one thin thread, newest first: the mark, the line and its time, then the status and a few words */
-function Timeline({ changes, actions, onSelect }: { changes: BriefingChange[]; actions: BriefingActionItem[]; onSelect: (d: BriefingDimension) => void }) {
+/**
+ * Updates on one thin thread, newest first: the mark, the line and its time, then the status and a
+ * few words. With `onSelect`, a line about a step of the reasoning selects it; without (the
+ * workspace home), the lines are read only.
+ */
+export function Timeline({ changes, actions, onSelect }: { changes: BriefingChange[]; actions: BriefingActionItem[]; onSelect?: (d: BriefingDimension) => void }) {
   const statusOf = (c: BriefingChange): { word: string; mark: ReactNode; tone: string } => {
     const action = c.actionId ? actions.find((a) => a.id === c.actionId) : undefined;
     return action
@@ -174,7 +178,7 @@ function Timeline({ changes, actions, onSelect }: { changes: BriefingChange[]; a
         );
         return (
           <li key={c.id} className="bd-changes__item" style={{ animationDelay: `${i * 70}ms` }}>
-            {c.dimension ? (
+            {c.dimension && onSelect ? (
               <button
                 type="button"
                 className="bd-change"

@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Hanken_Grotesk, Instrument_Serif, Schibsted_Grotesk,
 import { siteConfig } from "@/lib/site-config";
 import { THEME_SCRIPT } from "@/lib/theme";
 import "./globals.css";
+import "./styles/executive.css";
 
 // The brand's type (see "Typography" in globals.css): Spectral for headlines and their italic
 // accent, Schibsted Grotesk for text and labels

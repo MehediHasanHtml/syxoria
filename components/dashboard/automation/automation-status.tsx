@@ -12,7 +12,7 @@ import { cn } from "@/lib/cn";
 import { useAutomation } from "./automation-provider";
 
 /** The pages where the Core is on stage: the bar gives it up there, as in the onboarding */
-const CORE_ON_STAGE = (path: string) => path === "/app" || path.startsWith("/app/assistant");
+const CORE_ON_STAGE = (path: string) => path === "/app" || path.startsWith("/app/assistant") || path.startsWith("/concept/overview/living");
 
 /**
  * The top bar's word on Syxoria: the Core and what it is doing (Active · Suspended · 2 paused).
@@ -136,35 +136,6 @@ export function AutomationControl() {
         </div>
       </div>
     </div>
-  );
-}
-
-/**
- * The kill switch's discreet shortcut at the foot of the navigation: one quiet line, never a red
- * block. It suspends (with the same confirmation as everywhere) or, while suspended, opens the
- * review before resuming.
- */
-export function KillSwitchShortcut({ collapsed }: { collapsed?: boolean }) {
-  const { state, requestSuspend, requestResume } = useAutomation();
-  const all = globalHold(state);
-  return (
-    <button
-      type="button"
-      onClick={() => (all ? requestResume(all) : requestSuspend())}
-      className="ks"
-      data-held={all ? "" : undefined}
-      data-collapsed={collapsed || undefined}
-      aria-label={all ? `${copy.status.suspended}. ${copy.panel.review}` : `Kill switch: ${copy.panel.suspend}`}
-      title={collapsed ? (all ? copy.panel.review : copy.panel.suspend) : undefined}
-    >
-      <span aria-hidden="true" className="ks__dot" />
-      {!collapsed && (
-        <span className="min-w-0 text-left">
-          <span className="ks__title">{all ? "Execution suspended" : "Kill switch"}</span>
-          <span className="ks__sub">{all ? copy.panel.review : "Suspend autonomous execution"}</span>
-        </span>
-      )}
-    </button>
   );
 }
 

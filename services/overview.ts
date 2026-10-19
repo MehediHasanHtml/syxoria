@@ -2,6 +2,7 @@ import { mockIndicators, mockRecommendations, mockSignals, WORKSPACE_NOW } from 
 import type { AutonomyLevel, HomeOverview } from "@/types";
 import { clone } from "./_client";
 import { getDailyBriefings } from "./briefings";
+import { getWorkspaceActions } from "./workspace";
 
 /**
  * TODO(api): GET /overview — the workspace home: the latest briefing, the business indicators,
@@ -21,8 +22,11 @@ export async function getHomeOverview(level: AutonomyLevel = "autonomous"): Prom
   });
 }
 
-/** TODO(api): GET /actions?status=awaiting-approval&count — what waits for the owner, beside Actions & Approvals */
+/**
+ * TODO(api): GET /actions?status=awaiting-approval&count — what waits for the owner, beside Actions &
+ * Approvals: every action awaiting approval, the same count as the Actions page and the overview
+ */
 export async function getPendingApprovals(): Promise<number> {
-  const set = await getDailyBriefings();
-  return set.briefings[set.briefings.length - 1].actions.filter((a) => a.status === "awaiting-approval").length;
+  const actions = await getWorkspaceActions();
+  return actions.filter((a) => a.status === "awaiting-approval").length;
 }

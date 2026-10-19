@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
-import { HomeView } from "@/components/dashboard/home/home-overview";
-import { getHomeOverview } from "@/services/overview";
-import { getCalendar, getWorkspaceActions } from "@/services/workspace";
+import { loadOverview } from "@/components/dashboard/overview/data";
+import { ExecutiveOverview } from "@/components/dashboard/overview/executive-overview";
 
-export const metadata: Metadata = { title: "Home" };
+export const metadata: Metadata = { title: "Overview" };
 
-export default async function HomePage() {
-  const [data, events, workspaceActions] = await Promise.all([getHomeOverview(), getCalendar(), getWorkspaceActions()]);
-  return <HomeView data={data} events={events} workspaceActions={workspaceActions} />;
+/**
+ * The Executive Overview, the workspace's first page.
+ *   ?briefing=b_morning · b_midday · b_evening   open on one of the day's briefings (the latest by default)
+ */
+export default async function OverviewPage({ searchParams }: PageProps<"/app">) {
+  const [{ briefing }, data] = await Promise.all([searchParams, loadOverview()]);
+  return <ExecutiveOverview data={data} initial={typeof briefing === "string" ? briefing : undefined} />;
 }

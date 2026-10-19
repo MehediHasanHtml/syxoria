@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Bell, CircleAlert, CheckCheck, Hand, LogOut, Mail, Menu as MenuIcon, Plug, ScrollText, Settings, UserRound, type LucideIcon } from "lucide-react";
+import { Bell, CircleAlert, CheckCheck, Hand, LogOut, Mail, Plug, ScrollText, Settings, UserRound, type LucideIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Avatar } from "@/components/ui/avatar";
 import { Menu } from "@/components/ui/menu";
@@ -9,70 +9,32 @@ import { cn } from "@/lib/cn";
 import { formatRelative } from "@/lib/format";
 import { WORKSPACE_NOW } from "@/lib/mock-data/overview";
 import type { Notification, User } from "@/types";
-import type { CalendarEvent, NotificationKind, SearchItem } from "@/types/workspace";
-import { AutomationControl } from "./automation/automation-status";
-import { AgendaMenu } from "./global/agenda-menu";
-import { CommandSearch } from "./global/command-search";
+import type { NotificationKind } from "@/types/workspace";
 
 const NOW = new Date(WORKSPACE_NOW);
 
-/**
- * The top bar, the same on every page: global search and the assistant (Ctrl K), Syxoria's status
- * and the kill switch's shortcut, the agenda, notifications and the account.
- */
-export function Topbar({ user, notifications, searchIndex, events, onOpenMenu }: { user: User; notifications: Notification[]; searchIndex: SearchItem[]; events: CalendarEvent[]; onOpenMenu: () => void }) {
+/** The account: who is signed in, their profile and settings, signing out */
+export function AccountMenu({ user }: { user: User }) {
   return (
-    <header className="sticky top-0 z-(--z-sticky) border-b border-line bg-canvas/85 backdrop-blur-xl">
-      <div className="flex h-16 items-center gap-3 px-4 sm:px-6 lg:px-10">
-        <button
-          type="button"
-          onClick={onOpenMenu}
-          aria-label="Open navigation"
-          className="-ml-1.5 grid size-9 place-items-center rounded-md text-fg-2 hover:bg-white/5 hover:text-fg lg:hidden"
-        >
-          <MenuIcon className="size-5" aria-hidden="true" />
+    <Menu
+      header={
+        <div className="border-b border-line px-2.5 pb-2.5 pt-1.5">
+          <p className="text-[13px] font-medium text-fg">{user.name}</p>
+          <p className="truncate text-xs text-fg-3">{user.email}</p>
+        </div>
+      }
+      items={[
+        { label: "Profile", href: "/app/settings?tab=account", icon: <UserRound aria-hidden="true" /> },
+        { label: "Settings & Autonomy", href: "/app/settings", icon: <Settings aria-hidden="true" /> },
+        { type: "separator" },
+        { label: "Sign out", href: "/login", icon: <LogOut aria-hidden="true" /> },
+      ]}
+      trigger={(props) => (
+        <button type="button" {...props} aria-label="Account menu" className="sx-account">
+          <Avatar initials={user.initials} name={user.name} size="sm" />
         </button>
-
-        <div className="min-w-0 max-w-md flex-1">
-          <CommandSearch index={searchIndex} />
-        </div>
-
-        <div className="ml-auto flex items-center gap-1.5">
-          {/* the same Core as everywhere, with what it is doing: the kill switch's shortcut */}
-          <AutomationControl />
-          <AgendaMenu events={events} />
-          <NotificationsMenu notifications={notifications} />
-          <Menu
-            header={
-              <div className="border-b border-line px-2.5 pb-2.5 pt-1.5">
-                <p className="text-[13px] font-medium text-fg">{user.name}</p>
-                <p className="truncate text-xs text-fg-3">{user.email}</p>
-              </div>
-            }
-            items={[
-              { label: "Profile", href: "/app/settings?tab=account", icon: <UserRound aria-hidden="true" /> },
-              { label: "Settings & Autonomy", href: "/app/settings", icon: <Settings aria-hidden="true" /> },
-              { type: "separator" },
-              { label: "Sign out", href: "/login", icon: <LogOut aria-hidden="true" /> },
-            ]}
-            trigger={(props) => (
-              <button
-                type="button"
-                {...props}
-                aria-label="Account menu"
-                className="flex items-center gap-2 rounded-md p-1 transition-colors hover:bg-white/5 sm:pr-2.5"
-              >
-                <Avatar initials={user.initials} name={user.name} size="sm" />
-                <span className="hidden text-left sm:block">
-                  <span className="block text-[13px] leading-tight text-fg">{user.name.split(" ")[0]}</span>
-                  <span className="block text-[11px] capitalize leading-tight text-fg-3">{user.role}</span>
-                </span>
-              </button>
-            )}
-          />
-        </div>
-      </div>
-    </header>
+      )}
+    />
   );
 }
 
@@ -85,7 +47,7 @@ const FILTERS: { id: "all" | "you" | "reply" | "done"; label: string; kinds: Not
 ];
 
 /** Smart notifications: what is urgent, waits for approval, came back from a client, was done, or needs a connection fixed */
-function NotificationsMenu({ notifications }: { notifications: Notification[] }) {
+export function NotificationsMenu({ notifications }: { notifications: Notification[] }) {
   const [items, setItems] = useState(notifications);
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState<(typeof FILTERS)[number]["id"]>("all");

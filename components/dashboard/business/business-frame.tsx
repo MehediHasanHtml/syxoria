@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, type KeyboardEvent } from "react";
 import { WsHead } from "@/components/dashboard/ws/kit";
@@ -28,8 +27,8 @@ export function usePeriod(initial: PeriodId) {
 }
 
 /**
- * Business Management's one frame: the four categories as quiet secondary navigation under the
- * heading, and the reporting period beside it. Each category keeps its own interface below.
+ * Business Management's one frame: the heading and the reporting period beside it. The categories
+ * are the space's pages, in the line under the bar (lib/app-nav.ts). Each keeps its own interface.
  */
 export function BusinessHeader({ section, periods, period, onPeriod }: { section: BusinessSection; periods: Period[]; period: PeriodId; onPeriod: (p: PeriodId) => void }) {
   const current = SECTIONS.find((s) => s.id === section) ?? SECTIONS[0];
@@ -43,32 +42,23 @@ export function BusinessHeader({ section, periods, period, onPeriod }: { section
     document.getElementById(`period-${next.id}`)?.focus();
   };
   return (
-    <>
-      <WsHead eyebrow="Business Management" title={current.label} lead={current.lead}>
-        <div role="radiogroup" aria-label="Reporting period" className="ws-seg" onKeyDown={onKey}>
-          {periods.map((p) => (
-            <button
-              key={p.id}
-              id={`period-${p.id}`}
-              type="button"
-              role="radio"
-              aria-checked={p.id === period}
-              tabIndex={p.id === period ? 0 : -1}
-              onClick={() => onPeriod(p.id)}
-              className="ws-seg__item"
-            >
-              {p.label}
-            </button>
-          ))}
-        </div>
-      </WsHead>
-      <nav aria-label="Business Management" className="ws-subnav">
-        {SECTIONS.map((s) => (
-          <Link key={s.id} href={`/app/business/${s.id}?period=${period}`} aria-current={s.id === section ? "page" : undefined}>
-            {s.label}
-          </Link>
+    <WsHead eyebrow="Business Management" title={current.label} lead={current.lead}>
+      <div role="radiogroup" aria-label="Reporting period" className="ws-seg" onKeyDown={onKey}>
+        {periods.map((p) => (
+          <button
+            key={p.id}
+            id={`period-${p.id}`}
+            type="button"
+            role="radio"
+            aria-checked={p.id === period}
+            tabIndex={p.id === period ? 0 : -1}
+            onClick={() => onPeriod(p.id)}
+            className="ws-seg__item"
+          >
+            {p.label}
+          </button>
         ))}
-      </nav>
-    </>
+      </div>
+    </WsHead>
   );
 }

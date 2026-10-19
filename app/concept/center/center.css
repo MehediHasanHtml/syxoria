@@ -1,0 +1,871 @@
+/* ==========================================================================
+   CENTRE EXPLORATIONS (/concept/center): three directions for the overview's centre.
+   .ce-lab the switcher · .ce-sculpt the sculptural Brain · .ce-sample the abstract Core ·
+   .ce-dc the decision centre. Colour keeps its meaning: terracotta is what went wrong or needs
+   the owner, emerald is what Syxoria does or waits to do, white is what is.
+   ========================================================================== */
+
+.ce {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  width: 100%;
+  min-height: 0;
+}
+
+/* ---------- The switcher: one thin strip above the bar ---------- */
+
+/* the strip takes its height from the screen, so the overview under it still fits one screen */
+body:has(.ce-lab) {
+  padding-top: 2.4rem;
+}
+
+body:has(.ce-lab) .sx {
+  --sx-top: calc(var(--sx-bar) + 2.4rem);
+  min-height: calc(100dvh - 2.4rem);
+}
+
+body:has(.ce-lab) .sx .sx-bar {
+  top: 2.4rem;
+}
+
+.ce-lab {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  height: 2.4rem;
+  padding: 0 clamp(1rem, 2.6vw, 2.5rem);
+  overflow-x: auto;
+  white-space: nowrap;
+  font-size: 12px;
+  color: var(--color-fg-2);
+  background: #0d0f10;
+  border-bottom: 1px solid rgb(255 255 255 / 0.08);
+  scrollbar-width: none;
+}
+
+.ce-lab__label {
+  font-size: 9.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-fg-3);
+}
+
+.ce-lab__title {
+  margin-right: 0.75rem;
+  color: var(--color-fg-2);
+}
+
+.ce-lab__seg + .ce-lab__label {
+  margin-left: 0.75rem;
+}
+
+.ce-lab__seg {
+  display: flex;
+}
+
+.ce-lab__seg button {
+  position: relative;
+  padding: 0.3rem 0.6rem;
+  color: var(--color-fg-3);
+  white-space: nowrap;
+  transition: color 200ms, background-color 200ms;
+}
+
+.ce-lab__seg button:hover {
+  color: var(--color-fg);
+}
+
+.ce-lab__seg button[aria-checked="true"] {
+  color: var(--color-fg);
+  background: rgb(255 255 255 / 0.07);
+}
+
+.ce-lab__seg button:focus-visible {
+  outline: 2px solid var(--color-fg);
+  outline-offset: -2px;
+}
+
+.ce-lab__seg button[data-state]::before {
+  content: "";
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  margin-right: 0.4rem;
+  vertical-align: 0.1em;
+  border-radius: 50%;
+  background: var(--color-fg-3);
+}
+
+.ce-lab__seg button[data-state="anomaly"]::before {
+  background: var(--color-negative);
+}
+
+.ce-lab__seg button[data-state="approval"]::before {
+  box-shadow: inset 0 0 0 1.5px var(--color-accent-strong);
+  background: none;
+}
+
+.ce-lab__seg button[data-state="done"]::before {
+  background: var(--color-accent-strong);
+}
+
+.ce-lab__line {
+  min-width: 0;
+  margin-left: auto;
+  padding-left: 1.5rem;
+  overflow: hidden;
+  font-size: 11.5px;
+  color: var(--color-fg-3);
+  text-overflow: ellipsis;
+}
+
+/* ---------- Shared: the moment, told ---------- */
+
+.ce-kicker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.5rem;
+  font-size: 10.5px;
+  letter-spacing: 0.17em;
+  text-transform: uppercase;
+  color: var(--color-fg-3);
+}
+
+.ce-kicker > span + span::before {
+  content: "·";
+  margin-right: 0.5rem;
+  color: var(--color-fg-3);
+}
+
+.ce-kicker__verb {
+  color: var(--color-fg-2);
+}
+
+.ce-kicker[data-verb="detect"] .ce-kicker__verb {
+  color: var(--color-negative);
+}
+
+.ce-kicker:is([data-verb="recommend"], [data-verb="execute"]) .ce-kicker__verb {
+  color: var(--color-accent-strong);
+}
+
+.ce-next {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.25rem;
+  margin-top: 1.1rem;
+}
+
+.ce-next__line {
+  flex: 1 1 16rem;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--color-fg-2);
+}
+
+.ce-caption {
+  display: grid;
+  justify-items: center;
+  max-width: 30rem;
+  text-align: center;
+  animation: cx-rise 500ms var(--ease-out-soft) both;
+}
+
+.ce-caption__headline {
+  margin-top: 0.55rem;
+  font-family: var(--cx-serif);
+  font-size: clamp(1.35rem, 1rem + 0.8vw, 1.75rem);
+  font-weight: 300;
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+}
+
+.ce-caption__stake {
+  margin-top: 0.35rem;
+  font-size: 12.5px;
+  color: var(--color-fg-3);
+}
+
+.ce-caption__stake strong {
+  font-weight: 500;
+  color: var(--color-fg);
+}
+
+.ce-caption .ce-next {
+  justify-content: center;
+  margin-top: 0.75rem;
+}
+
+.ce-caption .ce-next__line {
+  flex-basis: 100%;
+  font-size: 12.5px;
+}
+
+/* ---------- Direction one: the sculptural Brain ---------- */
+
+.ce-sculpt,
+.ce-sample {
+  display: grid;
+  flex: 1;
+  grid-template-rows: minmax(0, 1fr) auto;
+  justify-items: center;
+  gap: 0.75rem;
+  min-height: 0;
+}
+
+.ce-sculpt__stage {
+  position: relative;
+  display: grid;
+  place-items: center;
+  height: 100%;
+  max-width: 100%;
+  aspect-ratio: 1;
+  perspective: 900px;
+}
+
+.ce-sculpt__object {
+  position: relative;
+  width: 74%;
+  aspect-ratio: 1;
+  transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  transition: transform 700ms var(--ease-out-soft);
+}
+
+/* the same Core, as anthracite: no colour of its own, lit by what happens */
+.ce-sculpt__core {
+  width: 100%;
+  height: 100%;
+  filter: grayscale(1) brightness(1.15) contrast(1.12);
+}
+
+.ce-sculpt__object > span {
+  position: absolute;
+  pointer-events: none;
+}
+
+/* the gallery light, from the upper left, following the pointer */
+.ce-sculpt__light {
+  inset: 12% 14%;
+  border-radius: 46%;
+  background: radial-gradient(circle at var(--lx, 30%) var(--ly, 22%), rgb(255 255 255 / 0.6), transparent 58%);
+  mix-blend-mode: overlay;
+}
+
+/* an anomaly: a warm slit of light on the side that holds it */
+.ce-sculpt__flare {
+  inset: 18% 50% 16% 12%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at 40% 55%, rgb(217 138 124 / 0.95), transparent 70%);
+  mix-blend-mode: overlay;
+  opacity: 0;
+  transition: opacity 900ms var(--ease-out-soft);
+}
+
+.ce-sculpt[data-state="anomaly"] .ce-sculpt__flare {
+  opacity: 1;
+}
+
+/* a decision: the seam between the halves lit, waiting */
+.ce-sculpt__seam {
+  left: 50%;
+  top: 16%;
+  bottom: 14%;
+  width: 2px;
+  translate: -50% 0;
+  background: linear-gradient(transparent, var(--color-accent-strong) 25%, var(--color-accent-strong) 75%, transparent);
+  box-shadow: 0 0 22px 3px rgb(79 174 134 / 0.45);
+  opacity: 0;
+  transition: opacity 900ms var(--ease-out-soft);
+}
+
+.ce-sculpt[data-state="approval"] .ce-sculpt__seam {
+  opacity: 0.9;
+}
+
+/* done: one emerald breath, then calm */
+.ce-sculpt__breath {
+  inset: 6%;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px var(--color-accent-strong), 0 0 40px 4px rgb(79 174 134 / 0.25);
+  opacity: 0;
+}
+
+.ce-sculpt[data-state="done"] .ce-sculpt__breath {
+  animation: ce-breath 2.2s var(--ease-out-soft) both;
+}
+
+.ce-sculpt__plinth {
+  position: absolute;
+  bottom: 9%;
+  left: 50%;
+  width: 46%;
+  height: 6%;
+  translate: -50% 0;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgb(0 0 0 / 0.75), transparent);
+  box-shadow: inset 0 -1px 0 rgb(255 255 255 / 0.06);
+}
+
+.ce-sculpt[data-state="done"] .ce-sculpt__plinth {
+  background: radial-gradient(closest-side, rgb(79 174 134 / 0.22), rgb(0 0 0 / 0.6) 60%, transparent);
+}
+
+.ce-sculpt__note {
+  position: absolute;
+  top: 32%;
+  left: 2%;
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-fg-3);
+  animation: cx-rise 600ms 300ms var(--ease-out-soft) both;
+}
+
+.ce-sculpt__note span {
+  color: var(--color-negative);
+}
+
+.ce-sculpt__note::after {
+  content: "";
+  display: block;
+  width: 4.5rem;
+  height: 1px;
+  margin-top: 0.45rem;
+  margin-left: 2.5rem;
+  background: linear-gradient(to right, var(--cx-hair-2), transparent);
+}
+
+.ce-sculpt[data-state="approval"] .ce-sculpt__note {
+  top: 4%;
+  left: 50%;
+  translate: -50% 0;
+  text-align: center;
+}
+
+.ce-sculpt[data-state="approval"] .ce-sculpt__note::after {
+  width: 1px;
+  height: 1.5rem;
+  margin: 0.45rem auto 0;
+  background: linear-gradient(var(--color-accent-line), transparent);
+}
+
+.ce-sculpt:is([data-state="approval"], [data-state="done"]) .ce-sculpt__note span {
+  color: var(--color-accent-strong);
+}
+
+.ce-sculpt[data-state="done"] .ce-sculpt__note {
+  left: auto;
+  right: 2%;
+  text-align: right;
+}
+
+.ce-sculpt[data-state="done"] .ce-sculpt__note::after {
+  margin-left: auto;
+  margin-right: 2.5rem;
+  background: linear-gradient(to left, var(--cx-hair-2), transparent);
+}
+
+@keyframes ce-breath {
+  0% {
+    opacity: 0;
+    transform: scale(0.82);
+  }
+  35% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.18);
+  }
+}
+
+/* ---------- Direction two: the abstract Core ---------- */
+
+.ce-sample__stage {
+  position: relative;
+  height: 100%;
+  max-width: 100%;
+  aspect-ratio: 200 / 364;
+}
+
+.ce-sample__svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.ce-layer {
+  transition: transform 900ms var(--ease-out-soft);
+}
+
+.ce-layer__body[data-i="0"] {
+  fill: #2b2e32;
+}
+
+.ce-layer__body[data-i="1"] {
+  fill: #383c41;
+}
+
+.ce-layer__grain {
+  fill: none;
+  stroke: rgb(255 255 255 / 0.07);
+  stroke-width: 0.6;
+}
+
+.ce-layer__edge {
+  fill: none;
+  stroke: rgb(255 255 255 / 0.22);
+  stroke-width: 0.7;
+}
+
+.ce-sample[data-state="anomaly"] .ce-layer[data-here] .ce-layer__body {
+  fill: #3d2f2c;
+}
+
+.ce-sample__seam {
+  stroke: var(--color-accent);
+  stroke-width: 1;
+  opacity: 0.35;
+  transition: opacity 600ms;
+}
+
+.ce-sample__travel {
+  stroke-width: 1.6;
+  stroke-dasharray: 70 420;
+  animation: ce-travel 7s linear infinite;
+}
+
+.ce-sample[data-state="anomaly"] .ce-sample__seam {
+  opacity: 0.15;
+}
+
+.ce-sample[data-state="anomaly"] .ce-sample__travel,
+.ce-sample[data-state="approval"] .ce-sample__travel {
+  display: none;
+}
+
+.ce-sample[data-state="approval"] .ce-sample__seam {
+  opacity: 0.6;
+}
+
+.ce-sample[data-state="done"] .ce-sample__seam {
+  stroke: var(--color-accent-strong);
+  opacity: 1;
+  stroke-width: 1.4;
+  stroke-dasharray: 340;
+  animation: ce-draw 1.6s var(--ease-out-soft) both;
+}
+
+.ce-sample[data-state="done"] .ce-sample__travel {
+  display: none;
+}
+
+.ce-sample__fault {
+  stroke: var(--color-negative);
+  stroke-width: 1.3;
+  animation: cx-fade 700ms 500ms both;
+}
+
+.ce-sample__gap {
+  stroke: var(--color-accent-strong);
+  stroke-width: 1.4;
+  filter: drop-shadow(0 0 6px rgb(79 174 134 / 0.7));
+  animation: cx-fade 700ms 500ms both;
+}
+
+.ce-sample__labels li {
+  position: absolute;
+  top: var(--y);
+  left: 80%;
+  translate: 0 -50%;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--color-fg-3);
+  transition: color 400ms;
+}
+
+.ce-sample__labels li[data-here] {
+  color: var(--color-fg);
+}
+
+.ce-sample__labels li[data-here][data-state="anomaly"] {
+  color: var(--color-negative);
+}
+
+.ce-sample__labels li[data-here]:is([data-state="approval"], [data-state="done"]) {
+  color: var(--color-accent-strong);
+}
+
+@keyframes ce-travel {
+  from {
+    stroke-dashoffset: 490;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes ce-draw {
+  from {
+    stroke-dashoffset: 340;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* ---------- Direction three: the decision centre ---------- */
+
+.ce-dc {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 1rem;
+  width: min(100%, 36rem);
+  min-height: 0;
+  margin: 0 auto;
+}
+
+.ce-dc__moment {
+  animation: cx-rise 500ms var(--ease-out-soft) both;
+}
+
+.ce-dc__head {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.ce-mark {
+  flex: none;
+  width: 13px;
+  height: 26px;
+}
+
+.ce-mark rect {
+  fill: #2c2f33;
+  transition: fill 500ms, x 500ms;
+}
+
+.ce-mark line {
+  stroke: var(--color-accent);
+  stroke-width: 1;
+  opacity: 0.6;
+}
+
+.ce-mark[data-state="anomaly"] rect[data-here] {
+  fill: var(--color-negative);
+}
+
+.ce-mark:is([data-state="approval"], [data-state="done"]) rect[data-here] {
+  fill: var(--color-accent-strong);
+}
+
+.ce-dc__headline {
+  margin-top: 0.7rem;
+  font-family: var(--cx-serif);
+  font-size: clamp(1.6rem, 0.9rem + 1.3vw, 2.2rem);
+  font-weight: 300;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+.ce-dc__detail {
+  margin-top: 0.6rem;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--color-fg-2);
+}
+
+.ce-watch {
+  margin-top: 1.1rem;
+}
+
+.ce-watch li {
+  display: grid;
+  grid-template-columns: 6.5rem minmax(0, 1fr);
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--color-fg-2);
+  border-top: 1px solid var(--cx-hair);
+}
+
+.ce-watch__area {
+  padding-top: 0.15rem;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-fg-3);
+}
+
+.ce-dc__grid {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 1.5rem;
+  align-items: start;
+  margin-top: 1.1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--cx-hair);
+}
+
+.ce-dc__stake strong {
+  display: block;
+  font-family: var(--cx-serif);
+  font-size: 2.3rem;
+  font-weight: 300;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.ce-dc__stake span {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 12px;
+  color: var(--color-fg-3);
+}
+
+.ce-dc__evidence {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--color-fg-2);
+}
+
+.ce-dc__evidence li {
+  position: relative;
+  padding-left: 1rem;
+}
+
+.ce-dc__evidence li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.6em;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--color-fg-3);
+}
+
+.ce-dc[data-state="done"] .ce-dc__evidence li::before {
+  display: none;
+}
+
+.ce-dc__evidence svg {
+  position: absolute;
+  left: -0.15rem;
+  top: 0.2em;
+  width: 13px;
+  height: 13px;
+  color: var(--color-accent-strong);
+}
+
+.ce-dc__draft {
+  margin-top: 0.9rem;
+  padding: 0.65rem 0.9rem;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--color-fg-2);
+  border-left: 1px solid var(--color-accent-line);
+  background: rgb(255 255 255 / 0.025);
+}
+
+.ce-dc__draft-to {
+  font-size: 11.5px;
+  color: var(--color-fg-3);
+}
+
+.ce-dc__draft-subject {
+  margin: 0.15rem 0 0.35rem;
+  color: var(--color-fg);
+}
+
+.ce-dc__foot {
+  display: grid;
+  gap: 0.85rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--cx-hair);
+}
+
+.ce-verbs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.ce-verbs li {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  font-size: 11.5px;
+  color: var(--color-fg-3);
+}
+
+.ce-verbs strong {
+  font-family: var(--cx-serif);
+  font-size: 1.3rem;
+  font-weight: 300;
+  color: var(--color-fg-2);
+}
+
+.ce-verbs li[data-on] span {
+  color: var(--color-fg);
+}
+
+.ce-verbs li[data-on][data-verb="detect"] strong {
+  color: var(--color-negative);
+}
+
+.ce-verbs li[data-on]:is([data-verb="recommend"], [data-verb="execute"]) strong {
+  color: var(--color-accent-strong);
+}
+
+.ce-verbs li[data-on][data-verb="understand"] strong {
+  color: var(--color-fg);
+}
+
+.ce-day__line {
+  position: relative;
+  height: 16px;
+}
+
+.ce-day__line::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: var(--cx-hair-2);
+}
+
+.ce-day__line li {
+  position: absolute;
+  top: 50%;
+  left: var(--at);
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  translate: -50% -50%;
+  background: var(--color-canvas);
+  box-shadow: inset 0 0 0 1px var(--color-fg-3);
+  transition: transform 400ms var(--ease-out-soft);
+}
+
+.ce-day__line li[data-verb="detect"] {
+  background: var(--color-fg-2);
+  box-shadow: none;
+}
+
+.ce-day__line li[data-verb="recommend"] {
+  box-shadow: inset 0 0 0 1.5px var(--color-accent-strong);
+}
+
+.ce-day__line li[data-verb="execute"] {
+  background: var(--color-accent);
+  box-shadow: none;
+}
+
+.ce-day__line li[data-on] {
+  transform: scale(1.7);
+  box-shadow: 0 0 0 3px rgb(255 255 255 / 0.06);
+}
+
+.ce-day__line li[data-on][data-verb="detect"] {
+  background: var(--color-negative);
+}
+
+.ce-day__ends {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 11.5px;
+  color: var(--color-fg-3);
+}
+
+.ce-day__on {
+  overflow: hidden;
+  color: var(--color-fg-2);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ce-day__on--quiet {
+  color: var(--color-fg-3);
+}
+
+/* ---------- Placement in the overview ---------- */
+
+@media (min-width: 1024px) and (min-height: 600px) {
+  .ce {
+    padding-top: 0.5rem;
+  }
+}
+
+/* short desktop screens: the decision centre keeps its head, its figure and its next step */
+@media (min-width: 1024px) and (max-height: 940px) {
+  .ce-dc__draft > p:last-child,
+  .ce-dc__draft-to {
+    display: none;
+  }
+
+  .ce-dc__detail {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .ce-dc__grid {
+    margin-top: 0.8rem;
+    padding-top: 0.8rem;
+  }
+
+  .ce-watch li {
+    padding: 0.4rem 0;
+  }
+}
+
+@media (max-width: 1023px) {
+  .ce-lab__line {
+    display: none;
+  }
+
+  .ce-sculpt__stage,
+  .ce-sample__stage {
+    height: 20rem;
+  }
+
+  .ce-dc {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ce-caption,
+  .ce-dc__moment,
+  .ce-sculpt__note,
+  .ce-sample__travel,
+  .ce-sample__fault,
+  .ce-sample__gap {
+    animation: none;
+  }
+
+  .ce-sculpt[data-state="done"] .ce-sculpt__breath,
+  .ce-sample[data-state="done"] .ce-sample__seam {
+    animation: none;
+  }
+}

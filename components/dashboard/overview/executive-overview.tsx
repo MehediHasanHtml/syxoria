@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, type CSSProperties } from "react";
+import { useState, type CSSProperties, type ReactNode } from "react";
 import { ArrowRight, ArrowUp, ArrowUpRight, Sun, Sunrise, Sunset, X, type LucideIcon } from "lucide-react";
 import { SyxoriaCore } from "@/components/brand/syxoria-core";
 import { SeverityMark, StatusIcon } from "@/components/briefing/marks";
@@ -46,7 +46,19 @@ const ANGLE: Record<Lens["id"], number> = { sales: 196, clients: 152, goals: 270
  * the bottom. Choosing a lens turns the whole overview to that part of the business in place;
  * the day's briefings are chosen on the left, and the full briefing opens over the page.
  */
-export function ExecutiveOverview({ data, initial }: { data: OverviewData; initial?: string }) {
+export function ExecutiveOverview({
+  data,
+  initial,
+  center,
+  ask: askAbout,
+}: {
+  data: OverviewData;
+  initial?: string;
+  /** Another centre in place of the Core and its ring (the explorations at /concept/center); Ask Syxoria stays under it */
+  center?: ReactNode;
+  /** Ask Syxoria, about what the centre shows: what the field invites, and the questions it suggests */
+  ask?: { placeholder: string; prompts: string[] };
+}) {
   const { set } = data;
   const router = useRouter();
   const { briefing, select, isLatest } = useBriefing(set, initial);
@@ -169,36 +181,42 @@ export function ExecutiveOverview({ data, initial }: { data: OverviewData; initi
         </section>
 
         {/* ---------- The Core, and the business around it ---------- */}
-        <section className="ev-heart" aria-label="Your business, around Syxoria">
-          <div className="ev-ring">
-            <svg className="ev-ring__line" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-              <ellipse cx="50" cy="50" rx="49.6" ry="49.4" vectorEffect="non-scaling-stroke" />
-            </svg>
-            <div className="ev-ring__pool" aria-hidden="true" />
-            <button type="button" className="ev-core" onClick={() => turnTo(null)} aria-label="Back to the briefing" data-on={lens ? undefined : true}>
-              <SyxoriaCore state={suspended ? "paused" : CORE_FOR[open]} pulse={pulse} label={`Syxoria, ${suspended ? "suspended" : "working"}`} className="ev-core__svg" />
-            </button>
-            <ul className="ev-lenses" aria-label="Business Management">
-              {data.lenses.map((l) => {
-                const a = (ANGLE[l.id] * Math.PI) / 180;
-                const style = { "--x": `${50 + 50 * Math.cos(a)}%`, "--y": `${50 + 50 * Math.sin(a)}%` } as CSSProperties;
-                return (
-                  <li key={l.id} style={style} className="ev-lens" data-tone={l.tone} data-on={l.id === lensId || undefined} data-source={!lensId && l.id === priorityLens?.id ? true : undefined}>
-                    <button type="button" aria-pressed={l.id === lensId} onClick={() => turnTo(l.id === lensId ? null : l.id)}>
-                      <span className="ev-lens__dot" aria-hidden="true" />
-                      <span className="ev-lens__text">
-                        <span className="ev-lens__name">{l.name}</span>
-                        <span className="ev-lens__word">{l.word}</span>
-                      </span>
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-          <p className="ev-heart__state" aria-live="polite">
-            {suspended ? "Suspended. Nothing starts on its own." : `${set.autonomy.name} mode. ${set.autonomy.promise}`}
-          </p>
+        <section className="ev-heart" aria-label="Your business, around Syxoria" data-center={center ? "" : undefined}>
+          {center ? (
+            <div className="ev-center">{center}</div>
+          ) : (
+            <>
+              <div className="ev-ring">
+                <svg className="ev-ring__line" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+                  <ellipse cx="50" cy="50" rx="49.6" ry="49.4" vectorEffect="non-scaling-stroke" />
+                </svg>
+                <div className="ev-ring__pool" aria-hidden="true" />
+                <button type="button" className="ev-core" onClick={() => turnTo(null)} aria-label="Back to the briefing" data-on={lens ? undefined : true}>
+                  <SyxoriaCore state={suspended ? "paused" : CORE_FOR[open]} pulse={pulse} label={`Syxoria, ${suspended ? "suspended" : "working"}`} className="ev-core__svg" />
+                </button>
+                <ul className="ev-lenses" aria-label="Business Management">
+                  {data.lenses.map((l) => {
+                    const a = (ANGLE[l.id] * Math.PI) / 180;
+                    const style = { "--x": `${50 + 50 * Math.cos(a)}%`, "--y": `${50 + 50 * Math.sin(a)}%` } as CSSProperties;
+                    return (
+                      <li key={l.id} style={style} className="ev-lens" data-tone={l.tone} data-on={l.id === lensId || undefined} data-source={!lensId && l.id === priorityLens?.id ? true : undefined}>
+                        <button type="button" aria-pressed={l.id === lensId} onClick={() => turnTo(l.id === lensId ? null : l.id)}>
+                          <span className="ev-lens__dot" aria-hidden="true" />
+                          <span className="ev-lens__text">
+                            <span className="ev-lens__name">{l.name}</span>
+                            <span className="ev-lens__word">{l.word}</span>
+                          </span>
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+              <p className="ev-heart__state" aria-live="polite">
+                {suspended ? "Suspended. Nothing starts on its own." : `${set.autonomy.name} mode. ${set.autonomy.promise}`}
+              </p>
+            </>
+          )}
           {/* the assistant's entry on the overview: the Core you speak to */}
           <form
             className="ev-ask"
@@ -210,11 +228,20 @@ export function ExecutiveOverview({ data, initial }: { data: OverviewData; initi
             <label className="sr-only" htmlFor="ev-ask">
               {copy.ask.placeholder}
             </label>
-            <input id="ev-ask" value={ask} onChange={(e) => setAsk(e.target.value)} placeholder={lens ? `Ask about ${lens.name.toLowerCase()}` : copy.ask.placeholder} autoComplete="off" />
+            <input id="ev-ask" value={ask} onChange={(e) => setAsk(e.target.value)} placeholder={askAbout?.placeholder ?? (lens ? `Ask about ${lens.name.toLowerCase()}` : copy.ask.placeholder)} autoComplete="off" />
             <button type="submit" aria-label={copy.ask.send}>
               <ArrowUp aria-hidden="true" />
             </button>
           </form>
+          {askAbout && askAbout.prompts.length > 0 && (
+            <p className="ev-prompts">
+              {askAbout.prompts.map((p) => (
+                <Link key={p} href={`/app/assistant?q=${encodeURIComponent(p)}`}>
+                  {p}
+                </Link>
+              ))}
+            </p>
+          )}
         </section>
 
         {/* ---------- The thread: one question open at a time ---------- */}

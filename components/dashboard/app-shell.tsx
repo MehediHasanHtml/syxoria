@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
-import { isPageActive, spaceOf, spaces } from "@/lib/app-nav";
+import { isPageActive, spaceOf, spaces, type SpaceId } from "@/lib/app-nav";
 import type { AutomationContext, Notification, User, Workspace } from "@/types";
 import type { CalendarEvent, SearchItem } from "@/types/workspace";
 import { AutomationProvider } from "./automation/automation-provider";
@@ -33,9 +33,9 @@ export type ShellContext = {
  * the line that says when autonomous actions are suspended. Styles: "THE SHELL" in
  * app/styles/executive.css.
  */
-export function AppShell({ children, ...ctx }: ShellContext & { children: ReactNode }) {
+export function AppShell({ children, space, ...ctx }: ShellContext & { children: ReactNode; /** The space to show as open, for a page outside /app (the concept pages) */ space?: SpaceId }) {
   const pathname = usePathname();
-  const current = spaceOf(pathname);
+  const current = space ? spaces.find((s) => s.id === space) : spaceOf(pathname);
 
   return (
     <div data-theme="dark" className="editorial-type cx sx">

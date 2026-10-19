@@ -1929,6 +1929,43 @@
   }
 }
 
+/* another centre in place of the Core (the explorations at /concept/center), and Ask Syxoria's
+   suggestions under the field when the centre gives it something to ask about */
+.ev-center {
+  display: flex;
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+}
+
+/* on phones a centre that carries the moment comes right after the lead, before the thread */
+@media (max-width: 639px) {
+  .ev-heart[data-center] {
+    order: 1;
+  }
+}
+
+.ev-prompts {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.35rem 1.1rem;
+  margin-top: -0.25rem;
+  font-size: 12px;
+}
+
+.ev-prompts a {
+  color: var(--color-fg-3);
+  text-decoration: underline;
+  text-decoration-color: var(--cx-hair-2);
+  text-underline-offset: 4px;
+  transition: color 200ms;
+}
+
+.ev-prompts a:hover {
+  color: var(--color-fg);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .ev-voice,
   .ev-thread,

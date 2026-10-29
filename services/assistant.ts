@@ -1,8 +1,13 @@
-import { mockAssistantSamples } from "@/lib/mock-data/assistant";
-import type { AssistantSample } from "@/types";
+import { mockAssistantBrought, mockAssistantDoing, mockAssistantLead, mockPreparedAnswers } from "@/lib/mock-data/assistant";
+import type { AssistantBrought, AssistantDoing, PreparedAnswer } from "@/types/workspace";
 import { clone } from "./_client";
 
-/** TODO(api): the assistant's suggestions for the owner's day; answers will be generated, not prepared */
-export async function getAssistantSamples(): Promise<AssistantSample[]> {
-  return clone(mockAssistantSamples);
+/** TODO(api): answers will be generated from the connected tools, not prepared */
+export async function getPreparedAnswers(): Promise<PreparedAnswer[]> {
+  return clone(mockPreparedAnswers);
+}
+
+/** TODO(api): what the assistant brings up for the owner now, and what it is busy with */
+export async function getAssistantDesk(): Promise<{ lead: string; brought: AssistantBrought[]; doing: AssistantDoing[] }> {
+  return clone({ lead: mockAssistantLead, brought: mockAssistantBrought, doing: mockAssistantDoing });
 }

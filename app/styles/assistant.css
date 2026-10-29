@@ -1,0 +1,1505 @@
+/* ==========================================================================
+   THE ASSISTANT (components/dashboard/assistant): Syxoria as a colleague
+   One room under the bar: the conversations as shared work on the left, Syxoria on the stage
+   (its Core, its status and what it is busy with; it speaks first, then the conversation reads
+   like an exchange between two people), and what is on the table on the right, with the rules
+   it works under. White is what is; emerald is Syxoria, what it does and what it hands over;
+   terracotta is what is held or did not go through.
+   ========================================================================== */
+
+.ar {
+  --ar-rail: 17rem;
+  --ar-table: 19.5rem;
+  --ar-gutter: clamp(1rem, 3vw, 2.25rem);
+  --ar-read: 46rem;
+  --ar-indent: 1.95rem;
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  /* phones: the spaces float at the foot of the screen */
+  height: calc(100dvh - var(--sx-top) - 3.25rem - env(safe-area-inset-bottom));
+  margin: calc(var(--sx-pt) * -1) calc(var(--sx-px) * -1) calc(var(--sx-pb) * -1);
+  overflow: hidden;
+  background: radial-gradient(120% 90% at 50% 0%, var(--color-canvas-2), var(--color-canvas) 72%);
+}
+
+.ar :focus-visible {
+  outline: 2px solid var(--color-fg);
+  outline-offset: 2px;
+}
+
+/* ---------- Between us: the conversations ---------- */
+
+.ar-threads {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  min-height: 0;
+  padding: 1.25rem 0.9rem 1rem;
+  background: color-mix(in oklab, var(--color-canvas) 55%, transparent);
+  box-shadow: inset -1px 0 0 var(--cx-hair);
+}
+
+.ar-threads__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 1.75rem;
+  padding: 0 0.35rem;
+}
+
+.ar-threads__close {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  color: var(--color-fg-2);
+}
+
+.ar-threads__close svg {
+  width: 16px;
+  height: 16px;
+}
+
+.ar-new {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  height: 2.5rem;
+  padding: 0 0.95rem;
+  border-radius: 999px;
+  font-size: 13.5px;
+  color: var(--color-fg);
+  box-shadow: inset 0 0 0 1px var(--cx-hair-2);
+  transition: background-color 200ms, box-shadow 200ms;
+}
+
+.ar-new:hover {
+  background: color-mix(in oklab, var(--color-fg) 5%, transparent);
+}
+
+.ar-new[aria-current] {
+  box-shadow: inset 0 0 0 1px var(--color-accent-line);
+}
+
+.ar-new svg {
+  width: 15px;
+  height: 15px;
+  color: var(--color-accent-strong);
+}
+
+.ar-find {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  height: 2.3rem;
+  padding: 0 0.8rem;
+  border-radius: 10px;
+  background: color-mix(in oklab, var(--color-fg) 3.5%, transparent);
+}
+
+.ar-find:focus-within {
+  box-shadow: inset 0 0 0 1px var(--cx-hair-2);
+}
+
+.ar-find svg {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  color: var(--color-fg-3);
+}
+
+.ar-find input {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  color: var(--color-fg);
+  background: none;
+  outline: none;
+}
+
+.ar-find input::placeholder {
+  color: var(--color-fg-3);
+}
+
+.ar-threads__list {
+  display: grid;
+  flex: 1;
+  align-content: start;
+  gap: 1.1rem;
+  min-height: 0;
+  margin: 0 -0.25rem;
+  padding: 0.25rem;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--cx-hair-2) transparent;
+}
+
+.ar-threads__group {
+  margin: 0 0 0.3rem;
+  padding-left: 0.65rem;
+  font-size: 10px;
+  letter-spacing: 0.17em;
+  text-transform: uppercase;
+  color: var(--color-fg-3);
+}
+
+.ar-convo {
+  display: grid;
+  gap: 0.35rem;
+  width: 100%;
+  padding: 0.6rem 0.65rem 0.65rem;
+  border-radius: 12px;
+  text-align: left;
+  transition: background-color 200ms, box-shadow 200ms;
+}
+
+.ar-convo:hover {
+  background: color-mix(in oklab, var(--color-fg) 4%, transparent);
+}
+
+.ar-convo[aria-current] {
+  background: color-mix(in oklab, var(--color-fg) 6%, transparent);
+  box-shadow: inset 0 0 0 1px var(--cx-hair);
+}
+
+.ar-convo__title {
+  display: -webkit-box;
+  overflow: hidden;
+  font-size: 13.5px;
+  line-height: 1.38;
+  color: var(--color-fg-2);
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.ar-convo[aria-current] .ar-convo__title,
+.ar-convo:hover .ar-convo__title {
+  color: var(--color-fg);
+}
+
+.ar-convo__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 11.5px;
+  color: var(--color-fg-3);
+}
+
+.ar-convo__meta .ws-state {
+  font-size: 11.5px;
+}
+
+.ar-quiet {
+  padding: 0 0.65rem;
+  line-height: 1.5;
+  font-size: 13px;
+  color: var(--color-fg-3);
+}
+
+/* phones and tablets: the conversations open over the page */
+@media (max-width: 1023px) {
+  .ar-threads {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 70;
+    width: min(20rem, 88vw);
+    padding-top: 1.1rem;
+    background: var(--color-canvas-2);
+    box-shadow: 0 0 0 1px var(--cx-hair), 30px 0 80px -30px rgb(0 0 0 / 0.8);
+    transform: translateX(-104%);
+    visibility: hidden;
+    transition: transform 380ms var(--ease-out-soft), visibility 0s 380ms;
+  }
+
+  .ar-threads[data-open] {
+    transform: none;
+    visibility: visible;
+    transition: transform 380ms var(--ease-out-soft);
+  }
+
+  .ar-scrim {
+    position: fixed;
+    inset: 0;
+    z-index: 65;
+    background: rgb(0 0 0 / 0.5);
+    animation: ar-fade 300ms both;
+  }
+}
+
+/* ---------- The stage ---------- */
+
+.ar-stage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  isolation: isolate;
+}
+
+/* the Core's light in the room: under it on the opening, by the head of a conversation */
+.ar-stage::before,
+.ar-stage::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  transition: opacity 900ms var(--ease-out-soft);
+}
+
+.ar-stage::before {
+  background: radial-gradient(38% 34% at 50% 20%, color-mix(in oklab, var(--color-accent) 11%, transparent), transparent 72%);
+}
+
+.ar-stage::after {
+  background: radial-gradient(30% 22% at 8% 0%, color-mix(in oklab, var(--color-accent) 9%, transparent), transparent 70%);
+  opacity: 0;
+}
+
+.ar[data-view="thread"] .ar-stage::before {
+  opacity: 0;
+}
+
+.ar[data-view="thread"] .ar-stage::after {
+  opacity: 1;
+}
+
+.ar[data-phase="thinking"] .ar-stage::after,
+.ar[data-phase="listening"] .ar-stage::after {
+  animation: ar-breathe 2.4s var(--ease-in-out-soft) infinite;
+}
+
+/* Syxoria's presence: the Core, its name and status, what it is busy with */
+.ar-presence {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 0.95rem;
+  min-height: 4.25rem;
+  padding: 0.75rem var(--ar-gutter);
+  box-shadow: inset 0 -1px 0 var(--cx-hair);
+}
+
+.ar[data-view="opening"] .ar-presence {
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 2;
+  justify-content: flex-end;
+  min-height: 0;
+  box-shadow: none;
+  pointer-events: none;
+}
+
+.ar-presence__core {
+  flex: none;
+  width: 2.9rem;
+  height: 2.9rem;
+}
+
+.ar-presence__who {
+  display: grid;
+  flex: 1;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.ar-presence__tools {
+  display: flex;
+  flex: none;
+  gap: 0.4rem;
+  margin-left: auto;
+  pointer-events: auto;
+}
+
+.ar-tool {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  height: 2.25rem;
+  padding: 0 0.85rem;
+  border-radius: 999px;
+  font-size: 12.5px;
+  color: var(--color-fg-2);
+  box-shadow: inset 0 0 0 1px var(--cx-hair);
+  transition: color 200ms, background-color 200ms;
+}
+
+.ar-tool:hover {
+  color: var(--color-fg);
+  background: color-mix(in oklab, var(--color-fg) 5%, transparent);
+}
+
+.ar-tool svg {
+  width: 15px;
+  height: 15px;
+}
+
+.ar-name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.75rem;
+  font-family: var(--cx-serif);
+  font-size: 1.2rem;
+  font-weight: 400;
+  line-height: 1.2;
+  color: var(--color-fg);
+}
+
+.ar-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-family: var(--cx-sans);
+  font-size: 11.5px;
+  letter-spacing: 0.02em;
+  color: var(--color-fg-2);
+}
+
+.ar-status > span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-accent-strong);
+  box-shadow: 0 0 0 3px var(--color-accent-soft), 0 0 10px var(--color-accent);
+}
+
+.ar-status[data-tone="busy"] > span {
+  animation: pulse-soft 1.2s var(--ease-in-out-soft) infinite;
+}
+
+.ar-status[data-tone="held"] {
+  color: var(--color-negative);
+}
+
+.ar-status[data-tone="held"] > span {
+  background: var(--color-negative);
+  box-shadow: 0 0 0 3px var(--color-negative-soft);
+}
+
+.ar-doing {
+  min-height: 1.2rem;
+  overflow: hidden;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--color-fg-3);
+}
+
+.ar-doing__line {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  animation: ar-rise 700ms var(--ease-out-soft) both;
+}
+
+.ar-doing__when {
+  margin-right: 0.5rem;
+  color: var(--color-accent-strong);
+}
+
+.ar-role {
+  font-size: 12px;
+  color: var(--color-fg-3);
+}
+
+.ar-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--cx-hair-2) transparent;
+}
+
+.ar[data-view="thread"] .ar-scroll {
+  mask-image: linear-gradient(to bottom, transparent, #000 1.25rem, #000 calc(100% - 1.5rem), transparent);
+}
+
+/* ---------- The opening: Syxoria speaks first ---------- */
+
+.ar-open {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100%;
+  padding: clamp(1.5rem, 5vh, 3.25rem) var(--ar-gutter) clamp(1rem, 3vh, 2rem);
+  text-align: center;
+}
+
+.ar-open__presence {
+  display: grid;
+  justify-items: center;
+  gap: 0.4rem;
+}
+
+.ar-open__presence .ar-name {
+  justify-content: center;
+}
+
+.ar-open__presence .ar-doing {
+  max-width: min(32rem, 90vw);
+}
+
+.ar-open__core {
+  width: clamp(5.25rem, 14vh, 8.25rem);
+  height: clamp(5.25rem, 14vh, 8.25rem);
+  margin-bottom: clamp(0.4rem, 1.4vh, 0.9rem);
+}
+
+.ar-open__greet {
+  margin-top: clamp(1.1rem, 3.6vh, 2.25rem);
+  font-family: var(--cx-serif);
+  font-size: clamp(1.9rem, 3.4vh + 0.75rem, 2.7rem);
+  font-weight: 300;
+  line-height: 1.1;
+  letter-spacing: -0.012em;
+  color: var(--color-fg);
+  animation: ar-rise 900ms 120ms var(--ease-out-soft) both;
+}
+
+.ar-open__lead {
+  max-width: 34rem;
+  margin-top: 0.65rem;
+  font-family: var(--cx-serif);
+  font-size: clamp(1.02rem, 0.8vh + 0.85rem, 1.18rem);
+  font-weight: 300;
+  line-height: 1.5;
+  color: var(--color-fg-2);
+  text-wrap: balance;
+  animation: ar-rise 900ms 280ms var(--ease-out-soft) both;
+}
+
+.ar-brought {
+  container: ar-brought / inline-size;
+  display: grid;
+  justify-items: center;
+  gap: 0.8rem;
+  width: 100%;
+  max-width: 56rem;
+  margin-top: clamp(1.3rem, 4.2vh, 2.75rem);
+  animation: ar-rise 900ms 440ms var(--ease-out-soft) both;
+}
+
+.ar-brought ul {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.7rem;
+  width: 100%;
+}
+
+@container ar-brought (min-width: 40rem) {
+  .ar-brought ul {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.ar-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.45rem;
+  width: 100%;
+  height: 100%;
+  padding: 0.95rem 1.05rem 0.9rem;
+  border-radius: 16px;
+  text-align: left;
+  background: linear-gradient(180deg, color-mix(in oklab, var(--color-fg) 4.5%, transparent), color-mix(in oklab, var(--color-fg) 1.5%, transparent));
+  box-shadow: inset 0 0 0 1px var(--cx-hair), 0 24px 44px -34px rgb(0 0 0 / 0.9);
+  transition: background-color 250ms, box-shadow 250ms, transform 250ms var(--ease-out-soft);
+}
+
+.ar-card:hover {
+  background-color: color-mix(in oklab, var(--color-fg) 3%, transparent);
+  box-shadow: inset 0 0 0 1px var(--cx-hair-2), 0 28px 50px -34px rgb(0 0 0 / 0.95);
+  transform: translateY(-2px);
+}
+
+.ar-card .ws-state {
+  font-size: 11.5px;
+}
+
+.ar-card__title {
+  font-family: var(--cx-serif);
+  font-size: 1.04rem;
+  font-weight: 400;
+  line-height: 1.3;
+  color: var(--color-fg);
+}
+
+.ar-card__line {
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--color-fg-3);
+}
+
+.ar-card__go {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: auto;
+  padding-top: 0.35rem;
+  font-size: 12.5px;
+  color: var(--color-fg-2);
+  transition: color 200ms;
+}
+
+.ar-card__go svg {
+  width: 13px;
+  height: 13px;
+  transition: transform 250ms var(--ease-out-soft);
+}
+
+.ar-card:hover .ar-card__go {
+  color: var(--color-accent-strong);
+}
+
+.ar-card:hover .ar-card__go svg {
+  transform: translateX(3px);
+}
+
+/* ---------- A conversation ---------- */
+
+.ar-thread {
+  display: grid;
+  gap: 1.9rem;
+  max-width: var(--ar-read);
+  margin: 0 auto;
+  padding: 1.9rem var(--ar-gutter) 2.25rem;
+}
+
+.ar-thread__title {
+  font-family: var(--cx-serif);
+  font-size: 1.55rem;
+  font-weight: 300;
+  line-height: 1.25;
+  letter-spacing: -0.008em;
+  color: var(--color-fg);
+  text-wrap: balance;
+}
+
+.ar-turn {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.ar-turn__who {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem;
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-fg-3);
+}
+
+.ar-turn__who time {
+  letter-spacing: 0.02em;
+  text-transform: none;
+  opacity: 0.8;
+}
+
+.ar-turn__who .cx-tag {
+  margin-left: 0.15rem;
+}
+
+.ar-turn[data-from="syxoria"] .ar-turn__who {
+  color: var(--color-accent-strong);
+}
+
+/* both voices carry the same mark width, so what they say starts on one line */
+.ar-initials,
+.ar-seal {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 1.4rem;
+  height: 1.4rem;
+}
+
+.ar-initials {
+  border-radius: 50%;
+  font-size: 9px;
+  letter-spacing: 0.04em;
+  color: var(--color-fg-2);
+  box-shadow: inset 0 0 0 1px var(--cx-hair-2);
+}
+
+.ar-seal::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-accent-strong);
+  box-shadow: 0 0 0 3px var(--color-accent-soft), 0 0 12px var(--color-accent);
+}
+
+.ar-seal[data-busy]::before {
+  animation: pulse-soft 1.1s var(--ease-in-out-soft) infinite;
+}
+
+.ar-turn__said,
+.ar-turn__body,
+.ar-working__steps {
+  padding-left: var(--ar-indent);
+}
+
+.ar-turn__said {
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--color-fg);
+}
+
+.ar-turn__body {
+  display: grid;
+  gap: 0.95rem;
+}
+
+.ar-say {
+  font-family: var(--cx-serif);
+  font-size: 1.16rem;
+  font-weight: 300;
+  line-height: 1.58;
+  color: var(--color-fg);
+  text-wrap: pretty;
+}
+
+/* a fresh answer is said word after word, what it hands over arrives after */
+.ar-turn[data-fresh][data-from="you"] {
+  animation: ar-rise 500ms var(--ease-out-soft) both;
+}
+
+.ar-turn[data-fresh] .ar-w {
+  display: inline-block;
+  animation: ar-word 560ms var(--ease-out-soft) both;
+  animation-delay: var(--d);
+}
+
+.ar-turn[data-fresh] .ar-block {
+  animation: ar-rise 650ms var(--ease-out-soft) both;
+  animation-delay: var(--d);
+}
+
+.ar-figures {
+  container: ar-fig / inline-size;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
+  border-block: 1px solid var(--cx-hair);
+}
+
+.ar-figures > div {
+  display: grid;
+  align-content: start;
+  gap: 0.3rem;
+  padding: 0.85rem 1rem 0.9rem 0;
+}
+
+.ar-figures > div + div {
+  padding-left: 1rem;
+  box-shadow: inset 1px 0 0 var(--cx-hair);
+}
+
+.ar-figures__value {
+  font-family: var(--cx-serif);
+  font-size: 1.45rem;
+  font-weight: 300;
+  line-height: 1.15;
+  color: var(--color-fg);
+}
+
+.ar-figures__note {
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--color-fg-3);
+}
+
+.ar-points {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.ar-points ul {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.ar-points li {
+  position: relative;
+  padding-left: 1.15rem;
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: var(--color-fg-2);
+}
+
+.ar-points li::before {
+  content: "";
+  position: absolute;
+  left: 0.15rem;
+  top: 0.62em;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--color-accent-strong);
+}
+
+/* the message it wrote, laid in front of the owner like a sheet of paper */
+.ar-draft figure {
+  padding: 1rem 1.2rem 1.15rem;
+  border-radius: 14px;
+  background: linear-gradient(180deg, color-mix(in oklab, var(--color-fg) 6%, transparent), color-mix(in oklab, var(--color-fg) 3%, transparent));
+  box-shadow: inset 0 0 0 1px var(--cx-hair-2), 0 30px 60px -40px rgb(0 0 0 / 0.95);
+}
+
+.ar-draft figcaption {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 0.9rem;
+  padding-bottom: 0.75rem;
+  margin-bottom: 0.85rem;
+  box-shadow: inset 0 -1px 0 var(--cx-hair);
+}
+
+.ar-draft__to {
+  font-size: 13px;
+  color: var(--color-fg-2);
+}
+
+.ar-draft__subject {
+  flex-basis: 100%;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-fg);
+}
+
+.ar-draft__body {
+  display: grid;
+  gap: 0.55rem;
+  font-family: var(--cx-serif);
+  font-size: 1rem;
+  font-weight: 300;
+  line-height: 1.6;
+  color: var(--color-fg-2);
+}
+
+/* what it set in motion, handed over: Syxoria's, so its edge is emerald */
+.ar-slip {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.8rem 0.95rem;
+  border-radius: 14px;
+  background: linear-gradient(90deg, color-mix(in oklab, var(--color-accent) 7%, transparent), color-mix(in oklab, var(--color-fg) 2%, transparent) 60%);
+  box-shadow: inset 0 0 0 1px var(--color-accent-line);
+  transition: background-color 200ms, box-shadow 200ms;
+}
+
+.ar-slip:hover {
+  background-color: color-mix(in oklab, var(--color-fg) 3%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--color-accent-strong) 60%, transparent);
+}
+
+.ar-slip__text {
+  display: grid;
+  flex: 1;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.ar-slip__title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-fg);
+}
+
+.ar-slip__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.2rem 0.8rem;
+  font-size: 12px;
+  color: var(--color-fg-3);
+}
+
+.ar-slip__meta .ws-state {
+  font-size: 12px;
+}
+
+.ar-slip__go {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 12.5px;
+  color: var(--color-fg-2);
+  transition: color 200ms;
+}
+
+.ar-slip__go svg {
+  width: 13px;
+  height: 13px;
+  transition: transform 250ms var(--ease-out-soft);
+}
+
+.ar-slip:hover .ar-slip__go {
+  color: var(--color-fg);
+}
+
+.ar-slip:hover .ar-slip__go svg {
+  transform: translateX(3px);
+}
+
+/* how it knows */
+.ar-know {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 1rem;
+}
+
+.ar-know ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1.1rem;
+}
+
+.ar-know li {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  font-size: 12.5px;
+  color: var(--color-fg-3);
+}
+
+.ar-know svg {
+  flex: none;
+  align-self: center;
+  width: 12px;
+  height: 12px;
+}
+
+.ar-know a {
+  color: var(--color-fg-2);
+  text-decoration: underline;
+  text-decoration-color: var(--cx-hair-2);
+  text-underline-offset: 3px;
+  transition: color 200ms, text-decoration-color 200ms;
+}
+
+.ar-know a:hover {
+  color: var(--color-fg);
+  text-decoration-color: currentColor;
+}
+
+/* Syxoria at work: what it reads, then writing */
+.ar-working__steps {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.ar-working__steps li {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 13.5px;
+  color: var(--color-fg-3);
+  animation: ar-rise 380ms var(--ease-out-soft) both;
+}
+
+.ar-working__steps li[data-state="now"] {
+  color: var(--color-fg-2);
+}
+
+.ar-working__steps svg {
+  flex: none;
+  width: 13px;
+  height: 13px;
+  color: var(--color-accent-strong);
+}
+
+.ar-working__dot {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 13px;
+  height: 13px;
+}
+
+.ar-working__dot::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-accent-strong);
+  animation: pulse-soft 0.9s var(--ease-in-out-soft) infinite;
+}
+
+/* ---------- Speaking to Syxoria ---------- */
+
+.ar-composer {
+  display: grid;
+  flex: none;
+  justify-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem var(--ar-gutter) clamp(0.8rem, 2vh, 1.25rem);
+}
+
+.ar-suggest {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.45rem;
+  max-width: var(--ar-read);
+}
+
+.ar-suggest button {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  max-width: 100%;
+  padding: 0.42rem 0.85rem;
+  border-radius: 999px;
+  font-size: 12.5px;
+  text-align: left;
+  color: var(--color-fg-2);
+  box-shadow: inset 0 0 0 1px var(--cx-hair);
+  transition: color 200ms, background-color 200ms, box-shadow 200ms;
+}
+
+.ar-suggest button:hover:not(:disabled) {
+  color: var(--color-fg);
+  background: color-mix(in oklab, var(--color-fg) 4%, transparent);
+  box-shadow: inset 0 0 0 1px var(--cx-hair-2);
+}
+
+.ar-suggest button:disabled {
+  opacity: 0.5;
+}
+
+.ar-suggest__label {
+  font-size: 9.5px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--color-accent-strong);
+}
+
+.ar-ask {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.45rem;
+  width: 100%;
+  max-width: var(--ar-read);
+  padding: 0.45rem;
+  border-radius: 24px;
+  background: color-mix(in oklab, var(--color-surface) 82%, transparent);
+  box-shadow: inset 0 0 0 1px var(--cx-hair-2), 0 26px 54px -34px rgb(0 0 0 / 0.95);
+  transition: box-shadow 250ms;
+}
+
+.ar-ask:focus-within,
+.ar-ask[data-listening] {
+  box-shadow: inset 0 0 0 1px var(--color-accent-line), 0 0 0 4px var(--color-accent-soft), 0 26px 54px -34px rgb(0 0 0 / 0.95);
+}
+
+.ar-ask:focus-within :focus-visible {
+  outline: none;
+}
+
+.ar-ask textarea {
+  flex: 1;
+  min-width: 0;
+  min-height: 2.6rem;
+  max-height: 9rem;
+  padding: 0.62rem 0.4rem;
+  resize: none;
+  field-sizing: content;
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--color-fg);
+  background: none;
+  outline: none;
+}
+
+.ar-ask textarea::placeholder {
+  color: var(--color-fg-3);
+}
+
+.ar-ask[data-listening] textarea {
+  color: var(--color-fg-2);
+}
+
+.ar-mic,
+.ar-send {
+  position: relative;
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 50%;
+  transition: color 200ms, background-color 200ms, box-shadow 200ms, opacity 200ms;
+}
+
+.ar-mic svg,
+.ar-send svg {
+  width: 17px;
+  height: 17px;
+}
+
+.ar-mic {
+  color: var(--color-fg-2);
+  box-shadow: inset 0 0 0 1px var(--cx-hair-2);
+}
+
+.ar-mic:hover:not(:disabled) {
+  color: var(--color-fg);
+  background: color-mix(in oklab, var(--color-fg) 5%, transparent);
+}
+
+.ar-mic[aria-pressed="true"] {
+  color: #04140d;
+  background: var(--color-accent-strong);
+  box-shadow: none;
+}
+
+.ar-mic[aria-pressed="true"] svg {
+  width: 13px;
+  height: 13px;
+  fill: currentColor;
+}
+
+/* listening: the light around the microphone keeps breathing out */
+.ar-mic[aria-pressed="true"]::before,
+.ar-mic[aria-pressed="true"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px var(--color-accent-strong);
+  animation: ar-listen 1.8s var(--ease-out-soft) infinite;
+}
+
+.ar-mic[aria-pressed="true"]::after {
+  animation-delay: 0.9s;
+}
+
+.ar-mic:disabled {
+  opacity: 0.4;
+}
+
+.ar-send {
+  color: var(--color-canvas);
+  background: var(--color-fg);
+}
+
+.ar-send:disabled {
+  opacity: 0.32;
+}
+
+.ar-problem {
+  font-size: 12px;
+  color: var(--color-negative);
+}
+
+/* ---------- On the table ---------- */
+
+.ar-table {
+  display: none;
+}
+
+.ar-table__in {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.ar-table__in section {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.ar-table__title {
+  font-family: var(--cx-serif);
+  font-size: 1.15rem;
+  font-weight: 300;
+  color: var(--color-fg);
+}
+
+.ar-people,
+.ar-moves,
+.ar-coming {
+  display: grid;
+  gap: 0.2rem;
+  margin: 0 -0.5rem;
+}
+
+.ar-people a,
+.ar-moves a,
+.ar-coming a {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  padding: 0.5rem;
+  border-radius: 10px;
+  transition: background-color 200ms;
+}
+
+.ar-people a:hover,
+.ar-moves a:hover,
+.ar-coming a:hover {
+  background: color-mix(in oklab, var(--color-fg) 4%, transparent);
+}
+
+.ar-people__initials {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  color: var(--color-fg-2);
+  background: color-mix(in oklab, var(--color-fg) 6%, transparent);
+}
+
+.ar-people__name,
+.ar-moves__title,
+.ar-coming__title {
+  display: block;
+  font-size: 13.5px;
+  line-height: 1.35;
+  color: var(--color-fg);
+}
+
+.ar-people__where,
+.ar-coming__note {
+  display: block;
+  margin-top: 0.1rem;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--color-fg-3);
+}
+
+.ar-moves .ws-state {
+  margin-top: 0.15rem;
+  font-size: 12px;
+}
+
+.ar-coming a {
+  display: grid;
+  grid-template-columns: 6.25rem minmax(0, 1fr);
+}
+
+.ar-coming__when {
+  padding-top: 0.1rem;
+  font-size: 12px;
+  color: var(--color-fg-3);
+}
+
+.ar-recalls {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.ar-recalls li {
+  padding-left: 0.85rem;
+  font-family: var(--cx-serif);
+  font-size: 0.98rem;
+  font-weight: 300;
+  line-height: 1.45;
+  color: var(--color-fg-2);
+  box-shadow: inset 1px 0 0 var(--color-accent-line);
+}
+
+.ar-recalls span {
+  display: block;
+  margin-top: 0.2rem;
+  font-family: var(--cx-sans);
+  font-size: 11.5px;
+  color: var(--color-fg-3);
+}
+
+.ar-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  justify-self: start;
+  font-size: 12.5px;
+  color: var(--color-fg-2);
+  transition: color 200ms;
+}
+
+.ar-more:hover {
+  color: var(--color-fg);
+}
+
+.ar-more svg {
+  width: 13px;
+  height: 13px;
+}
+
+.ar-quiet--table {
+  padding: 0;
+  font-size: 12.5px;
+}
+
+/* how we work together: always there, at the foot of the table */
+.ar-pact {
+  display: grid;
+  gap: 0.8rem;
+  padding: 1rem 1.05rem 1.05rem;
+  border-radius: 16px;
+  background: linear-gradient(180deg, color-mix(in oklab, var(--color-fg) 3.5%, transparent), color-mix(in oklab, var(--color-fg) 1.5%, transparent));
+  box-shadow: inset 0 0 0 1px var(--cx-hair);
+}
+
+.ar-pact__mode {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-family: var(--cx-serif);
+  font-size: 1.02rem;
+  color: var(--color-fg);
+}
+
+.ar-pact__mode::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-accent-strong);
+  box-shadow: 0 0 0 3px var(--color-accent-soft);
+}
+
+.ar-pact__held {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--color-negative);
+}
+
+.ar-pact dl {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.ar-pact dt {
+  margin-bottom: 0.25rem;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-fg-3);
+}
+
+.ar-pact dd li {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--color-fg-2);
+}
+
+.ar-preview {
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--color-fg-3);
+}
+
+/* ---------- Room by room ---------- */
+
+@media (max-width: 1023px) {
+  .ar {
+    --ar-indent: 0rem;
+  }
+
+  .ar-turn__who {
+    gap: 0.45rem;
+  }
+}
+
+@media (max-width: 639px) {
+  .ar-tool span {
+    display: none;
+  }
+
+  .ar-tool {
+    width: 2.25rem;
+    padding: 0;
+    justify-content: center;
+  }
+
+  .ar-presence__core {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+
+  .ar-say {
+    font-size: 1.08rem;
+  }
+
+  .ar-suggest {
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    width: calc(100% + 2 * var(--ar-gutter));
+    margin: 0 calc(var(--ar-gutter) * -1);
+    padding: 0 var(--ar-gutter);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .ar-suggest button {
+    flex: none;
+    white-space: nowrap;
+  }
+}
+
+@media (min-width: 1024px) {
+  .ar {
+    grid-template-columns: var(--ar-rail) minmax(0, 1fr);
+    height: calc(100dvh - var(--sx-top));
+  }
+
+  .ar-tool--threads,
+  .ar-tool--new,
+  .ar-threads__close {
+    display: none;
+  }
+}
+
+@media (min-width: 1280px) {
+  .ar {
+    grid-template-columns: var(--ar-rail) minmax(0, 1fr) var(--ar-table);
+  }
+
+  .ar-table {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    min-height: 0;
+    padding: 1.35rem 1.25rem 1.1rem;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--cx-hair-2) transparent;
+    background: color-mix(in oklab, var(--color-canvas) 55%, transparent);
+    box-shadow: inset 1px 0 0 var(--cx-hair);
+  }
+
+  .ar-pact {
+    margin-top: auto;
+  }
+}
+
+/* laptops: narrower rails, so the stage keeps room for the three cards side by side */
+@media (min-width: 1024px) and (max-width: 1439px) {
+  .ar {
+    --ar-rail: 15rem;
+    --ar-table: 16.5rem;
+  }
+
+  .ar-threads {
+    padding-inline: 0.7rem;
+  }
+
+  .ar-table {
+    padding-inline: 1rem;
+  }
+}
+
+/* short screens: the opening keeps to one screen */
+@media (min-width: 1024px) and (max-height: 760px) {
+  .ar-open__presence .ar-role {
+    display: none;
+  }
+
+  .ar-card__line {
+    display: none;
+  }
+
+  .ar-open {
+    padding-top: 1rem;
+  }
+
+  .ar-open__core {
+    width: 4.75rem;
+    height: 4.75rem;
+    margin-bottom: 0.2rem;
+  }
+
+  .ar-open__greet {
+    margin-top: 1rem;
+  }
+
+  .ar-brought {
+    margin-top: 1.15rem;
+  }
+}
+
+@media (min-width: 1024px) and (max-width: 1439px) {
+  .ar-coming a {
+    grid-template-columns: 5.25rem minmax(0, 1fr);
+    gap: 0.55rem;
+  }
+}
+
+/* ---------- Motion ---------- */
+
+@keyframes ar-rise {
+  from {
+    opacity: 0;
+    translate: 0 0.45rem;
+  }
+}
+
+@keyframes ar-word {
+  from {
+    opacity: 0;
+    filter: blur(5px);
+    translate: 0 0.22em;
+  }
+}
+
+@keyframes ar-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes ar-breathe {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+@keyframes ar-listen {
+  from {
+    opacity: 0.9;
+    scale: 1;
+  }
+
+  to {
+    opacity: 0;
+    scale: 1.75;
+  }
+}
+
+/* the Core travels between the opening and the head of a conversation */
+::view-transition-group(ar-core) {
+  animation-duration: 820ms;
+  animation-timing-function: cubic-bezier(0.65, 0, 0.2, 1);
+}
+
+::view-transition-old(ar-core),
+::view-transition-new(ar-core) {
+  height: 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ar *,
+  .ar-stage::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

@@ -311,9 +311,36 @@ export type AssistantBlock =
   | { kind: "figures"; items: { label: string; value: string; note?: string }[] }
   | { kind: "list"; title?: string; items: string[] }
   | { kind: "action"; actionId: string }
+  /** A message Syxoria wrote for the owner, laid in front of them to read before anything goes out */
+  | { kind: "draft"; to: string; subject: string; body: string[] }
   | { kind: "sources"; items: { label: string; detail: string; href: string }[] };
 export type AssistantMessage = { id: string; from: "you" | "syxoria"; at: string; text?: string; blocks?: AssistantBlock[] };
-export type Conversation = { id: string; title: string; group: "Today" | "Yesterday" | "Previous 7 days"; updated: string; messages: AssistantMessage[]; actions: string[] };
+export type Conversation = {
+  id: string;
+  title: string;
+  group: "Today" | "Yesterday" | "Previous 7 days";
+  updated: string;
+  messages: AssistantMessage[];
+  actions: string[];
+  /** The clients it is about (Client ids) */
+  people?: string[];
+  /** What Syxoria remembered to answer (MemoryItem ids) */
+  recalls?: string[];
+};
+/** An answer prepared for a suggested question: the assistant is not connected to an AI yet */
+export type PreparedAnswer = {
+  id: string;
+  question: string;
+  /** What Syxoria goes through before it answers, shown while it works ("Reading …": "your emails with Côté Sud Hôtels") */
+  reads: string[];
+  blocks: AssistantBlock[];
+  people?: string[];
+  recalls?: string[];
+};
+/** What Syxoria brings up when the owner comes to it: the things worth a minute before they leave */
+export type AssistantBrought = { id: string; actionId: string; conversationId: string; title: string; line: string };
+/** What Syxoria is doing at the moment, as a colleague would say it */
+export type AssistantDoing = { when: string; text: string };
 
 /* ---------- Calendar, search, notifications ---------- */
 export type CalendarEvent = {

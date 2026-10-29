@@ -643,18 +643,6 @@ export type HomeOverview = {
   recommendations: HomeRecommendation[];
 };
 
-/* ---------- The assistant (a preview until the AI is connected) ---------- */
-/** A prepared answer to a suggested question, always shown as a sample: nothing is generated */
-export type AssistantSample = {
-  id: string;
-  question: string;
-  answer: string;
-  /** Where the answer comes from, to open it */
-  references: { label: string; href: string }[];
-  /** The action it concerns: its status is read from the briefing's actions */
-  actionId?: string;
-};
-
 /* ---------- Automation safety: holds, the kill switch ----------
  * Syxoria's execution can be held at three scopes: everything it would start on its own (global),
  * one workflow, or the actions in one tool. A hold stops NEW autonomous actions only: Syxoria keeps

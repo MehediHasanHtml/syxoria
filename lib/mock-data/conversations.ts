@@ -12,6 +12,8 @@ export const mockConversations: Conversation[] = [
     group: "Today",
     updated: "18:58",
     actions: ["quote_nora", "hold_call"],
+    people: ["cotesud"],
+    recalls: ["m10", "m9"],
     messages: [
       { id: "m1", from: "you", at: "18:52", text: "Why did Nora’s quote bounce, and what should I do?" },
       {
@@ -58,6 +60,8 @@ export const mockConversations: Conversation[] = [
     group: "Today",
     updated: "9:20",
     actions: ["refs_orea", "checkin_kanso"],
+    people: ["orea", "kanso", "pavillon"],
+    recalls: ["m5"],
     messages: [
       { id: "r1", from: "you", at: "9:10", text: "Which proposals are at risk this week?" },
       {
@@ -73,19 +77,224 @@ export const mockConversations: Conversation[] = [
       },
     ],
   },
-  { id: "cv_hugo", title: "Can we start Maison Lenoir in March?", group: "Today", updated: "12:30", actions: ["timeline_hugo"], messages: [] },
-  { id: "cv_q3", title: "Summarise Q3 for the team", group: "Yesterday", updated: "16:10", actions: ["weekly_report"], messages: [] },
-  { id: "cv_ads", title: "Why are ads getting more expensive?", group: "Yesterday", updated: "11:05", actions: ["pause_ads"], messages: [] },
-  { id: "cv_hosp", title: "A hospitality offer for 2027", group: "Previous 7 days", updated: "Mon", actions: [], messages: [] },
-  { id: "cv_cash", title: "Can we afford a new designer in January?", group: "Previous 7 days", updated: "Sun", actions: [], messages: [] },
+  {
+    id: "cv_hugo",
+    title: "Can we start Maison Lenoir in March?",
+    group: "Today",
+    updated: "17:20",
+    actions: ["timeline_hugo"],
+    people: ["lenoir"],
+    recalls: ["m7", "m12"],
+    messages: [
+      { id: "h1", from: "you", at: "12:24", text: "Hugo wants to start in March instead of April. Can we?" },
+      {
+        id: "h2",
+        from: "syxoria",
+        at: "12:25",
+        blocks: [
+          { kind: "text", text: "Yes. March is free in the studio calendar, and nothing in the proposal depends on April." },
+          {
+            kind: "figures",
+            items: [
+              { label: "Project", value: "€21,500", note: "packaging range" },
+              { label: "Start", value: "2 March", note: "a month earlier" },
+              { label: "Signature", value: "October", note: "instead of November" },
+            ],
+          },
+          { kind: "text", text: "Shall I revise the timeline? The scope and the price stay as they are, only the dates move. A change to a quote always waits for you." },
+          {
+            kind: "sources",
+            items: [
+              { label: "Hugo’s email", detail: "Gmail, today 12:15", href: "/app/clients?client=lenoir" },
+              { label: "Packaging range proposal", detail: "Documents, 28 Sep", href: "/app/documents" },
+            ],
+          },
+        ],
+      },
+      { id: "h3", from: "you", at: "12:30", text: "Yes, do it." },
+      {
+        id: "h4",
+        from: "syxoria",
+        at: "17:20",
+        blocks: [
+          { kind: "text", text: "The revised timeline is ready. I changed only the dates, and wrote to Hugo the way you usually write to founders." },
+          { kind: "action", actionId: "timeline_hugo" },
+          { kind: "text", text: "It goes out the moment you approve it." },
+        ],
+      },
+    ],
+  },
+  {
+    id: "cv_ads",
+    title: "Why are ads getting more expensive?",
+    group: "Today",
+    updated: "15:40",
+    actions: ["pause_ads"],
+    messages: [
+      { id: "a1", from: "you", at: "15:12", text: "Why are ads getting more expensive?" },
+      {
+        id: "a2",
+        from: "syxoria",
+        at: "15:14",
+        blocks: [
+          { kind: "text", text: "Because Google started spending your budget on the wrong searches. Since broad match was switched on, on 23 September, people looking for a free logo maker see your ads." },
+          {
+            kind: "figures",
+            items: [
+              { label: "Cost per lead", value: "€131", note: "up 41% in three weeks" },
+              { label: "Wrong searches", value: "62%", note: "of your clicks" },
+              { label: "Spent on them", value: "€1,450", note: "this month, no qualified lead" },
+            ],
+          },
+          { kind: "text", text: "Your other channels are healthy: the case study series brings qualified leads at €36 each." },
+          { kind: "sources", items: [{ label: "Search terms report", detail: "Google Ads, last 21 days", href: "/app/business/marketing" }] },
+        ],
+      },
+      { id: "a3", from: "you", at: "15:20", text: "Can you stop it?" },
+      {
+        id: "a4",
+        from: "syxoria",
+        at: "15:40",
+        blocks: [
+          { kind: "text", text: "I prepared it: pause the ‘logo maker’ ad group and exclude those searches. You can undo it in one click, and I’ll compare the cost per lead in two weeks." },
+          { kind: "action", actionId: "pause_ads" },
+          { kind: "text", text: "Campaign changes always wait for you, so it goes live when you approve." },
+        ],
+      },
+    ],
+  },
+  {
+    id: "cv_q3",
+    title: "Summarise Q3 for the team",
+    group: "Yesterday",
+    updated: "16:10",
+    actions: ["weekly_report"],
+    recalls: ["m4", "m6"],
+    messages: [
+      { id: "t1", from: "you", at: "16:02", text: "Summarise Q3 for the team." },
+      {
+        id: "t2",
+        from: "syxoria",
+        at: "16:04",
+        blocks: [
+          { kind: "text", text: "Here is the short version, written for Inès, Théo and Clara." },
+          {
+            kind: "figures",
+            items: [
+              { label: "Q3 revenue", value: "€162,200", note: "9% up on Q2" },
+              { label: "Grew fastest", value: "Hospitality", note: "enquiries up 38%" },
+            ],
+          },
+          {
+            kind: "list",
+            title: "In three lines",
+            items: [
+              "A good quarter, 9% up on Q2 and led by hotels and restaurants.",
+              "Replies slowed in September, and proposals that wait too long close less often.",
+              "For Q4: €190,000 of revenue, faster replies and three new hospitality clients.",
+            ],
+          },
+          { kind: "text", text: "I can open Friday’s weekly summary with it. It goes to the team at 17:00." },
+          { kind: "sources", items: [{ label: "Q3 performance review", detail: "Documents, Reports", href: "/app/documents?doc=doc_q3" }] },
+        ],
+      },
+      { id: "t3", from: "you", at: "16:08", text: "Yes, add it to Friday’s summary." },
+      {
+        id: "t4",
+        from: "syxoria",
+        at: "16:10",
+        blocks: [
+          { kind: "text", text: "Done. It will open Friday’s summary, and it stays inside the studio." },
+          { kind: "action", actionId: "weekly_report" },
+        ],
+      },
+    ],
+  },
+  {
+    id: "cv_hosp",
+    title: "A hospitality offer for 2027",
+    group: "Previous 7 days",
+    updated: "Mon",
+    actions: [],
+    people: ["cotesud", "pavillon", "ondine"],
+    recalls: ["m3", "m6"],
+    messages: [
+      { id: "o1", from: "you", at: "10:40", text: "Should we build a hospitality offer for 2027?" },
+      {
+        id: "o2",
+        from: "syxoria",
+        at: "10:42",
+        blocks: [
+          { kind: "text", text: "I think so. Hotels and restaurants come to you more often, and they decide faster." },
+          {
+            kind: "figures",
+            items: [
+              { label: "Enquiries", value: "38%", note: "more this quarter" },
+              { label: "They sign", value: "9 days", note: "faster than average" },
+              { label: "Webinar", value: "7 leads", note: "qualified, 8 October" },
+            ],
+          },
+          { kind: "text", text: "Your goal is three new hospitality clients by the end of the year, and Côté Sud Hôtels and Pavillon Nord are already in conversation." },
+          {
+            kind: "list",
+            title: "What an offer could hold",
+            items: [
+              "Identity, signage and menus as one package, the way Brasserie Ondine bought them.",
+              "Three sizes, priced from your 2026 grid, so a quote can go out the same day.",
+              "Brasserie Ondine’s new menus as the proof.",
+            ],
+          },
+          { kind: "text", text: "Shall I draft a one page outline for the team?" },
+        ],
+      },
+      { id: "o3", from: "you", at: "10:51", text: "Not yet. Let’s see how Côté Sud goes first." },
+      {
+        id: "o4",
+        from: "syxoria",
+        at: "10:51",
+        blocks: [{ kind: "text", text: "Understood. I’ll bring it back when Côté Sud signs, or at the end of November if they have not decided by then." }],
+      },
+    ],
+  },
+  {
+    id: "cv_cash",
+    title: "Can we afford a new designer in January?",
+    group: "Previous 7 days",
+    updated: "Sun",
+    actions: [],
+    people: ["rive"],
+    messages: [
+      { id: "d1", from: "you", at: "20:14", text: "Can we afford a new designer in January?" },
+      {
+        id: "d2",
+        from: "syxoria",
+        at: "20:16",
+        blocks: [
+          { kind: "text", text: "Yes, if Atelier Rive signs. Without it, your cushion would drop just under the four months you want to keep." },
+          {
+            kind: "figures",
+            items: [
+              { label: "Cash today", value: "€186,300", note: "about four months of costs" },
+              { label: "With a designer", value: "3.7 months", note: "of costs in cash" },
+              { label: "Atelier Rive", value: "€42,000", note: "about eight months of a designer" },
+            ],
+          },
+          { kind: "text", text: "I counted a senior designer at about €5,400 a month, all costs included. I’ll tell you the day Camille signs." },
+          { kind: "sources", items: [{ label: "Finance", detail: "Cash and costs, last twelve months", href: "/app/business/finance" }] },
+        ],
+      },
+      { id: "d3", from: "you", at: "20:20", text: "Keep me posted." },
+      { id: "d4", from: "syxoria", at: "20:20", blocks: [{ kind: "text", text: "I will." }] },
+    ],
+  },
 ];
 
-/** Prompts the composer offers, by what the owner might want to do */
+/** What the owner can ask in one click, by what they might want to do: each has a prepared answer */
 export const mockPrompts = [
   { label: "Ask", text: "What changed in the business this week?" },
   { label: "Analyse", text: "Why is our win rate falling?" },
   { label: "Instruct", text: "Draft a thank you note to Galerie Sorel" },
-  { label: "Prepare", text: "Prepare Friday’s call with Camille" },
+  { label: "Prepare", text: "Prepare tomorrow’s call with Boulangeries Lumière" },
 ];
 
 export const mockSearchIndex: SearchItem[] = [

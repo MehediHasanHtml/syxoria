@@ -8,6 +8,10 @@ import { ActionState } from "@/components/dashboard/ws/kit";
 import { assistant as copy } from "@/content/assistant";
 import type { AssistantBlock, AssistantMessage, WorkspaceAction } from "@/types/workspace";
 
+/** What an action asks of the owner: approval while it waits, nothing once given or never needed */
+export const slipNote = (a: WorkspaceAction) =>
+  !a.needsApproval ? copy.slip.own : ["suggested", "drafted", "awaiting-approval"].includes(a.status) ? copy.slip.waits : copy.slip.approved;
+
 /** A turn in the conversation; `fresh` when it has just been said, so its words arrive one by one */
 export type Turn = AssistantMessage & { tag?: "prepared" | "not-yet"; fresh?: boolean };
 
@@ -136,7 +140,7 @@ function Block({ block, from, fresh, action, isHeld }: { block: AssistantBlock; 
             <span className="ar-slip__title">{a.title}</span>
             <span className="ar-slip__meta">
               <ActionState status={a.status} held={held} />
-              <span>{a.needsApproval ? copy.slip.waits : copy.slip.own}</span>
+              <span>{slipNote(a)}</span>
             </span>
           </span>
           <span className="ar-slip__go">

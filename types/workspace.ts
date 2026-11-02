@@ -337,10 +337,43 @@ export type PreparedAnswer = {
   people?: string[];
   recalls?: string[];
 };
-/** What Syxoria brings up when the owner comes to it: the things worth a minute before they leave */
-export type AssistantBrought = { id: string; actionId: string; conversationId: string; title: string; line: string };
-/** What Syxoria is doing at the moment, as a colleague would say it */
-export type AssistantDoing = { when: string; text: string };
+/* ---------- Syxoria's day: what it watches, analyses, decides and does ---------- */
+export type ActivityLane = "monitoring" | "analysing" | "deciding" | "doing";
+/** ongoing: still going on · waiting: for the owner · ahead: planned · failed: did not go through */
+export type ActivityState = "ongoing" | "done" | "waiting" | "failed" | "ahead";
+export type ActivityItem = {
+  id: string;
+  lane: ActivityLane;
+  /** When it began today ("9:20"); what began before today starts with the day and says `since` */
+  at: string;
+  /** When it ended, for a span that is over */
+  until?: string;
+  since?: string;
+  /** Planned beyond today */
+  day?: "Tomorrow";
+  title: string;
+  detail: string;
+  /** What Syxoria will do next about it */
+  next?: string;
+  /** How long a watch goes on ("Friday") */
+  horizon?: string;
+  /** Moments along a watch */
+  marks?: { at: string; label: string }[];
+  /** A decision's owner */
+  by?: "you" | "syxoria";
+  /** Its state when it is not read from its action */
+  state?: ActivityState;
+  /** How far work in progress has come */
+  progress?: { done: number; of: number };
+  actionId?: string;
+  clientId?: string;
+  conversationId?: string;
+  href?: string;
+  /** The question to put to Syxoria about it (one with a prepared answer) */
+  ask?: string;
+};
+/** The demo moment: the day so far, and the time it is now */
+export type AssistantDay = { now: string; dayStart: string; dayEnd: string; items: ActivityItem[] };
 
 /* ---------- Calendar, search, notifications ---------- */
 export type CalendarEvent = {

@@ -1,587 +1,1438 @@
 /* ==========================================================================
-   THE ASSISTANT (components/dashboard/assistant): Syxoria as a colleague
-   One room under the bar: the conversations as shared work on the left, Syxoria on the stage
-   (its Core, its status and what it is busy with; it speaks first, then the conversation reads
-   like an exchange between two people), and what is on the table on the right, with the rules
-   it works under. White is what is; emerald is Syxoria, what it does and what it hands over;
-   terracotta is what is held or did not go through.
+   THE ASSISTANT (components/dashboard/assistant): the workspace of an executive at work
+   No figure and no chat window. Syxoria says where things stand in one sentence; its day is one
+   drawing of four lanes on one line of time (monitoring, analysing, deciding, doing) with the line
+   of now; the desk beside it tells the story of what is chosen, or holds an exchange. One quiet
+   field to talk to it. White is what is and what is yours; emerald is Syxoria, what it does, and
+   now; terracotta is what did not go through or is held.
    ========================================================================== */
 
-.ar {
-  --ar-rail: 17rem;
-  --ar-table: 19.5rem;
-  --ar-gutter: clamp(1rem, 3vw, 2.25rem);
-  --ar-read: 46rem;
+.sw {
+  --sw-desk: 25rem;
+  --sw-pad: clamp(1rem, 2.4vw, 2.25rem);
   --ar-indent: 1.95rem;
   position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  /* phones: the spaces float at the foot of the screen */
-  height: calc(100dvh - var(--sx-top) - 3.25rem - env(safe-area-inset-bottom));
   margin: calc(var(--sx-pt) * -1) calc(var(--sx-px) * -1) calc(var(--sx-pb) * -1);
-  overflow: hidden;
-  background: radial-gradient(120% 90% at 50% 0%, var(--color-canvas-2), var(--color-canvas) 72%);
+  background:
+    radial-gradient(40% 32% at 0% 0%, color-mix(in oklab, var(--color-accent) 7%, transparent), transparent 70%),
+    radial-gradient(120% 90% at 50% 0%, var(--color-canvas-2), var(--color-canvas) 72%);
 }
 
-.ar :focus-visible {
+.sw :focus-visible {
   outline: 2px solid var(--color-fg);
   outline-offset: 2px;
 }
 
-/* ---------- Between us: the conversations ---------- */
-
-.ar-threads {
+.sw-main {
   display: flex;
   flex-direction: column;
-  gap: 0.8rem;
+  gap: clamp(0.75rem, 2vh, 1.25rem);
+  min-width: 0;
   min-height: 0;
-  padding: 1.25rem 0.9rem 1rem;
-  background: color-mix(in oklab, var(--color-canvas) 55%, transparent);
-  box-shadow: inset -1px 0 0 var(--cx-hair);
+  padding: clamp(1rem, 2.6vh, 1.6rem) var(--sw-pad) clamp(0.75rem, 2vh, 1.1rem);
 }
 
-.ar-threads__head {
+/* ---------- What Syxoria says first ---------- */
+
+.sw-head {
   display: flex;
-  align-items: center;
+  flex-wrap: wrap;
+  align-items: flex-end;
   justify-content: space-between;
-  min-height: 1.75rem;
-  padding: 0 0.35rem;
+  gap: 1rem 2.5rem;
 }
 
-.ar-threads__close {
-  display: grid;
-  place-items: center;
-  width: 2rem;
-  height: 2rem;
-  border-radius: 999px;
-  color: var(--color-fg-2);
+.sw-voice {
+  flex: 1 1 30rem;
+  max-width: 50rem;
+  animation: ar-rise 900ms var(--ease-out-soft) both;
 }
 
-.ar-threads__close svg {
-  width: 16px;
-  height: 16px;
-}
-
-.ar-new {
+.sw-eyebrow {
   display: flex;
   align-items: center;
-  gap: 0.55rem;
-  height: 2.5rem;
-  padding: 0 0.95rem;
-  border-radius: 999px;
-  font-size: 13.5px;
+  gap: 0.6rem;
+  font-size: 10.5px;
+  letter-spacing: 0.17em;
+  text-transform: uppercase;
+  color: var(--color-fg-3);
+}
+
+.sw-live {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-accent-strong);
+  box-shadow: 0 0 0 3px var(--color-accent-soft), 0 0 10px var(--color-accent);
+  animation: pulse-soft 2.4s var(--ease-in-out-soft) infinite;
+}
+
+.sw[data-held] .sw-live {
+  background: var(--color-negative);
+  box-shadow: 0 0 0 3px var(--color-negative-soft);
+  animation: none;
+}
+
+.sw-statement {
+  margin-top: clamp(0.5rem, 1.4vh, 0.85rem);
+  font-family: var(--cx-serif);
+  font-size: clamp(1.45rem, 0.95rem + 1.1vw, 2.1rem);
+  font-weight: 300;
+  line-height: 1.22;
+  letter-spacing: -0.01em;
+  color: var(--color-fg-2);
+  text-wrap: balance;
+}
+
+.sw-statement > span {
   color: var(--color-fg);
-  box-shadow: inset 0 0 0 1px var(--cx-hair-2);
-  transition: background-color 200ms, box-shadow 200ms;
 }
 
-.ar-new:hover {
-  background: color-mix(in oklab, var(--color-fg) 5%, transparent);
+.sw-sub {
+  margin-top: 0.45rem;
+  font-size: 13.5px;
+  color: var(--color-fg-3);
 }
 
-.ar-new[aria-current] {
-  box-shadow: inset 0 0 0 1px var(--color-accent-line);
+/* right now: what it is in the middle of, and what comes next */
+.sw-now {
+  display: grid;
+  flex: 0 1 19rem;
+  gap: 0.5rem;
+  min-width: 15rem;
+  animation: ar-rise 900ms 120ms var(--ease-out-soft) both;
 }
 
-.ar-new svg {
-  width: 15px;
-  height: 15px;
+.sw-now ul {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.sw-now__row {
+  display: grid;
+  grid-template-columns: 5.6rem minmax(0, 1fr);
+  align-items: baseline;
+  gap: 0.15rem 0.75rem;
+  width: 100%;
+  padding: 0.35rem 0.5rem;
+  margin: 0 -0.5rem;
+  border-radius: 8px;
+  text-align: left;
+  transition: background-color 200ms;
+}
+
+.sw-now__row:hover {
+  background: color-mix(in oklab, var(--color-fg) 4%, transparent);
+}
+
+.sw-now__when {
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
   color: var(--color-accent-strong);
 }
 
-.ar-find {
-  display: flex;
-  align-items: center;
-  gap: 0.55rem;
-  height: 2.3rem;
-  padding: 0 0.8rem;
-  border-radius: 10px;
-  background: color-mix(in oklab, var(--color-fg) 3.5%, transparent);
-}
-
-.ar-find:focus-within {
-  box-shadow: inset 0 0 0 1px var(--cx-hair-2);
-}
-
-.ar-find svg {
-  flex: none;
-  width: 14px;
-  height: 14px;
+.sw-now__row[data-state="ahead"] .sw-now__when {
   color: var(--color-fg-3);
 }
 
-.ar-find input {
-  flex: 1;
-  min-width: 0;
+.sw-now__row[data-held] .sw-now__when {
+  color: var(--color-negative);
+}
+
+.sw-now__title {
+  overflow: hidden;
   font-size: 13px;
   color: var(--color-fg);
-  background: none;
-  outline: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.ar-find input::placeholder {
+.sw-now__bar {
+  grid-column: 2;
+  height: 2px;
+  margin-top: 0.3rem;
+  border-radius: 2px;
+  overflow: hidden;
+  background: var(--cx-hair-2);
+}
+
+.sw-now__bar > span {
+  display: block;
+  height: 100%;
+  background: var(--color-accent-strong);
+}
+
+.sw-now__row[data-held] .sw-now__bar > span {
+  background: var(--color-negative);
+}
+
+/* ---------- The day ---------- */
+
+.sw-score {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  animation: ar-rise 900ms 200ms var(--ease-out-soft) both;
+}
+
+.sd {
+  --sd-head: 8.75rem;
+  --sd-ahead: 8.75rem;
+  position: relative;
+  display: grid;
+  flex: 1;
+  grid-template-columns: var(--sd-head) minmax(0, 1fr) var(--sd-ahead);
+  grid-template-rows: 2.4rem minmax(6.75rem, 5fr) minmax(2.5rem, 1.25fr) minmax(5rem, 3.4fr) minmax(3.6rem, 2.4fr) minmax(2.4rem, 1.1fr);
+  min-height: 21rem;
+  border-radius: 18px;
+  background: linear-gradient(180deg, color-mix(in oklab, var(--color-fg) 2.6%, transparent), color-mix(in oklab, var(--color-fg) 0.8%, transparent));
+  box-shadow: inset 0 0 0 1px var(--cx-hair), 0 30px 60px -44px rgb(0 0 0 / 0.9);
+}
+
+/* the hours, the shade of what is still to come, and the line of now, under every lane */
+.sd-head {
+  grid-column: 1;
+}
+
+.sd-plot,
+.sd-axis {
+  grid-column: 2;
+}
+
+.sd-ahead {
+  grid-column: 3;
+}
+
+.sd-head--axis,
+.sd-axis,
+.sd-ahead--axis {
+  --lane: 1;
+}
+
+.sd-head--talk,
+.sd-plot--talk,
+.sd-ahead--talk {
+  --lane: 6;
+}
+
+.sd-guides {
+  position: relative;
+  grid-column: 2;
+  grid-row: 1 / -1;
+  pointer-events: none;
+}
+
+.sd-guides__hour {
+  position: absolute;
+  top: 2.4rem;
+  bottom: 0;
+  width: 1px;
+  background: color-mix(in oklab, var(--color-fg) 4.5%, transparent);
+}
+
+.sd-guides__future {
+  position: absolute;
+  inset: 0 0 0 var(--now);
+  background: repeating-linear-gradient(135deg, color-mix(in oklab, var(--color-fg) 2.4%, transparent) 0 1px, transparent 1px 7px);
+}
+
+.sd-guides__now {
+  position: absolute;
+  top: 1.85rem;
+  bottom: 0;
+  left: var(--now);
+  width: 1px;
+  background: linear-gradient(180deg, var(--color-accent-strong), color-mix(in oklab, var(--color-accent-strong) 55%, transparent));
+  box-shadow: 0 0 10px var(--color-accent);
+}
+
+.sd-guides__now::before {
+  content: "";
+  position: absolute;
+  inset: 0 -3.5rem;
+  background: radial-gradient(50% 60% at 50% 45%, color-mix(in oklab, var(--color-accent) 10%, transparent), transparent 70%);
+  animation: ar-breathe 4s var(--ease-in-out-soft) infinite;
+}
+
+.sd-head,
+.sd-plot,
+.sd-ahead {
+  position: relative;
+  grid-row: var(--lane);
+  min-width: 0;
+  box-shadow: inset 0 1px 0 var(--cx-hair);
+}
+
+.sd-head--axis,
+.sd-axis,
+.sd-ahead--axis {
+  box-shadow: none;
+}
+
+.sd-head {
+  display: grid;
+  align-content: center;
+  gap: 0.25rem;
+  padding: 0 1rem 0 1.15rem;
+}
+
+.sd-head__name {
+  font-size: 10.5px;
+  letter-spacing: 0.17em;
+  text-transform: uppercase;
+  color: var(--color-fg-2);
+}
+
+.sd-head__sub {
+  font-family: var(--cx-serif);
+  font-size: 0.95rem;
+  font-weight: 300;
   color: var(--color-fg-3);
 }
 
-.ar-threads__list {
-  display: grid;
-  flex: 1;
-  align-content: start;
-  gap: 1.1rem;
-  min-height: 0;
-  margin: 0 -0.25rem;
-  padding: 0.25rem;
-  overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: var(--cx-hair-2) transparent;
+.sd-head[data-lane="deciding"] .sd-head__sub {
+  color: var(--color-fg);
 }
 
-.ar-threads__group {
-  margin: 0 0 0.3rem;
-  padding-left: 0.65rem;
+.sd-head--talk .sd-head__name {
+  color: var(--color-fg-3);
+}
+
+.sd-axis {
+  position: relative;
+  grid-row: 1;
+}
+
+.sd-pulse {
+  position: absolute;
+  inset: 0.35rem 0 0;
+  width: 100%;
+  height: calc(100% - 0.35rem);
+  overflow: visible;
+}
+
+.sd-pulse path {
+  fill: color-mix(in oklab, var(--color-accent) 22%, transparent);
+  stroke: none;
+}
+
+.sd-axis__hour {
+  position: absolute;
+  bottom: 0.45rem;
+  font-size: 10.5px;
+  color: var(--color-fg-3);
+  translate: -50% 0;
+}
+
+.sd-axis__hour[data-near] {
+  visibility: hidden;
+}
+
+.sd-axis__now {
+  position: absolute;
+  top: 0.45rem;
+  left: var(--now);
+  z-index: 2;
+  padding: 0.12rem 0.5rem;
+  border-radius: 999px;
+  font-size: 10.5px;
+  white-space: nowrap;
+  color: var(--color-accent-strong);
+  background: var(--color-canvas-2);
+  box-shadow: inset 0 0 0 1px var(--color-accent-line);
+  translate: -50% 0;
+}
+
+.sd-ahead {
+  padding-left: 0.9rem;
+}
+
+.sd-ahead--axis {
+  display: flex;
+  align-items: flex-end;
+  padding-bottom: 0.45rem;
   font-size: 10px;
   letter-spacing: 0.17em;
   text-transform: uppercase;
   color: var(--color-fg-3);
 }
 
-.ar-convo {
-  display: grid;
-  gap: 0.35rem;
-  width: 100%;
-  padding: 0.6rem 0.65rem 0.65rem;
-  border-radius: 12px;
-  text-align: left;
-  transition: background-color 200ms, box-shadow 200ms;
+/* ---------- Marks: every one can be pointed at and chosen ---------- */
+
+.sd-mark,
+.sd-horizon,
+.sd-tomorrow {
+  position: absolute;
+  top: calc(var(--sd-top, 0px) + (var(--row) + 0.5) / var(--rows) * (100% - var(--sd-top, 0px)));
+  translate: 0 -50%;
 }
 
-.ar-convo:hover {
-  background: color-mix(in oklab, var(--color-fg) 4%, transparent);
+/* lanes whose marks carry a label above them keep room for the first one */
+.sd-plot[data-lane="monitoring"],
+.sd-ahead[data-lane="monitoring"],
+.sd-plot[data-lane="deciding"] {
+  --sd-top: 0.7rem;
 }
 
-.ar-convo[aria-current] {
-  background: color-mix(in oklab, var(--color-fg) 6%, transparent);
-  box-shadow: inset 0 0 0 1px var(--cx-hair);
+.sd-mark {
+  z-index: 1;
+  left: var(--x);
+  height: 1.5rem;
+  transition: opacity 300ms var(--ease-out-soft);
 }
 
-.ar-convo__title {
-  display: -webkit-box;
+.sd-mark:hover,
+.sd-mark:focus-visible {
+  z-index: 4;
+}
+
+.sd[data-focus] .sd-mark:not([data-on], [data-related]),
+.sd[data-focus] .sd-tomorrow:not([data-on], [data-related]),
+.sd[data-focus] .sd-horizon {
+  opacity: 0.28;
+}
+
+.sd-label {
+  position: absolute;
+  bottom: calc(50% + 4px);
+  left: 0.15rem;
   overflow: hidden;
-  font-size: 13.5px;
-  line-height: 1.38;
+  max-width: 18rem;
+  font-size: 11.5px;
+  line-height: 1.2;
+  white-space: nowrap;
+  text-overflow: ellipsis;
   color: var(--color-fg-2);
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+  transition: color 200ms;
 }
 
-.ar-convo[aria-current] .ar-convo__title,
-.ar-convo:hover .ar-convo__title {
+.sd-label[data-flip] {
+  left: auto;
+  right: 0.35rem;
+}
+
+.sd-mark:hover .sd-label,
+.sd-mark[data-on] .sd-label {
   color: var(--color-fg);
 }
 
-.ar-convo__meta {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  font-size: 11.5px;
-  color: var(--color-fg-3);
+/* a watch: from when it began to now, then on towards its horizon */
+.sd-watch {
+  right: 0;
 }
 
-.ar-convo__meta .ws-state {
-  font-size: 11.5px;
+.sd-watch__line {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: var(--cut);
+  height: 1px;
+  background: color-mix(in oklab, var(--color-fg) 34%, transparent);
+  transform-origin: left;
+  animation: sd-draw 1100ms 300ms var(--ease-out-soft) both;
 }
 
-.ar-quiet {
-  padding: 0 0.65rem;
-  line-height: 1.5;
-  font-size: 13px;
-  color: var(--color-fg-3);
+.sd-watch:has(.sd-label[data-since]) .sd-watch__line {
+  mask-image: linear-gradient(to right, transparent, #000 2.5rem);
 }
 
-/* phones and tablets: the conversations open over the page */
-@media (max-width: 1023px) {
-  .ar-threads {
-    position: fixed;
-    inset: 0 auto 0 0;
-    z-index: 70;
-    width: min(20rem, 88vw);
-    padding-top: 1.1rem;
-    background: var(--color-canvas-2);
-    box-shadow: 0 0 0 1px var(--cx-hair), 30px 0 80px -30px rgb(0 0 0 / 0.8);
-    transform: translateX(-104%);
-    visibility: hidden;
-    transition: transform 380ms var(--ease-out-soft), visibility 0s 380ms;
-  }
-
-  .ar-threads[data-open] {
-    transform: none;
-    visibility: visible;
-    transition: transform 380ms var(--ease-out-soft);
-  }
-
-  .ar-scrim {
-    position: fixed;
-    inset: 0;
-    z-index: 65;
-    background: rgb(0 0 0 / 0.5);
-    animation: ar-fade 300ms both;
-  }
-}
-
-/* ---------- The stage ---------- */
-
-.ar-stage {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  min-height: 0;
-  isolation: isolate;
-}
-
-/* the Core's light in the room: under it on the opening, by the head of a conversation */
-.ar-stage::before,
-.ar-stage::after {
+.sd-watch::after {
   content: "";
   position: absolute;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  transition: opacity 900ms var(--ease-out-soft);
+  top: 50%;
+  left: var(--cut);
+  right: 0;
+  height: 1px;
+  background: repeating-linear-gradient(to right, color-mix(in oklab, var(--color-fg) 26%, transparent) 0 2px, transparent 2px 6px);
 }
 
-.ar-stage::before {
-  background: radial-gradient(38% 34% at 50% 20%, color-mix(in oklab, var(--color-accent) 11%, transparent), transparent 72%);
-}
-
-.ar-stage::after {
-  background: radial-gradient(30% 22% at 8% 0%, color-mix(in oklab, var(--color-accent) 9%, transparent), transparent 70%);
-  opacity: 0;
-}
-
-.ar[data-view="thread"] .ar-stage::before {
-  opacity: 0;
-}
-
-.ar[data-view="thread"] .ar-stage::after {
-  opacity: 1;
-}
-
-.ar[data-phase="thinking"] .ar-stage::after,
-.ar[data-phase="listening"] .ar-stage::after {
-  animation: ar-breathe 2.4s var(--ease-in-out-soft) infinite;
-}
-
-/* Syxoria's presence: the Core, its name and status, what it is busy with */
-.ar-presence {
-  display: flex;
-  flex: none;
-  align-items: center;
-  gap: 0.95rem;
-  min-height: 4.25rem;
-  padding: 0.75rem var(--ar-gutter);
-  box-shadow: inset 0 -1px 0 var(--cx-hair);
-}
-
-.ar[data-view="opening"] .ar-presence {
+.sd-watch__now {
   position: absolute;
-  inset: 0 0 auto;
-  z-index: 2;
-  justify-content: flex-end;
-  min-height: 0;
-  box-shadow: none;
-  pointer-events: none;
-}
-
-.ar-presence__core {
-  flex: none;
-  width: 2.9rem;
-  height: 2.9rem;
-}
-
-.ar-presence__who {
-  display: grid;
-  flex: 1;
-  gap: 0.15rem;
-  min-width: 0;
-}
-
-.ar-presence__tools {
-  display: flex;
-  flex: none;
-  gap: 0.4rem;
-  margin-left: auto;
-  pointer-events: auto;
-}
-
-.ar-tool {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  height: 2.25rem;
-  padding: 0 0.85rem;
-  border-radius: 999px;
-  font-size: 12.5px;
-  color: var(--color-fg-2);
-  box-shadow: inset 0 0 0 1px var(--cx-hair);
-  transition: color 200ms, background-color 200ms;
-}
-
-.ar-tool:hover {
-  color: var(--color-fg);
-  background: color-mix(in oklab, var(--color-fg) 5%, transparent);
-}
-
-.ar-tool svg {
-  width: 15px;
-  height: 15px;
-}
-
-.ar-name {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.25rem 0.75rem;
-  font-family: var(--cx-serif);
-  font-size: 1.2rem;
-  font-weight: 400;
-  line-height: 1.2;
-  color: var(--color-fg);
-}
-
-.ar-status {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  font-family: var(--cx-sans);
-  font-size: 11.5px;
-  letter-spacing: 0.02em;
-  color: var(--color-fg-2);
-}
-
-.ar-status > span {
+  top: 50%;
+  left: var(--cut);
   width: 7px;
   height: 7px;
   border-radius: 50%;
   background: var(--color-accent-strong);
-  box-shadow: 0 0 0 3px var(--color-accent-soft), 0 0 10px var(--color-accent);
+  translate: -50% -50%;
 }
 
-.ar-status[data-tone="busy"] > span {
-  animation: pulse-soft 1.2s var(--ease-in-out-soft) infinite;
+.sd-watch__now::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px var(--color-accent-strong);
+  animation: ar-listen 2.6s var(--ease-out-soft) infinite;
 }
 
-.ar-status[data-tone="held"] {
+.sd-moment {
+  position: absolute;
+  top: 50%;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--color-fg-2);
+  translate: -50% -50%;
+}
+
+.sd-watch:hover .sd-watch__line,
+.sd-watch[data-on] .sd-watch__line {
+  background: var(--color-fg);
+}
+
+.sd-watch[data-on] .sd-watch__line {
+  box-shadow: 0 0 8px color-mix(in oklab, var(--color-fg) 40%, transparent);
+}
+
+/* an analysis: a span of reading and working out */
+.sd-span {
+  width: var(--w);
+}
+
+.sd-span::before {
+  content: "";
+  position: absolute;
+  inset: calc(50% - 3px) 0;
+  border-radius: 3px;
+  background: color-mix(in oklab, var(--color-fg) 24%, transparent);
+  transform-origin: left;
+  transition: background-color 200ms, box-shadow 200ms;
+  animation: sd-draw 700ms 500ms var(--ease-out-soft) both;
+}
+
+.sd-span:hover::before,
+.sd-span[data-on]::before {
+  background: color-mix(in oklab, var(--color-fg) 60%, transparent);
+}
+
+.sd-span[data-state="ongoing"]::before {
+  background: linear-gradient(90deg, color-mix(in oklab, var(--color-accent-strong) 30%, transparent), var(--color-accent-strong), color-mix(in oklab, var(--color-accent-strong) 30%, transparent));
+  background-size: 200% 100%;
+  animation: sd-flow 2.2s linear infinite;
+}
+
+/* a decision that waits for the owner: a ring when it began to wait, a line of waiting up to now */
+.sd-wait {
+  width: var(--w);
+}
+
+.sd-wait__line {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  border-top: 1px dashed color-mix(in oklab, var(--color-fg) 38%, transparent);
+  transform-origin: left;
+  animation: sd-draw 1000ms 450ms var(--ease-out-soft) both;
+}
+
+.sd-wait__ring {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--color-canvas-2);
+  box-shadow: inset 0 0 0 1.5px var(--color-fg);
+  translate: -50% -50%;
+}
+
+/* where it waits: on the line of now, for the owner */
+.sd-wait::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: -1px;
+  width: 2px;
+  height: 11px;
+  border-radius: 1px;
+  background: var(--color-fg);
+  translate: 0 -50%;
+}
+
+.sd-wait .sd-label {
+  left: 0.6rem;
+  color: var(--color-fg);
+}
+
+.sd-wait .sd-label[data-flip] {
+  left: auto;
+}
+
+.sd-wait:hover .sd-wait__line,
+.sd-wait[data-on] .sd-wait__line {
+  border-top-color: var(--color-fg);
+}
+
+.sd-wait[data-on] .sd-wait__ring {
+  box-shadow: inset 0 0 0 1.5px var(--color-fg), 0 0 0 4px color-mix(in oklab, var(--color-fg) 14%, transparent);
+}
+
+/* a point in time: a decision taken, a piece of work done or planned */
+.sd-dot {
+  width: 1.5rem;
+  translate: -50% -50%;
+}
+
+.sd-dot::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--color-accent-strong);
+  translate: -50% -50%;
+  transition: box-shadow 200ms, scale 200ms;
+  animation: ar-fade 500ms 700ms both;
+}
+
+/* a decision taken: a fine upright stroke, white when it was the owner's, emerald when Syxoria's */
+.sd-dot--decided::before {
+  width: 3px;
+  height: 13px;
+  border-radius: 2px;
+}
+
+.sd-dot--decided[data-by="you"]::before {
+  background: var(--color-fg);
+}
+
+.sd-dot[data-state="failed"]::before {
+  background: var(--color-negative);
+}
+
+.sd-dot[data-state="ahead"]::before {
+  background: var(--color-canvas-2);
+  box-shadow: inset 0 0 0 1.5px var(--color-accent-strong);
+}
+
+.sd-dot[data-held]::before {
+  box-shadow: inset 0 0 0 1.5px var(--color-negative);
+}
+
+.sd-dot:hover::before,
+.sd-dot[data-on]::before {
+  scale: 1.3;
+}
+
+.sd-dot[data-on]::before {
+  box-shadow: 0 0 0 4px var(--color-accent-soft);
+}
+
+.sd-dot--decided[data-by="you"][data-on]::before {
+  box-shadow: 0 0 0 4px color-mix(in oklab, var(--color-fg) 14%, transparent);
+}
+
+/* work in progress, up to now, and how far it has come */
+.sd-run {
+  width: var(--w);
+}
+
+.sd-run::before {
+  content: "";
+  position: absolute;
+  inset: calc(50% - 3px) 0;
+  border-radius: 3px;
+  background: color-mix(in oklab, var(--color-accent-strong) 28%, transparent);
+}
+
+.sd-run__fill {
+  position: absolute;
+  top: calc(50% - 3px);
+  left: 0;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--color-accent-strong);
+}
+
+.sd-run[data-held]::before {
+  background: color-mix(in oklab, var(--color-negative) 30%, transparent);
+}
+
+.sd-run[data-held] .sd-run__fill {
+  background: var(--color-negative);
+}
+
+/* what lies beyond the day: where a watch is heading, what is planned tomorrow */
+.sd-horizon {
+  left: 0.9rem;
+  right: 0.5rem;
+  overflow: hidden;
+  font-family: var(--cx-serif);
+  font-size: 12.5px;
+  font-style: italic;
+  font-weight: 300;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--color-fg-3);
+  transition: opacity 300ms;
+}
+
+.sd-tomorrow {
+  left: 0.9rem;
+  right: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  overflow: hidden;
+  font-size: 11.5px;
+  text-align: left;
+  white-space: nowrap;
+  color: var(--color-fg-3);
+  transition: color 200ms, opacity 300ms;
+}
+
+.sd-tomorrow::before {
+  content: "";
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1.5px var(--color-accent-strong);
+}
+
+.sd-tomorrow[data-held]::before {
+  box-shadow: inset 0 0 0 1.5px var(--color-negative);
+}
+
+.sd-tomorrow span {
+  color: var(--color-fg-2);
+}
+
+.sd-tomorrow:hover,
+.sd-tomorrow[data-on] {
+  color: var(--color-fg);
+}
+
+/* the exchanges: when each began and when its last word was said */
+.sd-talk {
+  width: var(--w);
+  min-width: 10px;
+  height: 1.1rem;
+}
+
+/* each word said, as a point on a thin thread from the first to the last */
+.sd-talk::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: color-mix(in oklab, var(--color-fg) 22%, transparent);
+  transition: background-color 200ms;
+}
+
+.sd-talk__at {
+  position: absolute;
+  top: 50%;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--color-canvas-2);
+  box-shadow: inset 0 0 0 1px var(--color-fg-2);
+  translate: -50% -50%;
+  transition: background-color 200ms, box-shadow 200ms;
+}
+
+.sd-talk:hover::before {
+  background: var(--color-fg-2);
+}
+
+.sd-talk:hover .sd-talk__at {
+  background: var(--color-fg-2);
+}
+
+.sd-talk[data-on]::before {
+  background: var(--color-accent-strong);
+}
+
+.sd-talk[data-on] .sd-talk__at {
+  background: var(--color-accent-strong);
+  box-shadow: none;
+}
+
+.sd-ahead--talk {
+  display: flex;
+  align-items: center;
+}
+
+.sd-all {
+  font-size: 11.5px;
+  color: var(--color-fg-2);
+  text-decoration: underline;
+  text-decoration-color: var(--cx-hair-2);
+  text-underline-offset: 3px;
+  transition: color 200ms;
+}
+
+.sd-all:hover {
+  color: var(--color-fg);
+}
+
+/* the note a mark carries: when, what, where it stands */
+.sd-tip {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: -0.25rem;
+  z-index: 5;
+  display: grid;
+  gap: 0.15rem;
+  width: max-content;
+  max-width: 17rem;
+  padding: 0.55rem 0.75rem 0.6rem;
+  border-radius: 10px;
+  font-size: 12px;
+  line-height: 1.35;
+  text-align: left;
+  white-space: normal;
+  background: color-mix(in oklab, var(--color-surface-2) 96%, transparent);
+  box-shadow: inset 0 0 0 1px var(--cx-hair-2), 0 18px 40px -18px rgb(0 0 0 / 0.9);
+  opacity: 0;
+  visibility: hidden;
+  translate: 0 4px;
+  pointer-events: none;
+  transition: opacity 180ms, translate 180ms, visibility 0s 180ms;
+}
+
+.sd-dot .sd-tip {
+  left: 0;
+}
+
+.sd-mark[data-edge="end"] .sd-tip {
+  left: auto;
+  right: -0.25rem;
+}
+
+.sd-mark:hover > .sd-tip,
+.sd-mark:focus-visible > .sd-tip {
+  opacity: 1;
+  visibility: visible;
+  translate: 0;
+  transition: opacity 180ms, translate 180ms;
+}
+
+.sd-tip__when {
+  color: var(--color-fg-3);
+}
+
+.sd-tip__title {
+  color: var(--color-fg);
+}
+
+.sd-tip__state {
+  color: var(--color-fg-3);
+}
+
+/* ---------- Speaking to Syxoria ---------- */
+
+.sw-compose {
+  display: grid;
+  flex: none;
+  justify-items: center;
+  gap: 0.45rem;
+}
+
+.sw-compose .ar-ask {
+  max-width: 54rem;
+  align-items: center;
+}
+
+.sw-in {
+  display: inline-flex;
+  flex: 0 1 auto;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+  max-width: 15rem;
+  height: 2rem;
+  margin-left: 0.2rem;
+  padding: 0 0.2rem 0 0.7rem;
+  border-radius: 999px;
+  background: var(--color-accent-soft);
+  box-shadow: inset 0 0 0 1px var(--color-accent-line);
+}
+
+.sw-in__label {
+  flex: none;
+  font-size: 9.5px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--color-accent-strong);
+}
+
+.sw-in__title {
+  overflow: hidden;
+  font-size: 12px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--color-fg-2);
+}
+
+.sw-in button {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 50%;
+  color: var(--color-fg-3);
+}
+
+.sw-in button:hover {
+  color: var(--color-fg);
+  background: color-mix(in oklab, var(--color-fg) 6%, transparent);
+}
+
+.sw-in svg {
+  width: 13px;
+  height: 13px;
+}
+
+.sw-try {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: baseline;
+  gap: 0.2rem 1rem;
+  max-width: 54rem;
+  font-size: 12px;
+}
+
+.sw-try > span {
+  font-size: 9.5px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--color-fg-3);
+}
+
+.sw-try button {
+  color: var(--color-fg-3);
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 3px;
+  transition: color 200ms, text-decoration-color 200ms;
+}
+
+.sw-try button:hover:not(:disabled) {
+  color: var(--color-fg);
+  text-decoration-color: var(--cx-hair-2);
+}
+
+.sw-try button:disabled {
+  opacity: 0.5;
+}
+
+/* ---------- The desk ---------- */
+
+.sw-desk {
+  --ar-indent: 0rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+  min-height: 0;
+  padding: clamp(1rem, 2.6vh, 1.6rem) 1.4rem 1rem;
+}
+
+.sw-desk__in {
+  display: grid;
+  flex: 1 0 auto;
+  align-content: start;
+  gap: 1.35rem;
+  animation: ar-rise 500ms var(--ease-out-soft) both;
+}
+
+.sw-desk__in > section {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.sw-rows {
+  display: grid;
+  gap: 0.1rem;
+  margin: 0 -0.6rem;
+}
+
+.sw-row {
+  display: grid;
+  grid-template-columns: 5.6rem minmax(0, 1fr);
+  align-items: baseline;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.55rem 0.6rem;
+  border-radius: 10px;
+  text-align: left;
+  transition: background-color 200ms;
+}
+
+.sw-row:hover,
+.sw-row[aria-current] {
+  background: color-mix(in oklab, var(--color-fg) 4.5%, transparent);
+}
+
+.sw-row__when {
+  font-size: 11.5px;
+  color: var(--color-fg-3);
+}
+
+.sw-row__title {
+  font-size: 13.5px;
+  line-height: 1.38;
+  color: var(--color-fg);
+}
+
+.sw-rows--ahead .sw-row__title {
+  color: var(--color-fg-2);
+}
+
+.sw-quiet {
+  font-size: 13px;
+  color: var(--color-fg-3);
+}
+
+.sw-mandate {
+  align-self: end;
+  margin-top: auto;
+  padding: 1rem 1.05rem;
+  border-radius: 14px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--color-fg-2);
+  background: linear-gradient(180deg, color-mix(in oklab, var(--color-fg) 3.5%, transparent), color-mix(in oklab, var(--color-fg) 1.5%, transparent));
+  box-shadow: inset 0 0 0 1px var(--cx-hair);
+}
+
+.sw-mandate__mode {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-family: var(--cx-serif);
+  font-size: 1rem;
+  color: var(--color-fg);
+}
+
+.sw-mandate__mode::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-accent-strong);
+  box-shadow: 0 0 0 3px var(--color-accent-soft);
+}
+
+.sw-mandate[data-held] .sw-mandate__mode {
   color: var(--color-negative);
 }
 
-.ar-status[data-tone="held"] > span {
+.sw-mandate[data-held] .sw-mandate__mode::before {
   background: var(--color-negative);
   box-shadow: 0 0 0 3px var(--color-negative-soft);
 }
 
-.ar-doing {
-  min-height: 1.2rem;
-  overflow: hidden;
-  font-size: 12.5px;
-  line-height: 1.45;
-  color: var(--color-fg-3);
-}
-
-.ar-doing__line {
-  display: block;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  animation: ar-rise 700ms var(--ease-out-soft) both;
-}
-
-.ar-doing__when {
-  margin-right: 0.5rem;
-  color: var(--color-accent-strong);
-}
-
-.ar-role {
-  font-size: 12px;
-  color: var(--color-fg-3);
-}
-
-.ar-scroll {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  scrollbar-width: thin;
-  scrollbar-color: var(--cx-hair-2) transparent;
-}
-
-.ar[data-view="thread"] .ar-scroll {
-  mask-image: linear-gradient(to bottom, transparent, #000 1.25rem, #000 calc(100% - 1.5rem), transparent);
-}
-
-/* ---------- The opening: Syxoria speaks first ---------- */
-
-.ar-open {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 100%;
-  padding: clamp(1.5rem, 5vh, 3.25rem) var(--ar-gutter) clamp(1rem, 3vh, 2rem);
-  text-align: center;
-}
-
-.ar-open__presence {
-  display: grid;
-  justify-items: center;
-  gap: 0.4rem;
-}
-
-.ar-open__presence .ar-name {
-  justify-content: center;
-}
-
-.ar-open__presence .ar-doing {
-  max-width: min(32rem, 90vw);
-}
-
-.ar-open__core {
-  width: clamp(5.25rem, 14vh, 8.25rem);
-  height: clamp(5.25rem, 14vh, 8.25rem);
-  margin-bottom: clamp(0.4rem, 1.4vh, 0.9rem);
-}
-
-.ar-open__greet {
-  margin-top: clamp(1.1rem, 3.6vh, 2.25rem);
-  font-family: var(--cx-serif);
-  font-size: clamp(1.9rem, 3.4vh + 0.75rem, 2.7rem);
-  font-weight: 300;
-  line-height: 1.1;
-  letter-spacing: -0.012em;
-  color: var(--color-fg);
-  animation: ar-rise 900ms 120ms var(--ease-out-soft) both;
-}
-
-.ar-open__lead {
-  max-width: 34rem;
-  margin-top: 0.65rem;
-  font-family: var(--cx-serif);
-  font-size: clamp(1.02rem, 0.8vh + 0.85rem, 1.18rem);
-  font-weight: 300;
-  line-height: 1.5;
-  color: var(--color-fg-2);
-  text-wrap: balance;
-  animation: ar-rise 900ms 280ms var(--ease-out-soft) both;
-}
-
-.ar-brought {
-  container: ar-brought / inline-size;
-  display: grid;
-  justify-items: center;
-  gap: 0.8rem;
-  width: 100%;
-  max-width: 56rem;
-  margin-top: clamp(1.3rem, 4.2vh, 2.75rem);
-  animation: ar-rise 900ms 440ms var(--ease-out-soft) both;
-}
-
-.ar-brought ul {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 0.7rem;
-  width: 100%;
-}
-
-@container ar-brought (min-width: 40rem) {
-  .ar-brought ul {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-
-.ar-card {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.45rem;
-  width: 100%;
-  height: 100%;
-  padding: 0.95rem 1.05rem 0.9rem;
-  border-radius: 16px;
-  text-align: left;
-  background: linear-gradient(180deg, color-mix(in oklab, var(--color-fg) 4.5%, transparent), color-mix(in oklab, var(--color-fg) 1.5%, transparent));
-  box-shadow: inset 0 0 0 1px var(--cx-hair), 0 24px 44px -34px rgb(0 0 0 / 0.9);
-  transition: background-color 250ms, box-shadow 250ms, transform 250ms var(--ease-out-soft);
-}
-
-.ar-card:hover {
-  background-color: color-mix(in oklab, var(--color-fg) 3%, transparent);
-  box-shadow: inset 0 0 0 1px var(--cx-hair-2), 0 28px 50px -34px rgb(0 0 0 / 0.95);
-  transform: translateY(-2px);
-}
-
-.ar-card .ws-state {
-  font-size: 11.5px;
-}
-
-.ar-card__title {
-  font-family: var(--cx-serif);
-  font-size: 1.04rem;
-  font-weight: 400;
-  line-height: 1.3;
-  color: var(--color-fg);
-}
-
-.ar-card__line {
-  font-size: 12.5px;
-  line-height: 1.45;
-  color: var(--color-fg-3);
-}
-
-.ar-card__go {
+.sw-more {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  margin-top: auto;
-  padding-top: 0.35rem;
+  justify-self: start;
   font-size: 12.5px;
   color: var(--color-fg-2);
   transition: color 200ms;
 }
 
-.ar-card__go svg {
-  width: 13px;
-  height: 13px;
-  transition: transform 250ms var(--ease-out-soft);
+.sw-more:hover {
+  color: var(--color-fg);
 }
 
-.ar-card:hover .ar-card__go {
+.sw-more svg {
+  width: 13px;
+  height: 13px;
+}
+
+.sw-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  justify-self: start;
+  font-size: 12.5px;
+  color: var(--color-fg-3);
+  transition: color 200ms;
+}
+
+.sw-back:hover {
+  color: var(--color-fg);
+}
+
+.sw-back svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* one item's story */
+.sw-story {
+  gap: 0.9rem;
+}
+
+.sw-story__kicker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.75rem;
+  font-size: 12px;
+  color: var(--color-fg-3);
+}
+
+.sw-story__lane {
+  font-size: 10px;
+  letter-spacing: 0.17em;
+  text-transform: uppercase;
+  color: var(--color-fg-2);
+}
+
+.sw-story__lane[data-lane="doing"],
+.sw-story__lane[data-lane="talk"] {
   color: var(--color-accent-strong);
 }
 
-.ar-card:hover .ar-card__go svg {
-  transform: translateX(3px);
+.sw-story__lane[data-lane="deciding"] {
+  color: var(--color-fg);
 }
 
-/* ---------- A conversation ---------- */
-
-.ar-thread {
-  display: grid;
-  gap: 1.9rem;
-  max-width: var(--ar-read);
-  margin: 0 auto;
-  padding: 1.9rem var(--ar-gutter) 2.25rem;
-}
-
-.ar-thread__title {
+.sw-story__title {
   font-family: var(--cx-serif);
-  font-size: 1.55rem;
+  font-size: 1.5rem;
   font-weight: 300;
-  line-height: 1.25;
+  line-height: 1.24;
   letter-spacing: -0.008em;
   color: var(--color-fg);
   text-wrap: balance;
 }
+
+.sw-story__state {
+  margin-top: -0.4rem;
+  font-size: 12.5px;
+  color: var(--color-fg-3);
+}
+
+.sw-story__state[data-state="waiting"] {
+  color: var(--color-fg);
+}
+
+.sw-story__state[data-state="ongoing"] {
+  color: var(--color-accent-strong);
+}
+
+.sw-story__state[data-state="failed"],
+.sw-story__held {
+  color: var(--color-negative);
+}
+
+.sw-story__held {
+  font-size: 12.5px;
+}
+
+.sw-story__detail {
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--color-fg-2);
+}
+
+.sw-progress {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.sw-progress::before {
+  content: "";
+  flex: 1;
+  order: 1;
+  height: 3px;
+  border-radius: 3px;
+  background: var(--cx-hair-2);
+}
+
+.sw-progress > span {
+  position: absolute;
+  height: 3px;
+  border-radius: 3px;
+  background: var(--color-accent-strong);
+}
+
+.sw-progress {
+  position: relative;
+}
+
+.sw-progress > em {
+  order: 2;
+  font-size: 12px;
+  font-style: normal;
+  color: var(--color-fg-3);
+}
+
+.sw-moments {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.sw-moments li {
+  display: flex;
+  gap: 0.75rem;
+  font-size: 13px;
+  color: var(--color-fg-2);
+}
+
+.sw-moments span {
+  color: var(--color-fg-3);
+}
+
+.sw-next {
+  display: grid;
+  gap: 0.35rem;
+  padding-left: 0.95rem;
+  box-shadow: inset 1px 0 0 var(--color-accent-line);
+}
+
+.sw-next p:last-child {
+  font-family: var(--cx-serif);
+  font-size: 1.04rem;
+  font-weight: 300;
+  line-height: 1.5;
+  color: var(--color-fg);
+}
+
+.sw-story__do {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.sw-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  max-width: 100%;
+  min-height: 2.3rem;
+  padding: 0.35rem 0.95rem;
+  border-radius: 999px;
+  font-size: 13px;
+  color: var(--color-fg-2);
+  box-shadow: inset 0 0 0 1px var(--cx-hair-2);
+  transition: color 200ms, background-color 200ms, box-shadow 200ms;
+}
+
+.sw-btn:hover:not(:disabled) {
+  color: var(--color-fg);
+  background: color-mix(in oklab, var(--color-fg) 5%, transparent);
+}
+
+.sw-btn svg {
+  flex: none;
+  width: 14px;
+  height: 14px;
+}
+
+.sw-btn--ask {
+  color: var(--color-canvas);
+  background: var(--color-fg);
+  box-shadow: none;
+}
+
+.sw-btn--ask:hover:not(:disabled) {
+  color: var(--color-canvas);
+  background: color-mix(in oklab, var(--color-fg) 86%, transparent);
+}
+
+.sw-btn:disabled {
+  opacity: 0.45;
+}
+
+/* an exchange on the desk, read like notes */
+.sw-exchange__turns {
+  display: grid;
+  gap: 1.6rem;
+}
+
+.sw-desk .ar-say {
+  font-size: 1.06rem;
+}
+
+.sw-desk .ar-figures {
+  grid-template-columns: repeat(auto-fit, minmax(6.25rem, 1fr));
+}
+
+.sw-desk .ar-figures__value {
+  font-size: 1.25rem;
+}
+
+.sw-preview {
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--color-fg-3);
+}
+
+.sw-scrim {
+  display: none;
+}
+
+/* ---------- Room by room ---------- */
+
+/* phones and tablets: the day scrolls sideways from now; the desk opens as a sheet */
+@media (max-width: 1023px) {
+  .sw {
+    --ar-indent: 0rem;
+    padding-bottom: 0.5rem;
+  }
+
+  .sw-score {
+    overflow-x: auto;
+    margin: 0 calc(var(--sw-pad) * -1);
+    padding: 0.25rem var(--sw-pad) 0.5rem;
+    scrollbar-width: none;
+  }
+
+  .sd {
+    --sd-head: 7rem;
+    --sd-ahead: 7.5rem;
+    min-width: 52rem;
+    min-height: 24rem;
+  }
+
+  /* the lane names stay in view while the day scrolls */
+  .sd-head {
+    position: sticky;
+    left: 0;
+    z-index: 3;
+    background: var(--color-canvas-2);
+    /* and covers what passes under the gutter beside them */
+    box-shadow: inset 0 1px 0 var(--cx-hair), calc(var(--sw-pad) * -1) 0 0 0 var(--color-canvas-2);
+  }
+
+  .sd-head--axis {
+    box-shadow: calc(var(--sw-pad) * -1) 0 0 0 var(--color-canvas-2);
+  }
+
+  .sd-head--axis {
+    border-top-left-radius: 18px;
+  }
+
+  .sd-head--talk {
+    border-bottom-left-radius: 18px;
+  }
+
+  .sw-now {
+    flex-basis: 100%;
+  }
+
+  .sw-compose {
+    position: sticky;
+    bottom: calc(3.25rem + env(safe-area-inset-bottom) + 0.5rem);
+    z-index: 20;
+  }
+
+
+  .sw[data-desk="item"] .sw-desk,
+  .sw[data-desk="exchange"] .sw-desk,
+  .sw[data-desk="history"] .sw-desk {
+    position: fixed;
+    inset: 12dvh 0 0;
+    z-index: 70;
+    overflow-y: auto;
+    padding: 1.25rem var(--sw-pad) calc(1.5rem + env(safe-area-inset-bottom));
+    border-radius: 22px 22px 0 0;
+    background: var(--color-canvas-2);
+    box-shadow: 0 -1px 0 var(--cx-hair-2), 0 -30px 80px -20px rgb(0 0 0 / 0.85);
+    animation: sw-sheet 420ms var(--ease-out-soft) both;
+  }
+
+  .sw[data-desk="exchange"] .sw-desk {
+    bottom: calc(3.25rem + env(safe-area-inset-bottom) + 5rem);
+  }
+
+  .sw-scrim {
+    position: fixed;
+    inset: 0;
+    z-index: 65;
+    display: block;
+    background: rgb(0 0 0 / 0.5);
+    animation: ar-fade 300ms both;
+  }
+
+  .sw[data-desk="exchange"] .sw-compose {
+    z-index: 75;
+  }
+}
+
+@media (max-width: 639px) {
+  .sw-in {
+    display: none;
+  }
+
+  .sw-try {
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    width: calc(100% + 2 * var(--sw-pad));
+    margin: 0 calc(var(--sw-pad) * -1);
+    padding: 0 var(--sw-pad);
+    overflow-x: auto;
+    scrollbar-width: none;
+    white-space: nowrap;
+  }
+}
+
+@media (min-width: 1024px) {
+  .sw {
+    grid-template-columns: minmax(0, 1fr) var(--sw-desk);
+    height: calc(100dvh - var(--sx-top));
+    overflow: hidden;
+  }
+
+  .sw-desk {
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--cx-hair-2) transparent;
+    background: color-mix(in oklab, var(--color-canvas) 55%, transparent);
+    box-shadow: inset 1px 0 0 var(--cx-hair);
+  }
+}
+
+@media (min-width: 1024px) and (max-width: 1365px) {
+  .sw {
+    --sw-desk: 21rem;
+  }
+
+  .sd {
+    --sd-head: 7.5rem;
+    --sd-ahead: 7.5rem;
+  }
+
+}
+
+/* short screens: the day keeps to one screen */
+@media (min-width: 1024px) and (max-height: 780px) {
+  .sw-sub {
+    display: none;
+  }
+
+  .sd {
+    grid-template-rows: 2.2rem minmax(6rem, 5fr) minmax(2.1rem, 1.25fr) minmax(4.4rem, 3.4fr) minmax(3.2rem, 2.4fr) minmax(2.1rem, 1.1fr);
+    min-height: 0;
+  }
+
+  .sd-head__sub {
+    font-size: 0.85rem;
+  }
+}
+
+/* ---------- An exchange: Syxoria's answers, read like notes ---------- */
 
 .ar-turn {
   display: grid;
@@ -940,54 +1791,8 @@
   animation: pulse-soft 0.9s var(--ease-in-out-soft) infinite;
 }
 
-/* ---------- Speaking to Syxoria ---------- */
 
-.ar-composer {
-  display: grid;
-  flex: none;
-  justify-items: center;
-  gap: 0.6rem;
-  padding: 0.6rem var(--ar-gutter) clamp(0.8rem, 2vh, 1.25rem);
-}
-
-.ar-suggest {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 0.45rem;
-  max-width: var(--ar-read);
-}
-
-.ar-suggest button {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 0.5rem;
-  max-width: 100%;
-  padding: 0.42rem 0.85rem;
-  border-radius: 999px;
-  font-size: 12.5px;
-  text-align: left;
-  color: var(--color-fg-2);
-  box-shadow: inset 0 0 0 1px var(--cx-hair);
-  transition: color 200ms, background-color 200ms, box-shadow 200ms;
-}
-
-.ar-suggest button:hover:not(:disabled) {
-  color: var(--color-fg);
-  background: color-mix(in oklab, var(--color-fg) 4%, transparent);
-  box-shadow: inset 0 0 0 1px var(--cx-hair-2);
-}
-
-.ar-suggest button:disabled {
-  opacity: 0.5;
-}
-
-.ar-suggest__label {
-  font-size: 9.5px;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  color: var(--color-accent-strong);
-}
+/* ---------- The field ---------- */
 
 .ar-ask {
   display: flex;
@@ -1107,342 +1912,6 @@
   color: var(--color-negative);
 }
 
-/* ---------- On the table ---------- */
-
-.ar-table {
-  display: none;
-}
-
-.ar-table__in {
-  display: grid;
-  gap: 1.5rem;
-}
-
-.ar-table__in section {
-  display: grid;
-  gap: 0.7rem;
-}
-
-.ar-table__title {
-  font-family: var(--cx-serif);
-  font-size: 1.15rem;
-  font-weight: 300;
-  color: var(--color-fg);
-}
-
-.ar-people,
-.ar-moves,
-.ar-coming {
-  display: grid;
-  gap: 0.2rem;
-  margin: 0 -0.5rem;
-}
-
-.ar-people a,
-.ar-moves a,
-.ar-coming a {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.7rem;
-  padding: 0.5rem;
-  border-radius: 10px;
-  transition: background-color 200ms;
-}
-
-.ar-people a:hover,
-.ar-moves a:hover,
-.ar-coming a:hover {
-  background: color-mix(in oklab, var(--color-fg) 4%, transparent);
-}
-
-.ar-people__initials {
-  display: grid;
-  flex: none;
-  place-items: center;
-  width: 2rem;
-  height: 2rem;
-  border-radius: 50%;
-  font-size: 10.5px;
-  letter-spacing: 0.04em;
-  color: var(--color-fg-2);
-  background: color-mix(in oklab, var(--color-fg) 6%, transparent);
-}
-
-.ar-people__name,
-.ar-moves__title,
-.ar-coming__title {
-  display: block;
-  font-size: 13.5px;
-  line-height: 1.35;
-  color: var(--color-fg);
-}
-
-.ar-people__where,
-.ar-coming__note {
-  display: block;
-  margin-top: 0.1rem;
-  font-size: 12px;
-  line-height: 1.4;
-  color: var(--color-fg-3);
-}
-
-.ar-moves .ws-state {
-  margin-top: 0.15rem;
-  font-size: 12px;
-}
-
-.ar-coming a {
-  display: grid;
-  grid-template-columns: 6.25rem minmax(0, 1fr);
-}
-
-.ar-coming__when {
-  padding-top: 0.1rem;
-  font-size: 12px;
-  color: var(--color-fg-3);
-}
-
-.ar-recalls {
-  display: grid;
-  gap: 0.75rem;
-}
-
-.ar-recalls li {
-  padding-left: 0.85rem;
-  font-family: var(--cx-serif);
-  font-size: 0.98rem;
-  font-weight: 300;
-  line-height: 1.45;
-  color: var(--color-fg-2);
-  box-shadow: inset 1px 0 0 var(--color-accent-line);
-}
-
-.ar-recalls span {
-  display: block;
-  margin-top: 0.2rem;
-  font-family: var(--cx-sans);
-  font-size: 11.5px;
-  color: var(--color-fg-3);
-}
-
-.ar-more {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  justify-self: start;
-  font-size: 12.5px;
-  color: var(--color-fg-2);
-  transition: color 200ms;
-}
-
-.ar-more:hover {
-  color: var(--color-fg);
-}
-
-.ar-more svg {
-  width: 13px;
-  height: 13px;
-}
-
-.ar-quiet--table {
-  padding: 0;
-  font-size: 12.5px;
-}
-
-/* how we work together: always there, at the foot of the table */
-.ar-pact {
-  display: grid;
-  gap: 0.8rem;
-  padding: 1rem 1.05rem 1.05rem;
-  border-radius: 16px;
-  background: linear-gradient(180deg, color-mix(in oklab, var(--color-fg) 3.5%, transparent), color-mix(in oklab, var(--color-fg) 1.5%, transparent));
-  box-shadow: inset 0 0 0 1px var(--cx-hair);
-}
-
-.ar-pact__mode {
-  display: flex;
-  align-items: center;
-  gap: 0.55rem;
-  font-family: var(--cx-serif);
-  font-size: 1.02rem;
-  color: var(--color-fg);
-}
-
-.ar-pact__mode::before {
-  content: "";
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--color-accent-strong);
-  box-shadow: 0 0 0 3px var(--color-accent-soft);
-}
-
-.ar-pact__held {
-  font-size: 12.5px;
-  line-height: 1.5;
-  color: var(--color-negative);
-}
-
-.ar-pact dl {
-  display: grid;
-  gap: 0.7rem;
-}
-
-.ar-pact dt {
-  margin-bottom: 0.25rem;
-  font-size: 10px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--color-fg-3);
-}
-
-.ar-pact dd li {
-  font-size: 12.5px;
-  line-height: 1.5;
-  color: var(--color-fg-2);
-}
-
-.ar-preview {
-  font-size: 11.5px;
-  line-height: 1.5;
-  color: var(--color-fg-3);
-}
-
-/* ---------- Room by room ---------- */
-
-@media (max-width: 1023px) {
-  .ar {
-    --ar-indent: 0rem;
-  }
-
-  .ar-turn__who {
-    gap: 0.45rem;
-  }
-}
-
-@media (max-width: 639px) {
-  .ar-tool span {
-    display: none;
-  }
-
-  .ar-tool {
-    width: 2.25rem;
-    padding: 0;
-    justify-content: center;
-  }
-
-  .ar-presence__core {
-    width: 2.5rem;
-    height: 2.5rem;
-  }
-
-  .ar-say {
-    font-size: 1.08rem;
-  }
-
-  .ar-suggest {
-    flex-wrap: nowrap;
-    justify-content: flex-start;
-    width: calc(100% + 2 * var(--ar-gutter));
-    margin: 0 calc(var(--ar-gutter) * -1);
-    padding: 0 var(--ar-gutter);
-    overflow-x: auto;
-    scrollbar-width: none;
-  }
-
-  .ar-suggest button {
-    flex: none;
-    white-space: nowrap;
-  }
-}
-
-@media (min-width: 1024px) {
-  .ar {
-    grid-template-columns: var(--ar-rail) minmax(0, 1fr);
-    height: calc(100dvh - var(--sx-top));
-  }
-
-  .ar-tool--threads,
-  .ar-tool--new,
-  .ar-threads__close {
-    display: none;
-  }
-}
-
-@media (min-width: 1280px) {
-  .ar {
-    grid-template-columns: var(--ar-rail) minmax(0, 1fr) var(--ar-table);
-  }
-
-  .ar-table {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-    min-height: 0;
-    padding: 1.35rem 1.25rem 1.1rem;
-    overflow-y: auto;
-    scrollbar-width: thin;
-    scrollbar-color: var(--cx-hair-2) transparent;
-    background: color-mix(in oklab, var(--color-canvas) 55%, transparent);
-    box-shadow: inset 1px 0 0 var(--cx-hair);
-  }
-
-  .ar-pact {
-    margin-top: auto;
-  }
-}
-
-/* laptops: narrower rails, so the stage keeps room for the three cards side by side */
-@media (min-width: 1024px) and (max-width: 1439px) {
-  .ar {
-    --ar-rail: 15rem;
-    --ar-table: 16.5rem;
-  }
-
-  .ar-threads {
-    padding-inline: 0.7rem;
-  }
-
-  .ar-table {
-    padding-inline: 1rem;
-  }
-}
-
-/* short screens: the opening keeps to one screen */
-@media (min-width: 1024px) and (max-height: 760px) {
-  .ar-open__presence .ar-role {
-    display: none;
-  }
-
-  .ar-card__line {
-    display: none;
-  }
-
-  .ar-open {
-    padding-top: 1rem;
-  }
-
-  .ar-open__core {
-    width: 4.75rem;
-    height: 4.75rem;
-    margin-bottom: 0.2rem;
-  }
-
-  .ar-open__greet {
-    margin-top: 1rem;
-  }
-
-  .ar-brought {
-    margin-top: 1.15rem;
-  }
-}
-
-@media (min-width: 1024px) and (max-width: 1439px) {
-  .ar-coming a {
-    grid-template-columns: 5.25rem minmax(0, 1fr);
-    gap: 0.55rem;
-  }
-}
 
 /* ---------- Motion ---------- */
 
@@ -1485,20 +1954,30 @@
   }
 }
 
-/* the Core travels between the opening and the head of a conversation */
-::view-transition-group(ar-core) {
-  animation-duration: 820ms;
-  animation-timing-function: cubic-bezier(0.65, 0, 0.2, 1);
+
+@keyframes sd-draw {
+  from {
+    scale: 0 1;
+  }
 }
 
-::view-transition-old(ar-core),
-::view-transition-new(ar-core) {
-  height: 100%;
+@keyframes sd-flow {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes sw-sheet {
+  from {
+    translate: 0 2rem;
+    opacity: 0;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ar *,
-  .ar-stage::after {
+  .sw *,
+  .sw *::before,
+  .sw *::after {
     animation: none !important;
     transition: none !important;
   }

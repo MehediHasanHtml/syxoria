@@ -1,44 +1,40 @@
 import { dailyBriefing as briefingCopy } from "@/content/briefing";
-import { getAssistantDesk, getPreparedAnswers } from "@/services/assistant";
+import { getAssistantDay, getPreparedAnswers } from "@/services/assistant";
 import { getDailyBriefings } from "@/services/briefings";
-import { getCurrentUser, getWorkspace } from "@/services/user";
-import { getCalendar, getClients, getConversations, getMemory, getSafetySettings, getWorkspaceActions } from "@/services/workspace";
+import { getCurrentUser } from "@/services/user";
+import { getClients, getConversations, getSafetySettings, getWorkspaceActions } from "@/services/workspace";
 
 /**
- * Everything the assistant reads, from the workspace's services: who it speaks to and how it
- * greets them (the latest briefing sets the time of day), what it brings up and is busy with,
- * the conversations and prepared answers, and what it can lay on the table (clients, actions,
- * company memory, the calendar, the rules it works under). The assistant has no data of its own.
+ * Everything the assistant reads, from the workspace's services: who it works for and how it
+ * greets them (the latest briefing sets the time of day), its day lane by lane, the exchanges and
+ * prepared answers, the actions its decisions and work read their status from, the clients they
+ * concern and the rules it works under. The assistant has no data of its own.
  */
 export async function loadAssistant() {
-  const [set, user, workspace, desk, answers, { conversations, prompts }, actions, memory, clients, events, safety] = await Promise.all([
+  const [set, user, day, answers, { conversations, prompts }, actions, clients, safety] = await Promise.all([
     getDailyBriefings(),
     getCurrentUser(),
-    getWorkspace(),
-    getAssistantDesk(),
+    getAssistantDay(),
     getPreparedAnswers(),
     getConversations(),
     getWorkspaceActions(),
-    getMemory(),
     getClients(),
-    getCalendar(),
     getSafetySettings(),
   ]);
   const latest = set.briefings[set.briefings.length - 1];
+  const date = new Date(`${set.date}T12:00:00`).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
 
   return {
     greeting: `${briefingCopy.greeting[latest.period]}, ${set.owner.firstName}.`,
+    date,
     initials: user.initials,
-    company: workspace.name,
-    ...desk,
+    day,
     answers,
     conversations,
     prompts,
     actions,
-    memory,
-    people: clients.map((c) => ({ id: c.id, name: c.contact.name, company: c.name, role: c.contact.role, status: c.status, href: `/app/clients?client=${c.id}` })),
-    events: events.filter((e) => e.day === "Today" || e.day === "Tomorrow").slice(0, 4),
-    rules: { ask: safety.approvals.filter((a) => a.autonomous === "ask").map((a) => a.action), never: safety.restricted.slice(0, 3) },
+    clients: clients.map((c) => ({ id: c.id, name: c.name, contact: c.contact.name })),
+    rules: { ask: safety.approvals.filter((a) => a.autonomous === "ask").map((a) => a.action) },
   };
 }
 

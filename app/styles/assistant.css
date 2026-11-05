@@ -1,969 +1,338 @@
 /* ==========================================================================
-   THE ASSISTANT (components/dashboard/assistant): the workspace of an executive at work
-   No figure and no chat window. Syxoria says where things stand in one sentence; its day is one
-   drawing of four lanes on one line of time (monitoring, analysing, deciding, doing) with the line
-   of now; the desk beside it tells the story of what is chosen, or holds an exchange. One quiet
-   field to talk to it. White is what is and what is yours; emerald is Syxoria, what it does, and
-   now; terracotta is what did not go through or is held.
+   THE ASSISTANT (components/dashboard/assistant): one quiet room
+   No figure and no side rails. A point of light stands for Syxoria until the final Core is
+   approved; one line beside its name says what it is analysing, preparing or doing. It speaks
+   first, then the conversation reads like an exchange between two people. Conversations wait in
+   a panel at the edge. White is what is; emerald is Syxoria and what it does; terracotta is what
+   did not go through or is held.
    ========================================================================== */
 
-.sw {
-  --sw-desk: 25rem;
-  --sw-pad: clamp(1rem, 2.4vw, 2.25rem);
-  --ar-indent: 1.95rem;
+.ar {
+  --ar-gutter: clamp(1rem, 3vw, 2.5rem);
+  --ar-read: 42rem;
+  --ar-indent: 0rem;
   position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
+  /* phones: the spaces float at the foot of the screen */
+  height: calc(100dvh - var(--sx-top) - 3.25rem - env(safe-area-inset-bottom));
   margin: calc(var(--sx-pt) * -1) calc(var(--sx-px) * -1) calc(var(--sx-pb) * -1);
+  overflow: hidden;
   background:
-    radial-gradient(40% 32% at 0% 0%, color-mix(in oklab, var(--color-accent) 7%, transparent), transparent 70%),
+    radial-gradient(34% 30% at 50% 26%, color-mix(in oklab, var(--color-accent) 5%, transparent), transparent 72%),
     radial-gradient(120% 90% at 50% 0%, var(--color-canvas-2), var(--color-canvas) 72%);
 }
 
-.sw :focus-visible {
+.ar :focus-visible {
   outline: 2px solid var(--color-fg);
   outline-offset: 2px;
 }
 
-.sw-main {
-  display: flex;
-  flex-direction: column;
-  gap: clamp(0.75rem, 2vh, 1.25rem);
-  min-width: 0;
-  min-height: 0;
-  padding: clamp(1rem, 2.6vh, 1.6rem) var(--sw-pad) clamp(0.75rem, 2vh, 1.1rem);
+/* ---------- Presence: a point of light in a fine ring, until the final Core ---------- */
+
+.ar-mark {
+  position: relative;
+  display: inline-block;
+  flex: none;
+  width: 1.6rem;
+  height: 1.6rem;
 }
 
-/* ---------- What Syxoria says first ---------- */
-
-.sw-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 1rem 2.5rem;
-}
-
-.sw-voice {
-  flex: 1 1 30rem;
-  max-width: 50rem;
-  animation: ar-rise 900ms var(--ease-out-soft) both;
-}
-
-.sw-eyebrow {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  font-size: 10.5px;
-  letter-spacing: 0.17em;
-  text-transform: uppercase;
-  color: var(--color-fg-3);
-}
-
-.sw-live {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--color-accent-strong);
-  box-shadow: 0 0 0 3px var(--color-accent-soft), 0 0 10px var(--color-accent);
-  animation: pulse-soft 2.4s var(--ease-in-out-soft) infinite;
-}
-
-.sw[data-held] .sw-live {
-  background: var(--color-negative);
-  box-shadow: 0 0 0 3px var(--color-negative-soft);
-  animation: none;
-}
-
-.sw-statement {
-  margin-top: clamp(0.5rem, 1.4vh, 0.85rem);
-  font-family: var(--cx-serif);
-  font-size: clamp(1.45rem, 0.95rem + 1.1vw, 2.1rem);
-  font-weight: 300;
-  line-height: 1.22;
-  letter-spacing: -0.01em;
-  color: var(--color-fg-2);
-  text-wrap: balance;
-}
-
-.sw-statement > span {
-  color: var(--color-fg);
-}
-
-.sw-sub {
-  margin-top: 0.45rem;
-  font-size: 13.5px;
-  color: var(--color-fg-3);
-}
-
-/* right now: what it is in the middle of, and what comes next */
-.sw-now {
-  display: grid;
-  flex: 0 1 19rem;
-  gap: 0.5rem;
-  min-width: 15rem;
-  animation: ar-rise 900ms 120ms var(--ease-out-soft) both;
-}
-
-.sw-now ul {
-  display: grid;
-  gap: 0.15rem;
-}
-
-.sw-now__row {
-  display: grid;
-  grid-template-columns: 5.6rem minmax(0, 1fr);
-  align-items: baseline;
-  gap: 0.15rem 0.75rem;
+.ar-mark svg {
   width: 100%;
-  padding: 0.35rem 0.5rem;
-  margin: 0 -0.5rem;
-  border-radius: 8px;
-  text-align: left;
-  transition: background-color 200ms;
-}
-
-.sw-now__row:hover {
-  background: color-mix(in oklab, var(--color-fg) 4%, transparent);
-}
-
-.sw-now__when {
-  font-size: 10px;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  color: var(--color-accent-strong);
-}
-
-.sw-now__row[data-state="ahead"] .sw-now__when {
-  color: var(--color-fg-3);
-}
-
-.sw-now__row[data-held] .sw-now__when {
-  color: var(--color-negative);
-}
-
-.sw-now__title {
-  overflow: hidden;
-  font-size: 13px;
-  color: var(--color-fg);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.sw-now__bar {
-  grid-column: 2;
-  height: 2px;
-  margin-top: 0.3rem;
-  border-radius: 2px;
-  overflow: hidden;
-  background: var(--cx-hair-2);
-}
-
-.sw-now__bar > span {
-  display: block;
   height: 100%;
-  background: var(--color-accent-strong);
-}
-
-.sw-now__row[data-held] .sw-now__bar > span {
-  background: var(--color-negative);
-}
-
-/* ---------- The day ---------- */
-
-.sw-score {
-  display: flex;
-  flex: 1;
-  min-height: 0;
-  animation: ar-rise 900ms 200ms var(--ease-out-soft) both;
-}
-
-.sd {
-  --sd-head: 8.75rem;
-  --sd-ahead: 8.75rem;
-  position: relative;
-  display: grid;
-  flex: 1;
-  grid-template-columns: var(--sd-head) minmax(0, 1fr) var(--sd-ahead);
-  grid-template-rows: 2.4rem minmax(6.75rem, 5fr) minmax(2.5rem, 1.25fr) minmax(5rem, 3.4fr) minmax(3.6rem, 2.4fr) minmax(2.4rem, 1.1fr);
-  min-height: 21rem;
-  border-radius: 18px;
-  background: linear-gradient(180deg, color-mix(in oklab, var(--color-fg) 2.6%, transparent), color-mix(in oklab, var(--color-fg) 0.8%, transparent));
-  box-shadow: inset 0 0 0 1px var(--cx-hair), 0 30px 60px -44px rgb(0 0 0 / 0.9);
-}
-
-/* the hours, the shade of what is still to come, and the line of now, under every lane */
-.sd-head {
-  grid-column: 1;
-}
-
-.sd-plot,
-.sd-axis {
-  grid-column: 2;
-}
-
-.sd-ahead {
-  grid-column: 3;
-}
-
-.sd-head--axis,
-.sd-axis,
-.sd-ahead--axis {
-  --lane: 1;
-}
-
-.sd-head--talk,
-.sd-plot--talk,
-.sd-ahead--talk {
-  --lane: 6;
-}
-
-.sd-guides {
-  position: relative;
-  grid-column: 2;
-  grid-row: 1 / -1;
-  pointer-events: none;
-}
-
-.sd-guides__hour {
-  position: absolute;
-  top: 2.4rem;
-  bottom: 0;
-  width: 1px;
-  background: color-mix(in oklab, var(--color-fg) 4.5%, transparent);
-}
-
-.sd-guides__future {
-  position: absolute;
-  inset: 0 0 0 var(--now);
-  background: repeating-linear-gradient(135deg, color-mix(in oklab, var(--color-fg) 2.4%, transparent) 0 1px, transparent 1px 7px);
-}
-
-.sd-guides__now {
-  position: absolute;
-  top: 1.85rem;
-  bottom: 0;
-  left: var(--now);
-  width: 1px;
-  background: linear-gradient(180deg, var(--color-accent-strong), color-mix(in oklab, var(--color-accent-strong) 55%, transparent));
-  box-shadow: 0 0 10px var(--color-accent);
-}
-
-.sd-guides__now::before {
-  content: "";
-  position: absolute;
-  inset: 0 -3.5rem;
-  background: radial-gradient(50% 60% at 50% 45%, color-mix(in oklab, var(--color-accent) 10%, transparent), transparent 70%);
-  animation: ar-breathe 4s var(--ease-in-out-soft) infinite;
-}
-
-.sd-head,
-.sd-plot,
-.sd-ahead {
-  position: relative;
-  grid-row: var(--lane);
-  min-width: 0;
-  box-shadow: inset 0 1px 0 var(--cx-hair);
-}
-
-.sd-head--axis,
-.sd-axis,
-.sd-ahead--axis {
-  box-shadow: none;
-}
-
-.sd-head {
-  display: grid;
-  align-content: center;
-  gap: 0.25rem;
-  padding: 0 1rem 0 1.15rem;
-}
-
-.sd-head__name {
-  font-size: 10.5px;
-  letter-spacing: 0.17em;
-  text-transform: uppercase;
-  color: var(--color-fg-2);
-}
-
-.sd-head__sub {
-  font-family: var(--cx-serif);
-  font-size: 0.95rem;
-  font-weight: 300;
-  color: var(--color-fg-3);
-}
-
-.sd-head[data-lane="deciding"] .sd-head__sub {
-  color: var(--color-fg);
-}
-
-.sd-head--talk .sd-head__name {
-  color: var(--color-fg-3);
-}
-
-.sd-axis {
-  position: relative;
-  grid-row: 1;
-}
-
-.sd-pulse {
-  position: absolute;
-  inset: 0.35rem 0 0;
-  width: 100%;
-  height: calc(100% - 0.35rem);
   overflow: visible;
 }
 
-.sd-pulse path {
-  fill: color-mix(in oklab, var(--color-accent) 22%, transparent);
-  stroke: none;
-}
-
-.sd-axis__hour {
-  position: absolute;
-  bottom: 0.45rem;
-  font-size: 10.5px;
-  color: var(--color-fg-3);
-  translate: -50% 0;
-}
-
-.sd-axis__hour[data-near] {
-  visibility: hidden;
-}
-
-.sd-axis__now {
-  position: absolute;
-  top: 0.45rem;
-  left: var(--now);
-  z-index: 2;
-  padding: 0.12rem 0.5rem;
-  border-radius: 999px;
-  font-size: 10.5px;
-  white-space: nowrap;
-  color: var(--color-accent-strong);
-  background: var(--color-canvas-2);
-  box-shadow: inset 0 0 0 1px var(--color-accent-line);
-  translate: -50% 0;
-}
-
-.sd-ahead {
-  padding-left: 0.9rem;
-}
-
-.sd-ahead--axis {
-  display: flex;
-  align-items: flex-end;
-  padding-bottom: 0.45rem;
-  font-size: 10px;
-  letter-spacing: 0.17em;
-  text-transform: uppercase;
-  color: var(--color-fg-3);
-}
-
-/* ---------- Marks: every one can be pointed at and chosen ---------- */
-
-.sd-mark,
-.sd-horizon,
-.sd-tomorrow {
-  position: absolute;
-  top: calc(var(--sd-top, 0px) + (var(--row) + 0.5) / var(--rows) * (100% - var(--sd-top, 0px)));
-  translate: 0 -50%;
-}
-
-/* lanes whose marks carry a label above them keep room for the first one */
-.sd-plot[data-lane="monitoring"],
-.sd-ahead[data-lane="monitoring"],
-.sd-plot[data-lane="deciding"] {
-  --sd-top: 0.7rem;
-}
-
-.sd-mark {
-  z-index: 1;
-  left: var(--x);
-  height: 1.5rem;
-  transition: opacity 300ms var(--ease-out-soft);
-}
-
-.sd-mark:hover,
-.sd-mark:focus-visible {
-  z-index: 4;
-}
-
-.sd[data-focus] .sd-mark:not([data-on], [data-related]),
-.sd[data-focus] .sd-tomorrow:not([data-on], [data-related]),
-.sd[data-focus] .sd-horizon {
-  opacity: 0.28;
-}
-
-.sd-label {
-  position: absolute;
-  bottom: calc(50% + 4px);
-  left: 0.15rem;
-  overflow: hidden;
-  max-width: 18rem;
-  font-size: 11.5px;
-  line-height: 1.2;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  color: var(--color-fg-2);
-  transition: color 200ms;
-}
-
-.sd-label[data-flip] {
-  left: auto;
-  right: 0.35rem;
-}
-
-.sd-mark:hover .sd-label,
-.sd-mark[data-on] .sd-label {
-  color: var(--color-fg);
-}
-
-/* a watch: from when it began to now, then on towards its horizon */
-.sd-watch {
-  right: 0;
-}
-
-.sd-watch__line {
-  position: absolute;
-  top: 50%;
-  left: 0;
-  width: var(--cut);
-  height: 1px;
-  background: color-mix(in oklab, var(--color-fg) 34%, transparent);
-  transform-origin: left;
-  animation: sd-draw 1100ms 300ms var(--ease-out-soft) both;
-}
-
-.sd-watch:has(.sd-label[data-since]) .sd-watch__line {
-  mask-image: linear-gradient(to right, transparent, #000 2.5rem);
-}
-
-.sd-watch::after {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: var(--cut);
-  right: 0;
-  height: 1px;
-  background: repeating-linear-gradient(to right, color-mix(in oklab, var(--color-fg) 26%, transparent) 0 2px, transparent 2px 6px);
-}
-
-.sd-watch__now {
-  position: absolute;
-  top: 50%;
-  left: var(--cut);
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--color-accent-strong);
-  translate: -50% -50%;
-}
-
-.sd-watch__now::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  box-shadow: 0 0 0 1px var(--color-accent-strong);
-  animation: ar-listen 2.6s var(--ease-out-soft) infinite;
-}
-
-.sd-moment {
-  position: absolute;
-  top: 50%;
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--color-fg-2);
-  translate: -50% -50%;
-}
-
-.sd-watch:hover .sd-watch__line,
-.sd-watch[data-on] .sd-watch__line {
-  background: var(--color-fg);
-}
-
-.sd-watch[data-on] .sd-watch__line {
-  box-shadow: 0 0 8px color-mix(in oklab, var(--color-fg) 40%, transparent);
-}
-
-/* an analysis: a span of reading and working out */
-.sd-span {
-  width: var(--w);
-}
-
-.sd-span::before {
-  content: "";
-  position: absolute;
-  inset: calc(50% - 3px) 0;
-  border-radius: 3px;
-  background: color-mix(in oklab, var(--color-fg) 24%, transparent);
-  transform-origin: left;
-  transition: background-color 200ms, box-shadow 200ms;
-  animation: sd-draw 700ms 500ms var(--ease-out-soft) both;
-}
-
-.sd-span:hover::before,
-.sd-span[data-on]::before {
-  background: color-mix(in oklab, var(--color-fg) 60%, transparent);
-}
-
-.sd-span[data-state="ongoing"]::before {
-  background: linear-gradient(90deg, color-mix(in oklab, var(--color-accent-strong) 30%, transparent), var(--color-accent-strong), color-mix(in oklab, var(--color-accent-strong) 30%, transparent));
-  background-size: 200% 100%;
-  animation: sd-flow 2.2s linear infinite;
-}
-
-/* a decision that waits for the owner: a ring when it began to wait, a line of waiting up to now */
-.sd-wait {
-  width: var(--w);
-}
-
-.sd-wait__line {
-  position: absolute;
-  top: 50%;
-  left: 0;
-  right: 0;
-  border-top: 1px dashed color-mix(in oklab, var(--color-fg) 38%, transparent);
-  transform-origin: left;
-  animation: sd-draw 1000ms 450ms var(--ease-out-soft) both;
-}
-
-.sd-wait__ring {
-  position: absolute;
-  top: 50%;
-  left: 0;
-  width: 11px;
-  height: 11px;
-  border-radius: 50%;
-  background: var(--color-canvas-2);
-  box-shadow: inset 0 0 0 1.5px var(--color-fg);
-  translate: -50% -50%;
-}
-
-/* where it waits: on the line of now, for the owner */
-.sd-wait::after {
-  content: "";
-  position: absolute;
-  top: 50%;
-  right: -1px;
-  width: 2px;
-  height: 11px;
-  border-radius: 1px;
-  background: var(--color-fg);
-  translate: 0 -50%;
-}
-
-.sd-wait .sd-label {
-  left: 0.6rem;
-  color: var(--color-fg);
-}
-
-.sd-wait .sd-label[data-flip] {
-  left: auto;
-}
-
-.sd-wait:hover .sd-wait__line,
-.sd-wait[data-on] .sd-wait__line {
-  border-top-color: var(--color-fg);
-}
-
-.sd-wait[data-on] .sd-wait__ring {
-  box-shadow: inset 0 0 0 1.5px var(--color-fg), 0 0 0 4px color-mix(in oklab, var(--color-fg) 14%, transparent);
-}
-
-/* a point in time: a decision taken, a piece of work done or planned */
-.sd-dot {
-  width: 1.5rem;
-  translate: -50% -50%;
-}
-
-.sd-dot::before {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  background: var(--color-accent-strong);
-  translate: -50% -50%;
-  transition: box-shadow 200ms, scale 200ms;
-  animation: ar-fade 500ms 700ms both;
-}
-
-/* a decision taken: a fine upright stroke, white when it was the owner's, emerald when Syxoria's */
-.sd-dot--decided::before {
-  width: 3px;
-  height: 13px;
-  border-radius: 2px;
-}
-
-.sd-dot--decided[data-by="you"]::before {
-  background: var(--color-fg);
-}
-
-.sd-dot[data-state="failed"]::before {
-  background: var(--color-negative);
-}
-
-.sd-dot[data-state="ahead"]::before {
-  background: var(--color-canvas-2);
-  box-shadow: inset 0 0 0 1.5px var(--color-accent-strong);
-}
-
-.sd-dot[data-held]::before {
-  box-shadow: inset 0 0 0 1.5px var(--color-negative);
-}
-
-.sd-dot:hover::before,
-.sd-dot[data-on]::before {
-  scale: 1.3;
-}
-
-.sd-dot[data-on]::before {
-  box-shadow: 0 0 0 4px var(--color-accent-soft);
-}
-
-.sd-dot--decided[data-by="you"][data-on]::before {
-  box-shadow: 0 0 0 4px color-mix(in oklab, var(--color-fg) 14%, transparent);
-}
-
-/* work in progress, up to now, and how far it has come */
-.sd-run {
-  width: var(--w);
-}
-
-.sd-run::before {
-  content: "";
-  position: absolute;
-  inset: calc(50% - 3px) 0;
-  border-radius: 3px;
-  background: color-mix(in oklab, var(--color-accent-strong) 28%, transparent);
-}
-
-.sd-run__fill {
-  position: absolute;
-  top: calc(50% - 3px);
-  left: 0;
-  height: 6px;
-  border-radius: 3px;
-  background: var(--color-accent-strong);
-}
-
-.sd-run[data-held]::before {
-  background: color-mix(in oklab, var(--color-negative) 30%, transparent);
-}
-
-.sd-run[data-held] .sd-run__fill {
-  background: var(--color-negative);
-}
-
-/* what lies beyond the day: where a watch is heading, what is planned tomorrow */
-.sd-horizon {
-  left: 0.9rem;
-  right: 0.5rem;
-  overflow: hidden;
-  font-family: var(--cx-serif);
-  font-size: 12.5px;
-  font-style: italic;
-  font-weight: 300;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  color: var(--color-fg-3);
-  transition: opacity 300ms;
-}
-
-.sd-tomorrow {
-  left: 0.9rem;
-  right: 0.5rem;
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
-  overflow: hidden;
-  font-size: 11.5px;
-  text-align: left;
-  white-space: nowrap;
-  color: var(--color-fg-3);
-  transition: color 200ms, opacity 300ms;
-}
-
-.sd-tomorrow::before {
-  content: "";
-  flex: none;
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  box-shadow: inset 0 0 0 1.5px var(--color-accent-strong);
-}
-
-.sd-tomorrow[data-held]::before {
-  box-shadow: inset 0 0 0 1.5px var(--color-negative);
-}
-
-.sd-tomorrow span {
-  color: var(--color-fg-2);
-}
-
-.sd-tomorrow:hover,
-.sd-tomorrow[data-on] {
-  color: var(--color-fg);
-}
-
-/* the exchanges: when each began and when its last word was said */
-.sd-talk {
-  width: var(--w);
-  min-width: 10px;
-  height: 1.1rem;
-}
-
-/* each word said, as a point on a thin thread from the first to the last */
-.sd-talk::before {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: color-mix(in oklab, var(--color-fg) 22%, transparent);
-  transition: background-color 200ms;
-}
-
-.sd-talk__at {
-  position: absolute;
-  top: 50%;
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--color-canvas-2);
-  box-shadow: inset 0 0 0 1px var(--color-fg-2);
-  translate: -50% -50%;
-  transition: background-color 200ms, box-shadow 200ms;
-}
-
-.sd-talk:hover::before {
-  background: var(--color-fg-2);
-}
-
-.sd-talk:hover .sd-talk__at {
-  background: var(--color-fg-2);
-}
-
-.sd-talk[data-on]::before {
-  background: var(--color-accent-strong);
-}
-
-.sd-talk[data-on] .sd-talk__at {
-  background: var(--color-accent-strong);
-  box-shadow: none;
-}
-
-.sd-ahead--talk {
-  display: flex;
-  align-items: center;
-}
-
-.sd-all {
-  font-size: 11.5px;
-  color: var(--color-fg-2);
-  text-decoration: underline;
-  text-decoration-color: var(--cx-hair-2);
-  text-underline-offset: 3px;
-  transition: color 200ms;
-}
-
-.sd-all:hover {
-  color: var(--color-fg);
-}
-
-/* the note a mark carries: when, what, where it stands */
-.sd-tip {
-  position: absolute;
-  bottom: calc(100% + 6px);
-  left: -0.25rem;
-  z-index: 5;
-  display: grid;
-  gap: 0.15rem;
-  width: max-content;
-  max-width: 17rem;
-  padding: 0.55rem 0.75rem 0.6rem;
-  border-radius: 10px;
-  font-size: 12px;
-  line-height: 1.35;
-  text-align: left;
-  white-space: normal;
-  background: color-mix(in oklab, var(--color-surface-2) 96%, transparent);
-  box-shadow: inset 0 0 0 1px var(--cx-hair-2), 0 18px 40px -18px rgb(0 0 0 / 0.9);
+.ar-mark__ring,
+.ar-mark__arc {
+  fill: none;
+  transform-box: fill-box;
+  transform-origin: center;
+  vector-effect: non-scaling-stroke;
+}
+
+.ar-mark__ring {
+  stroke: color-mix(in oklab, var(--color-fg) 18%, transparent);
+  stroke-width: 1;
+}
+
+.ar-mark__arc {
+  stroke: var(--color-accent-strong);
+  stroke-width: 1.25;
+  stroke-linecap: round;
+  stroke-dasharray: 0 100;
   opacity: 0;
-  visibility: hidden;
-  translate: 0 4px;
-  pointer-events: none;
-  transition: opacity 180ms, translate 180ms, visibility 0s 180ms;
+  transition: opacity 400ms, stroke-dasharray 600ms var(--ease-out-soft);
 }
 
-.sd-dot .sd-tip {
-  left: 0;
+.ar-mark__dot {
+  fill: var(--color-accent-strong);
+  filter: drop-shadow(0 0 3px var(--color-accent));
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: ar-mark-breathe 4.2s var(--ease-in-out-soft) infinite;
 }
 
-.sd-mark[data-edge="end"] .sd-tip {
-  left: auto;
-  right: -0.25rem;
-}
-
-.sd-mark:hover > .sd-tip,
-.sd-mark:focus-visible > .sd-tip {
+/* working: an arc turns around the light */
+.ar-mark[data-state="busy"] .ar-mark__arc {
+  stroke-dasharray: 24 76;
   opacity: 1;
-  visibility: visible;
-  translate: 0;
-  transition: opacity 180ms, translate 180ms;
+  animation: ar-mark-turn 1.8s linear infinite;
 }
 
-.sd-tip__when {
-  color: var(--color-fg-3);
+/* listening: rings open out from it */
+.ar-mark[data-state="listening"] .ar-mark__ring {
+  stroke: var(--color-accent-strong);
+  animation: ar-mark-ripple 1.8s var(--ease-out-soft) infinite;
 }
 
-.sd-tip__title {
+/* held: terracotta and still */
+.ar-mark[data-state="held"] .ar-mark__dot {
+  fill: var(--color-negative);
+  filter: none;
+  animation: none;
+}
+
+.ar-mark[data-state="held"] .ar-mark__ring {
+  stroke: color-mix(in oklab, var(--color-negative) 40%, transparent);
+}
+
+.ar-name {
+  font-family: var(--cx-serif);
+  font-size: 1.05rem;
+  font-weight: 400;
   color: var(--color-fg);
 }
 
-.sd-tip__state {
+.ar-activity {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  font-size: 12.5px;
+  line-height: 1.45;
   color: var(--color-fg-3);
 }
 
-/* ---------- Speaking to Syxoria ---------- */
-
-.sw-compose {
-  display: grid;
-  flex: none;
-  justify-items: center;
-  gap: 0.45rem;
+.ar-activity__line {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  animation: ar-rise 800ms var(--ease-out-soft) both;
 }
 
-.sw-compose .ar-ask {
-  max-width: 54rem;
-  align-items: center;
-}
-
-.sw-in {
-  display: inline-flex;
-  flex: 0 1 auto;
-  align-items: center;
-  gap: 0.4rem;
-  min-width: 0;
-  max-width: 15rem;
-  height: 2rem;
-  margin-left: 0.2rem;
-  padding: 0 0.2rem 0 0.7rem;
-  border-radius: 999px;
-  background: var(--color-accent-soft);
-  box-shadow: inset 0 0 0 1px var(--color-accent-line);
-}
-
-.sw-in__label {
-  flex: none;
-  font-size: 9.5px;
-  letter-spacing: 0.15em;
+.ar-activity__verb {
+  margin-right: 0.55rem;
+  font-size: 10px;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--color-accent-strong);
 }
 
-.sw-in__title {
-  overflow: hidden;
-  font-size: 12px;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  color: var(--color-fg-2);
+.ar-activity__line[data-tone="held"] .ar-activity__verb {
+  color: var(--color-negative);
 }
 
-.sw-in button {
+/* ---------- The conversations, at the edge ---------- */
+
+.ar-threads {
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 70;
+  width: min(22rem, 88vw);
+  background: var(--color-canvas-2);
+  box-shadow: 1px 0 0 var(--cx-hair), 40px 0 90px -40px rgb(0 0 0 / 0.85);
+  transform: translateX(-104%);
+  visibility: hidden;
+  transition: transform 420ms var(--ease-out-soft), visibility 0s 420ms;
+}
+
+.ar-threads[data-open] {
+  transform: none;
+  visibility: visible;
+  transition: transform 420ms var(--ease-out-soft);
+}
+
+/* the panel's contents keep their width while it opens, so nothing reflows */
+.ar-threads__in {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  height: 100%;
+  padding: 1.25rem 1.1rem 1.1rem;
+}
+
+/* wide screens: docked beside the stage, opened and closed by its toggle */
+@media (min-width: 1024px) {
+  .ar {
+    --ar-panel: 19rem;
+    grid-template-columns: 0 minmax(0, 1fr);
+    transition: grid-template-columns 420ms var(--ease-out-soft);
+  }
+
+  .ar[data-docked] {
+    grid-template-columns: var(--ar-panel) minmax(0, 1fr);
+  }
+
+  .ar-threads {
+    position: relative;
+    inset: auto;
+    z-index: auto;
+    width: auto;
+    min-width: 0;
+    overflow: hidden;
+    background: color-mix(in oklab, var(--color-canvas) 55%, transparent);
+    box-shadow: inset -1px 0 0 var(--cx-hair);
+    transform: none;
+    opacity: 0;
+    transition: opacity 300ms, visibility 0s 420ms;
+  }
+
+  .ar-threads[data-open] {
+    opacity: 1;
+    transition: opacity 420ms 80ms;
+  }
+
+  .ar-threads__in {
+    width: var(--ar-panel);
+    padding-top: 1rem;
+  }
+
+  /* the toggle shows that the panel is open */
+  .ar-tool--panel[aria-expanded="true"] {
+    color: var(--color-fg);
+  }
+}
+
+.ar-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 65;
+  background: rgb(0 0 0 / 0.45);
+  animation: ar-fade 300ms both;
+}
+
+.ar-threads__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-left: 0.35rem;
+}
+
+.ar-threads__title {
+  font-family: var(--cx-serif);
+  font-size: 1.2rem;
+  font-weight: 300;
+  color: var(--color-fg);
+}
+
+.ar-threads__close {
   display: grid;
-  flex: none;
   place-items: center;
-  width: 1.6rem;
-  height: 1.6rem;
-  border-radius: 50%;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
   color: var(--color-fg-3);
+  transition: color 200ms, background-color 200ms;
 }
 
-.sw-in button:hover {
+.ar-threads__close:hover {
   color: var(--color-fg);
   background: color-mix(in oklab, var(--color-fg) 6%, transparent);
 }
 
-.sw-in svg {
-  width: 13px;
-  height: 13px;
+.ar-threads__close svg {
+  width: 16px;
+  height: 16px;
 }
 
-.sw-try {
+.ar-threads__tools {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.ar-new {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-items: baseline;
-  gap: 0.2rem 1rem;
-  max-width: 54rem;
-  font-size: 12px;
+  align-items: center;
+  gap: 0.55rem;
+  height: 2.4rem;
+  padding: 0 0.95rem;
+  border-radius: 999px;
+  font-size: 13px;
+  color: var(--color-fg);
+  box-shadow: inset 0 0 0 1px var(--cx-hair-2);
+  transition: background-color 200ms;
 }
 
-.sw-try > span {
-  font-size: 9.5px;
-  letter-spacing: 0.15em;
+.ar-new:hover {
+  background: color-mix(in oklab, var(--color-fg) 5%, transparent);
+}
+
+.ar-new svg {
+  width: 15px;
+  height: 15px;
+  color: var(--color-accent-strong);
+}
+
+.ar-find {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  height: 2.3rem;
+  padding: 0 0.85rem;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--color-fg) 3.5%, transparent);
+}
+
+.ar-find:focus-within {
+  box-shadow: inset 0 0 0 1px var(--cx-hair-2);
+}
+
+.ar-find svg {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  color: var(--color-fg-3);
+}
+
+.ar-find input {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  color: var(--color-fg);
+  background: none;
+  outline: none;
+}
+
+.ar-find input::placeholder {
+  color: var(--color-fg-3);
+}
+
+.ar-threads__list {
+  display: grid;
+  flex: 1;
+  align-content: start;
+  gap: 1.2rem;
+  min-height: 0;
+  margin: 0 -0.25rem;
+  padding: 0.25rem;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--cx-hair-2) transparent;
+}
+
+.ar-threads__group {
+  margin: 0 0 0.25rem;
+  padding-left: 0.6rem;
+  font-size: 10px;
+  letter-spacing: 0.17em;
   text-transform: uppercase;
   color: var(--color-fg-3);
 }
 
-.sw-try button {
-  color: var(--color-fg-3);
-  text-decoration: underline;
-  text-decoration-color: transparent;
-  text-underline-offset: 3px;
-  transition: color 200ms, text-decoration-color 200ms;
-}
-
-.sw-try button:hover:not(:disabled) {
-  color: var(--color-fg);
-  text-decoration-color: var(--cx-hair-2);
-}
-
-.sw-try button:disabled {
-  opacity: 0.5;
-}
-
-/* ---------- The desk ---------- */
-
-.sw-desk {
-  --ar-indent: 0rem;
+.ar-convo {
   display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  min-width: 0;
-  min-height: 0;
-  padding: clamp(1rem, 2.6vh, 1.6rem) 1.4rem 1rem;
-}
-
-.sw-desk__in {
-  display: grid;
-  flex: 1 0 auto;
-  align-content: start;
-  gap: 1.35rem;
-  animation: ar-rise 500ms var(--ease-out-soft) both;
-}
-
-.sw-desk__in > section {
-  display: grid;
-  gap: 0.6rem;
-}
-
-.sw-rows {
-  display: grid;
-  gap: 0.1rem;
-  margin: 0 -0.6rem;
-}
-
-.sw-row {
-  display: grid;
-  grid-template-columns: 5.6rem minmax(0, 1fr);
   align-items: baseline;
   gap: 0.75rem;
   width: 100%;
@@ -973,71 +342,59 @@
   transition: background-color 200ms;
 }
 
-.sw-row:hover,
-.sw-row[aria-current] {
-  background: color-mix(in oklab, var(--color-fg) 4.5%, transparent);
+.ar-convo:hover,
+.ar-convo[aria-current] {
+  background: color-mix(in oklab, var(--color-fg) 5%, transparent);
 }
 
-.sw-row__when {
+.ar-convo__title {
+  flex: 1;
+  min-width: 0;
+  font-size: 13.5px;
+  line-height: 1.4;
+  color: var(--color-fg-2);
+  transition: color 200ms;
+}
+
+.ar-convo:hover .ar-convo__title,
+.ar-convo[aria-current] .ar-convo__title {
+  color: var(--color-fg);
+}
+
+/* a point beside a conversation that waits for the owner */
+.ar-convo__waits {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin: 0 0.5rem 0.12rem 0;
+  border-radius: 50%;
+  vertical-align: middle;
+  box-shadow: inset 0 0 0 1.5px var(--color-fg);
+}
+
+.ar-convo__at {
+  flex: none;
   font-size: 11.5px;
   color: var(--color-fg-3);
 }
 
-.sw-row__title {
-  font-size: 13.5px;
-  line-height: 1.38;
-  color: var(--color-fg);
-}
-
-.sw-rows--ahead .sw-row__title {
-  color: var(--color-fg-2);
-}
-
-.sw-quiet {
+.ar-quiet {
+  padding: 0 0.6rem;
   font-size: 13px;
   color: var(--color-fg-3);
 }
 
-.sw-mandate {
-  align-self: end;
-  margin-top: auto;
-  padding: 1rem 1.05rem;
-  border-radius: 14px;
-  font-size: 12.5px;
-  line-height: 1.5;
-  color: var(--color-fg-2);
-  background: linear-gradient(180deg, color-mix(in oklab, var(--color-fg) 3.5%, transparent), color-mix(in oklab, var(--color-fg) 1.5%, transparent));
-  box-shadow: inset 0 0 0 1px var(--cx-hair);
-}
-
-.sw-mandate__mode {
-  display: flex;
-  align-items: center;
+.ar-threads__foot {
+  display: grid;
   gap: 0.55rem;
-  font-family: var(--cx-serif);
-  font-size: 1rem;
-  color: var(--color-fg);
+  padding: 0.9rem 0.35rem 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--color-fg-3);
+  box-shadow: inset 0 1px 0 var(--cx-hair);
 }
 
-.sw-mandate__mode::before {
-  content: "";
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--color-accent-strong);
-  box-shadow: 0 0 0 3px var(--color-accent-soft);
-}
-
-.sw-mandate[data-held] .sw-mandate__mode {
-  color: var(--color-negative);
-}
-
-.sw-mandate[data-held] .sw-mandate__mode::before {
-  background: var(--color-negative);
-  box-shadow: 0 0 0 3px var(--color-negative-soft);
-}
-
-.sw-more {
+.ar-more {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
@@ -1047,405 +404,283 @@
   transition: color 200ms;
 }
 
-.sw-more:hover {
+.ar-more:hover {
   color: var(--color-fg);
 }
 
-.sw-more svg {
+.ar-more svg {
   width: 13px;
   height: 13px;
 }
 
-.sw-back {
+.ar-preview {
+  font-size: 11px;
+  color: var(--color-fg-3);
+  opacity: 0.8;
+}
+
+/* ---------- The stage ---------- */
+
+.ar-stage {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.ar-top {
+  display: grid;
+  flex: none;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 1rem;
+  min-height: 3.75rem;
+  padding: 0.5rem var(--ar-gutter);
+}
+
+.ar-tool {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
   justify-self: start;
-  font-size: 12.5px;
-  color: var(--color-fg-3);
-  transition: color 200ms;
-}
-
-.sw-back:hover {
-  color: var(--color-fg);
-}
-
-.sw-back svg {
-  width: 14px;
-  height: 14px;
-}
-
-/* one item's story */
-.sw-story {
-  gap: 0.9rem;
-}
-
-.sw-story__kicker {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0.25rem 0.75rem;
-  font-size: 12px;
-  color: var(--color-fg-3);
-}
-
-.sw-story__lane {
-  font-size: 10px;
-  letter-spacing: 0.17em;
-  text-transform: uppercase;
-  color: var(--color-fg-2);
-}
-
-.sw-story__lane[data-lane="doing"],
-.sw-story__lane[data-lane="talk"] {
-  color: var(--color-accent-strong);
-}
-
-.sw-story__lane[data-lane="deciding"] {
-  color: var(--color-fg);
-}
-
-.sw-story__title {
-  font-family: var(--cx-serif);
-  font-size: 1.5rem;
-  font-weight: 300;
-  line-height: 1.24;
-  letter-spacing: -0.008em;
-  color: var(--color-fg);
-  text-wrap: balance;
-}
-
-.sw-story__state {
-  margin-top: -0.4rem;
-  font-size: 12.5px;
-  color: var(--color-fg-3);
-}
-
-.sw-story__state[data-state="waiting"] {
-  color: var(--color-fg);
-}
-
-.sw-story__state[data-state="ongoing"] {
-  color: var(--color-accent-strong);
-}
-
-.sw-story__state[data-state="failed"],
-.sw-story__held {
-  color: var(--color-negative);
-}
-
-.sw-story__held {
-  font-size: 12.5px;
-}
-
-.sw-story__detail {
-  font-size: 14.5px;
-  line-height: 1.6;
-  color: var(--color-fg-2);
-}
-
-.sw-progress {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.sw-progress::before {
-  content: "";
-  flex: 1;
-  order: 1;
-  height: 3px;
-  border-radius: 3px;
-  background: var(--cx-hair-2);
-}
-
-.sw-progress > span {
-  position: absolute;
-  height: 3px;
-  border-radius: 3px;
-  background: var(--color-accent-strong);
-}
-
-.sw-progress {
-  position: relative;
-}
-
-.sw-progress > em {
-  order: 2;
-  font-size: 12px;
-  font-style: normal;
-  color: var(--color-fg-3);
-}
-
-.sw-moments {
-  display: grid;
-  gap: 0.3rem;
-}
-
-.sw-moments li {
-  display: flex;
-  gap: 0.75rem;
-  font-size: 13px;
-  color: var(--color-fg-2);
-}
-
-.sw-moments span {
-  color: var(--color-fg-3);
-}
-
-.sw-next {
-  display: grid;
-  gap: 0.35rem;
-  padding-left: 0.95rem;
-  box-shadow: inset 1px 0 0 var(--color-accent-line);
-}
-
-.sw-next p:last-child {
-  font-family: var(--cx-serif);
-  font-size: 1.04rem;
-  font-weight: 300;
-  line-height: 1.5;
-  color: var(--color-fg);
-}
-
-.sw-story__do {
-  display: flex;
-  flex-wrap: wrap;
   gap: 0.5rem;
-  margin-top: 0.25rem;
-}
-
-.sw-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  max-width: 100%;
-  min-height: 2.3rem;
-  padding: 0.35rem 0.95rem;
+  height: 2.25rem;
+  padding: 0 0.6rem;
+  margin-left: -0.6rem;
   border-radius: 999px;
-  font-size: 13px;
-  color: var(--color-fg-2);
-  box-shadow: inset 0 0 0 1px var(--cx-hair-2);
-  transition: color 200ms, background-color 200ms, box-shadow 200ms;
+  font-size: 12.5px;
+  color: var(--color-fg-3);
+  transition: color 200ms, background-color 200ms;
 }
 
-.sw-btn:hover:not(:disabled) {
+.ar-tool:hover {
   color: var(--color-fg);
   background: color-mix(in oklab, var(--color-fg) 5%, transparent);
 }
 
-.sw-btn svg {
-  flex: none;
-  width: 14px;
-  height: 14px;
+.ar-tool svg {
+  width: 15px;
+  height: 15px;
 }
 
-.sw-btn--ask {
-  color: var(--color-canvas);
-  background: var(--color-fg);
+.ar-tool--new {
+  grid-column: 3;
+  justify-self: end;
+  margin: 0 -0.6rem 0 0;
+}
+
+/* in a conversation: the mark, the name and what it is doing, quietly in the middle */
+.ar-presence {
+  display: flex;
+  grid-column: 2;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 0;
+  max-width: min(36rem, 60vw);
+}
+
+.ar-presence .ar-activity {
+  flex: 1;
+}
+
+.ar-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--cx-hair-2) transparent;
+}
+
+.ar[data-view="thread"] .ar-scroll {
+  mask-image: linear-gradient(to bottom, transparent, #000 1.5rem, #000 calc(100% - 1.5rem), transparent);
+}
+
+/* ---------- The opening: Syxoria speaks first ---------- */
+
+.ar-open {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: calc(var(--ar-read) + 2 * var(--ar-gutter));
+  min-height: 100%;
+  margin: 0 auto;
+  padding: clamp(0.5rem, 3vh, 2rem) var(--ar-gutter) clamp(1rem, 4vh, 2.5rem);
+  text-align: center;
+}
+
+.ar-open__mark {
+  width: clamp(2.5rem, 6vh, 3.25rem);
+  height: clamp(2.5rem, 6vh, 3.25rem);
+}
+
+/* a faint light around it, the room's only glow */
+.ar-open__mark::before {
+  content: "";
+  position: absolute;
+  inset: -120%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, color-mix(in oklab, var(--color-accent) 16%, transparent), transparent);
+  pointer-events: none;
+  animation: ar-mark-glow 4.2s var(--ease-in-out-soft) infinite;
+}
+
+.ar-open__who {
+  display: grid;
+  justify-items: center;
+  gap: 0.2rem;
+  max-width: 100%;
+  margin-top: clamp(0.6rem, 1.6vh, 1rem);
+}
+
+.ar-open__who .ar-activity {
+  max-width: 100%;
+}
+
+.ar-open__greet {
+  margin-top: clamp(1.4rem, 5vh, 3rem);
+  font-family: var(--cx-serif);
+  font-size: clamp(2rem, 3.6vh + 0.8rem, 2.85rem);
+  font-weight: 300;
+  line-height: 1.1;
+  letter-spacing: -0.014em;
+  color: var(--color-fg);
+  animation: ar-rise 1000ms 120ms var(--ease-out-soft) both;
+}
+
+.ar-open__lead {
+  max-width: 32rem;
+  margin-top: 0.75rem;
+  font-family: var(--cx-serif);
+  font-size: clamp(1.02rem, 0.8vh + 0.85rem, 1.18rem);
+  font-weight: 300;
+  line-height: 1.55;
+  color: var(--color-fg-2);
+  text-wrap: balance;
+  animation: ar-rise 1000ms 260ms var(--ease-out-soft) both;
+}
+
+/* the few things worth a minute: lines, not cards */
+.ar-brought {
+  display: grid;
+  gap: 0.6rem;
+  width: 100%;
+  margin-top: clamp(1.75rem, 6vh, 3.5rem);
+  text-align: left;
+  animation: ar-rise 1000ms 420ms var(--ease-out-soft) both;
+}
+
+.ar-brought .cx-label {
+  justify-self: center;
+}
+
+.ar-brought li + li .ar-row {
+  box-shadow: inset 0 1px 0 var(--cx-hair);
+}
+
+.ar-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 1.1rem;
+  width: 100%;
+  padding: clamp(0.75rem, 2vh, 1.05rem) 0.35rem;
+  text-align: left;
+}
+
+.ar-row__mark {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1.5px var(--color-fg);
+}
+
+.ar-row__mark[data-tone="failed"] {
+  background: var(--color-negative);
   box-shadow: none;
 }
 
-.sw-btn--ask:hover:not(:disabled) {
-  color: var(--color-canvas);
-  background: color-mix(in oklab, var(--color-fg) 86%, transparent);
-}
-
-.sw-btn:disabled {
-  opacity: 0.45;
-}
-
-/* an exchange on the desk, read like notes */
-.sw-exchange__turns {
+.ar-row__text {
   display: grid;
-  gap: 1.6rem;
+  gap: 0.2rem;
+  min-width: 0;
 }
 
-.sw-desk .ar-say {
+.ar-row__title {
+  font-family: var(--cx-serif);
   font-size: 1.06rem;
+  font-weight: 400;
+  line-height: 1.3;
+  color: var(--color-fg-2);
+  transition: color 250ms;
 }
 
-.sw-desk .ar-figures {
-  grid-template-columns: repeat(auto-fit, minmax(6.25rem, 1fr));
-}
-
-.sw-desk .ar-figures__value {
-  font-size: 1.25rem;
-}
-
-.sw-preview {
-  font-size: 11px;
-  line-height: 1.5;
+.ar-row__line {
+  font-size: 13px;
+  line-height: 1.45;
   color: var(--color-fg-3);
 }
 
-.sw-scrim {
-  display: none;
+.ar-row__go {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 12.5px;
+  color: var(--color-accent-strong);
+  opacity: 0;
+  translate: -4px 0;
+  transition: opacity 250ms, translate 250ms var(--ease-out-soft);
 }
 
-/* ---------- Room by room ---------- */
-
-/* phones and tablets: the day scrolls sideways from now; the desk opens as a sheet */
-@media (max-width: 1023px) {
-  .sw {
-    --ar-indent: 0rem;
-    padding-bottom: 0.5rem;
-  }
-
-  .sw-score {
-    overflow-x: auto;
-    margin: 0 calc(var(--sw-pad) * -1);
-    padding: 0.25rem var(--sw-pad) 0.5rem;
-    scrollbar-width: none;
-  }
-
-  .sd {
-    --sd-head: 7rem;
-    --sd-ahead: 7.5rem;
-    min-width: 52rem;
-    min-height: 24rem;
-  }
-
-  /* the lane names stay in view while the day scrolls */
-  .sd-head {
-    position: sticky;
-    left: 0;
-    z-index: 3;
-    background: var(--color-canvas-2);
-    /* and covers what passes under the gutter beside them */
-    box-shadow: inset 0 1px 0 var(--cx-hair), calc(var(--sw-pad) * -1) 0 0 0 var(--color-canvas-2);
-  }
-
-  .sd-head--axis {
-    box-shadow: calc(var(--sw-pad) * -1) 0 0 0 var(--color-canvas-2);
-  }
-
-  .sd-head--axis {
-    border-top-left-radius: 18px;
-  }
-
-  .sd-head--talk {
-    border-bottom-left-radius: 18px;
-  }
-
-  .sw-now {
-    flex-basis: 100%;
-  }
-
-  .sw-compose {
-    position: sticky;
-    bottom: calc(3.25rem + env(safe-area-inset-bottom) + 0.5rem);
-    z-index: 20;
-  }
-
-
-  .sw[data-desk="item"] .sw-desk,
-  .sw[data-desk="exchange"] .sw-desk,
-  .sw[data-desk="history"] .sw-desk {
-    position: fixed;
-    inset: 12dvh 0 0;
-    z-index: 70;
-    overflow-y: auto;
-    padding: 1.25rem var(--sw-pad) calc(1.5rem + env(safe-area-inset-bottom));
-    border-radius: 22px 22px 0 0;
-    background: var(--color-canvas-2);
-    box-shadow: 0 -1px 0 var(--cx-hair-2), 0 -30px 80px -20px rgb(0 0 0 / 0.85);
-    animation: sw-sheet 420ms var(--ease-out-soft) both;
-  }
-
-  .sw[data-desk="exchange"] .sw-desk {
-    bottom: calc(3.25rem + env(safe-area-inset-bottom) + 5rem);
-  }
-
-  .sw-scrim {
-    position: fixed;
-    inset: 0;
-    z-index: 65;
-    display: block;
-    background: rgb(0 0 0 / 0.5);
-    animation: ar-fade 300ms both;
-  }
-
-  .sw[data-desk="exchange"] .sw-compose {
-    z-index: 75;
-  }
+.ar-row__go svg {
+  width: 13px;
+  height: 13px;
 }
 
-@media (max-width: 639px) {
-  .sw-in {
-    display: none;
-  }
-
-  .sw-try {
-    flex-wrap: nowrap;
-    justify-content: flex-start;
-    width: calc(100% + 2 * var(--sw-pad));
-    margin: 0 calc(var(--sw-pad) * -1);
-    padding: 0 var(--sw-pad);
-    overflow-x: auto;
-    scrollbar-width: none;
-    white-space: nowrap;
-  }
+.ar-row:hover .ar-row__title,
+.ar-row:focus-visible .ar-row__title {
+  color: var(--color-fg);
 }
 
-@media (min-width: 1024px) {
-  .sw {
-    grid-template-columns: minmax(0, 1fr) var(--sw-desk);
-    height: calc(100dvh - var(--sx-top));
-    overflow: hidden;
-  }
-
-  .sw-desk {
-    overflow-y: auto;
-    scrollbar-width: thin;
-    scrollbar-color: var(--cx-hair-2) transparent;
-    background: color-mix(in oklab, var(--color-canvas) 55%, transparent);
-    box-shadow: inset 1px 0 0 var(--cx-hair);
-  }
+.ar-row:hover .ar-row__go,
+.ar-row:focus-visible .ar-row__go {
+  opacity: 1;
+  translate: 0;
 }
 
-@media (min-width: 1024px) and (max-width: 1365px) {
-  .sw {
-    --sw-desk: 21rem;
-  }
+/* ---------- A conversation ---------- */
 
-  .sd {
-    --sd-head: 7.5rem;
-    --sd-ahead: 7.5rem;
-  }
-
+.ar-thread {
+  display: grid;
+  gap: 2.25rem;
+  max-width: calc(var(--ar-read) + 2 * var(--ar-gutter));
+  margin: 0 auto;
+  padding: 1.5rem var(--ar-gutter) 2.5rem;
 }
 
-/* short screens: the day keeps to one screen */
-@media (min-width: 1024px) and (max-height: 780px) {
-  .sw-sub {
-    display: none;
-  }
-
-  .sd {
-    grid-template-rows: 2.2rem minmax(6rem, 5fr) minmax(2.1rem, 1.25fr) minmax(4.4rem, 3.4fr) minmax(3.2rem, 2.4fr) minmax(2.1rem, 1.1fr);
-    min-height: 0;
-  }
-
-  .sd-head__sub {
-    font-size: 0.85rem;
-  }
+.ar-thread__title {
+  font-family: var(--cx-serif);
+  font-size: 1.6rem;
+  font-weight: 300;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  color: var(--color-fg);
+  text-wrap: balance;
 }
-
-/* ---------- An exchange: Syxoria's answers, read like notes ---------- */
 
 .ar-turn {
   display: grid;
-  gap: 0.6rem;
+  gap: 0.55rem;
 }
 
 .ar-turn__who {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.55rem;
-  font-size: 10.5px;
-  letter-spacing: 0.16em;
+  gap: 0.6rem;
+  font-size: 10px;
+  letter-spacing: 0.17em;
   text-transform: uppercase;
   color: var(--color-fg-3);
 }
@@ -1453,64 +688,84 @@
 .ar-turn__who time {
   letter-spacing: 0.02em;
   text-transform: none;
-  opacity: 0.8;
-}
-
-.ar-turn__who .cx-tag {
-  margin-left: 0.15rem;
+  opacity: 0.7;
 }
 
 .ar-turn[data-from="syxoria"] .ar-turn__who {
   color: var(--color-accent-strong);
 }
 
-/* both voices carry the same mark width, so what they say starts on one line */
-.ar-initials,
-.ar-seal {
-  display: inline-grid;
-  flex: none;
-  place-items: center;
-  width: 1.4rem;
-  height: 1.4rem;
-}
-
-.ar-initials {
-  border-radius: 50%;
-  font-size: 9px;
-  letter-spacing: 0.04em;
-  color: var(--color-fg-2);
-  box-shadow: inset 0 0 0 1px var(--cx-hair-2);
-}
-
-.ar-seal::before {
-  content: "";
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--color-accent-strong);
-  box-shadow: 0 0 0 3px var(--color-accent-soft), 0 0 12px var(--color-accent);
-}
-
-.ar-seal[data-busy]::before {
-  animation: pulse-soft 1.1s var(--ease-in-out-soft) infinite;
-}
-
-.ar-turn__said,
-.ar-turn__body,
-.ar-working__steps {
-  padding-left: var(--ar-indent);
-}
-
 .ar-turn__said {
   font-size: 15px;
-  line-height: 1.55;
-  color: var(--color-fg);
+  line-height: 1.6;
+  color: var(--color-fg-2);
 }
 
 .ar-turn__body {
   display: grid;
-  gap: 0.95rem;
+  gap: 1rem;
 }
+
+/* Syxoria at work on the question: one line that changes as it goes */
+.ar-working__line {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 13.5px;
+  color: var(--color-fg-3);
+  animation: ar-rise 420ms var(--ease-out-soft) both;
+}
+
+.ar-working__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-accent-strong);
+  animation: pulse-soft 0.9s var(--ease-in-out-soft) infinite;
+}
+
+/* ---------- Speaking to Syxoria ---------- */
+
+.ar-composer {
+  display: grid;
+  flex: none;
+  justify-items: center;
+  gap: 0.65rem;
+  padding: 0.5rem var(--ar-gutter) clamp(0.9rem, 2.4vh, 1.5rem);
+}
+
+.ar-composer .ar-ask {
+  max-width: var(--ar-read);
+  align-items: center;
+}
+
+.ar-suggest {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.2rem 1.4rem;
+  max-width: var(--ar-read);
+}
+
+.ar-suggest button {
+  font-size: 12.5px;
+  color: var(--color-fg-3);
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 4px;
+  transition: color 200ms, text-decoration-color 200ms;
+}
+
+.ar-suggest button:hover:not(:disabled) {
+  color: var(--color-fg);
+  text-decoration-color: var(--cx-hair-2);
+}
+
+.ar-suggest button:disabled {
+  opacity: 0.5;
+}
+
+/* ---------- What it hands over in an answer ---------- */
 
 .ar-say {
   font-family: var(--cx-serif);
@@ -1748,51 +1003,7 @@
   text-decoration-color: currentColor;
 }
 
-/* Syxoria at work: what it reads, then writing */
-.ar-working__steps {
-  display: grid;
-  gap: 0.4rem;
-}
-
-.ar-working__steps li {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  font-size: 13.5px;
-  color: var(--color-fg-3);
-  animation: ar-rise 380ms var(--ease-out-soft) both;
-}
-
-.ar-working__steps li[data-state="now"] {
-  color: var(--color-fg-2);
-}
-
-.ar-working__steps svg {
-  flex: none;
-  width: 13px;
-  height: 13px;
-  color: var(--color-accent-strong);
-}
-
-.ar-working__dot {
-  display: grid;
-  flex: none;
-  place-items: center;
-  width: 13px;
-  height: 13px;
-}
-
-.ar-working__dot::before {
-  content: "";
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--color-accent-strong);
-  animation: pulse-soft 0.9s var(--ease-in-out-soft) infinite;
-}
-
-
-/* ---------- The field ---------- */
+/* the field */
 
 .ar-ask {
   display: flex;
@@ -1913,6 +1124,80 @@
 }
 
 
+/* ---------- Room by room ---------- */
+
+@media (max-width: 639px) {
+  .ar-tool span {
+    display: none;
+  }
+
+  .ar-presence .ar-activity {
+    display: none;
+  }
+
+  .ar-say {
+    font-size: 1.08rem;
+  }
+
+  .ar-row__go {
+    display: none;
+  }
+
+  .ar-suggest {
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    width: calc(100% + 2 * var(--ar-gutter));
+    margin: 0 calc(var(--ar-gutter) * -1);
+    padding: 0 var(--ar-gutter);
+    overflow-x: auto;
+    scrollbar-width: none;
+    white-space: nowrap;
+  }
+}
+
+@media (min-width: 1024px) {
+  .ar {
+    height: calc(100dvh - var(--sx-top));
+  }
+}
+
+/* short screens: the opening keeps to one screen */
+@media (min-width: 1024px) and (max-height: 760px) {
+  .ar-top {
+    min-height: 3rem;
+  }
+
+  .ar-open {
+    padding-top: 0;
+  }
+
+  .ar-open__mark {
+    width: 2.25rem;
+    height: 2.25rem;
+  }
+
+  .ar-open__greet {
+    margin-top: 1rem;
+    font-size: 2rem;
+  }
+
+  .ar-open__lead {
+    margin-top: 0.5rem;
+  }
+
+  .ar-brought {
+    margin-top: 1.25rem;
+  }
+
+  .ar-row {
+    padding-block: 0.6rem;
+  }
+
+  .ar-row__line {
+    display: none;
+  }
+}
+
 /* ---------- Motion ---------- */
 
 @keyframes ar-rise {
@@ -1954,30 +1239,52 @@
   }
 }
 
-
-@keyframes sd-draw {
-  from {
-    scale: 0 1;
+@keyframes ar-mark-breathe {
+  50% {
+    opacity: 0.55;
+    scale: 0.82;
   }
 }
 
-@keyframes sd-flow {
+@keyframes ar-mark-turn {
   to {
-    background-position: -200% 0;
+    rotate: 360deg;
   }
 }
 
-@keyframes sw-sheet {
+@keyframes ar-mark-ripple {
   from {
-    translate: 0 2rem;
-    opacity: 0;
+    opacity: 0.9;
+    scale: 1;
   }
+
+  to {
+    opacity: 0;
+    scale: 1.45;
+  }
+}
+
+@keyframes ar-mark-glow {
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Syxoria's mark travels between the opening and the head of a conversation */
+::view-transition-group(ar-core) {
+  animation-duration: 820ms;
+  animation-timing-function: cubic-bezier(0.65, 0, 0.2, 1);
+}
+
+::view-transition-old(ar-core),
+::view-transition-new(ar-core) {
+  height: 100%;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .sw *,
-  .sw *::before,
-  .sw *::after {
+  .ar *,
+  .ar *::before,
+  .ar *::after {
     animation: none !important;
     transition: none !important;
   }

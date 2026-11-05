@@ -1,20 +1,20 @@
 "use client";
 
-import { ArrowUp, Mic, Square, X } from "lucide-react";
+import { ArrowRight, ArrowUp, MessagesSquare, Mic, PanelLeftClose, Plus, Square } from "lucide-react";
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type FormEvent } from "react";
+import { flushSync } from "react-dom";
 import { useAutomation } from "@/components/dashboard/automation/automation-provider";
 import { assistant as copy } from "@/content/assistant";
+import { dailyBriefing as briefingCopy } from "@/content/briefing";
 import { globalHold, isHeld as heldIn } from "@/lib/automation";
-import type { AssistantBlock, Conversation, PreparedAnswer } from "@/types/workspace";
+import type { AssistantBlock, PreparedAnswer } from "@/types/workspace";
 import type { AssistantData } from "./data";
-import { readDay } from "./day";
-import { DayScore, type ExchangeMark } from "./day-score";
-import { DeskDay, DeskExchange, DeskHistory, DeskItem, type DeskMode } from "./desk";
-import { arrival, type Turn } from "./turns";
+import { PresenceMark, type PresenceState } from "./presence-mark";
+import { Threads, type Thread } from "./rails";
+import { arrival, TurnView, Working, type Turn } from "./turns";
 import { useVoice } from "./use-voice";
 
 type Phase = "idle" | "thinking" | "answering";
-type Thread = Conversation & { fresh?: boolean };
 
 /* ---------- Understanding a question well enough to find its prepared answer ---------- */
 const STOP = new Set(["what", "why", "is", "are", "the", "a", "an", "to", "my", "our", "me", "in", "of", "for", "did", "does", "do", "can", "you", "it", "this", "with", "on", "at", "and", "or", "be", "we", "your", "how", "where", "about", "tell", "please"]);
@@ -46,57 +46,113 @@ const onMotion = (cb: () => void) => {
   return () => m.removeEventListener("change", cb);
 };
 
+/* Wide screens keep the conversations docked beside the stage; narrow ones open them over it */
+const wideQuery = "(min-width: 1024px)";
+const onWide = (cb: () => void) => {
+  const m = window.matchMedia(wideQuery);
+  m.addEventListener("change", cb);
+  return () => m.removeEventListener("change", cb);
+};
+
 /**
- * The assistant as the workspace of an executive at work for the company. No figure and no chat
- * window: Syxoria says where things stand in one sentence, and its day is drawn as four lanes on
- * one line of time (what it is monitoring, analysing, deciding and doing), up to the line of now
- * and beyond it. Choosing any mark puts its story on the desk beside it, with what Syxoria will do
- * next and what the owner can do about it. Conversation is one part of the day: a single quiet
- * field (typed or spoken), answers that open on the desk like notes, and the exchanges as a thin
- * line under the lanes. Answers are prepared examples: nothing is generated or sent.
- * Styles: app/styles/assistant.css.
+ * Whether the docked conversations are open: a toggle this browser remembers, so the panel stays
+ * as the owner left it between visits. Kept in memory too, where storage is unavailable.
+ */
+const PANEL_KEY = "syx.assistant.conversations";
+const PANEL_EVENT = "syx:assistant-conversations";
+let panelMemory = false;
+const panel = {
+  subscribe(cb: () => void) {
+    window.addEventListener(PANEL_EVENT, cb);
+    window.addEventListener("storage", cb);
+    return () => {
+      window.removeEventListener(PANEL_EVENT, cb);
+      window.removeEventListener("storage", cb);
+    };
+  },
+  get() {
+    try {
+      const v = localStorage.getItem(PANEL_KEY);
+      return v === null ? panelMemory : v === "open";
+    } catch {
+      return panelMemory;
+    }
+  },
+  set(open: boolean) {
+    panelMemory = open;
+    try {
+      localStorage.setItem(PANEL_KEY, open ? "open" : "closed");
+    } catch {
+      /* storage unavailable: the panel stays as set for this visit */
+    }
+    window.dispatchEvent(new Event(PANEL_EVENT));
+  },
+};
+
+/** What Syxoria is in the middle of, one thing after another */
+function useRotation(count: number, still: boolean) {
+  const [i, setI] = useState(0);
+  useEffect(() => {
+    if (still || count < 2) return;
+    const t = window.setInterval(() => setI((x) => (x + 1) % count), 6000);
+    return () => window.clearInterval(t);
+  }, [count, still]);
+  return i % Math.max(count, 1);
+}
+
+/**
+ * The assistant, kept simple. No figure: a point of light in a fine ring stands for Syxoria until
+ * the final Core is approved, and one quiet line beside its name says what it is analysing,
+ * preparing or doing. It speaks first: a greeting, one sentence, and the few things worth a
+ * minute. A conversation reads like an exchange between two people (its answers in Spectral,
+ * word after word, after a line of what it is reading), and what it prepares is handed over with
+ * its live status. Conversations stay out of the way in a panel; the owner can type or speak.
+ * Answers are prepared examples: nothing is generated or sent. Styles: app/styles/assistant.css.
  */
 export function AssistantRoom({ data, initialQuestion, initialConversation }: { data: AssistantData; initialQuestion?: string; initialConversation?: string }) {
   const { ctx, state } = useAutomation();
   const held = globalHold(state) !== null;
-  const isHeld = useCallback((id?: string) => (id ? heldIn(state, ctx, id) : false), [state, ctx]);
-  // what Syxoria would carry out on its own: everything stops under a global hold, a held workflow stops its own
-  const holds = useCallback((id?: string) => held || isHeld(id), [held, isHeld]);
+  const isHeld = useCallback((id: string) => heldIn(state, ctx, id), [state, ctx]);
   const calm = useSyncExternalStore(onMotion, () => window.matchMedia(motionQuery).matches, () => false);
-  const items = readDay(data.day, data.actions);
 
-  // a question from the top bar or the overview opens straight on its own exchange
+  // a question from the top bar or the overview opens straight on its own conversation
   const [boot] = useState(() => (initialQuestion?.trim() ? { key: "new0", q: initialQuestion.trim() } : null));
   const [threads, setThreads] = useState<Thread[]>(() =>
-    boot ? [{ id: boot.key, title: boot.q, group: "Today", updated: data.day.now, messages: [], actions: [], fresh: true }, ...data.conversations] : data.conversations,
+    boot ? [{ id: boot.key, title: boot.q, group: "Today", updated: "Now", messages: [], actions: [], fresh: true }, ...data.conversations] : data.conversations,
   );
-  const [desk, setDesk] = useState<DeskMode>(() =>
-    boot ? { kind: "exchange", id: boot.key } : initialConversation && data.conversations.some((c) => c.id === initialConversation) ? { kind: "exchange", id: initialConversation } : { kind: "day" },
-  );
-  const [extra, setExtra] = useState<Record<string, Turn[]>>(() => (boot ? { [boot.key]: [{ id: "u0", from: "you", at: data.day.now, text: boot.q, fresh: true }] } : {}));
+  const [open, setOpen] = useState<string | null>(() => (boot ? boot.key : initialConversation && data.conversations.some((c) => c.id === initialConversation) ? initialConversation : null));
+  const [extra, setExtra] = useState<Record<string, Turn[]>>(() => (boot ? { [boot.key]: [{ id: "u0", from: "you", at: "Now", text: boot.q, fresh: true }] } : {}));
   const [phase, setPhase] = useState<Phase>(boot ? "thinking" : "idle");
   const [work, setWork] = useState<{ reads: string[]; step: number } | null>(() => (boot ? { reads: answerFor(boot.q, data.answers)?.reads ?? ["your connected tools"], step: 0 } : null));
   const [text, setText] = useState("");
+  const [drawer, setDrawer] = useState(false);
   const timers = useRef<number[]>([]);
   const seq = useRef(0);
-  const end = useRef<HTMLDivElement>(null);
+  const scroller = useRef<HTMLDivElement>(null);
   const field = useRef<HTMLTextAreaElement>(null);
-  const score = useRef<HTMLDivElement>(null);
+  const opener = useRef<HTMLButtonElement>(null);
 
   const later = (ms: number, fn: () => void) => {
     timers.current.push(window.setTimeout(fn, ms));
+  };
+
+  /** Moving between the opening and a conversation: Syxoria's mark travels to its place */
+  const go = (fn: () => void) => {
+    const doc = document as Document & { startViewTransition?: (cb: () => void) => unknown };
+    if (calm || !doc.startViewTransition) return fn();
+    doc.startViewTransition(() => flushSync(fn));
   };
 
   /** Syxoria works on the question (reading, then writing), then answers */
   const respond = (key: string, question: string) => {
     const answer = answerFor(question, data.answers);
     const reads = answer?.reads ?? ["your connected tools"];
-    const step = calm ? 160 : 640;
+    const step = calm ? 160 : 720;
     for (let i = 1; i <= reads.length; i++) later(i * step, () => setWork((w) => w && { ...w, step: i }));
-    later(reads.length * step + (calm ? 120 : 560), () => {
+    later(reads.length * step + (calm ? 120 : 640), () => {
       const blocks: AssistantBlock[] = answer ? answer.blocks : [{ kind: "text", text: copy.notYet }];
       seq.current += 1;
-      setExtra((x) => ({ ...x, [key]: [...(x[key] ?? []), { id: `s${seq.current}`, from: "syxoria", at: data.day.now, blocks, tag: answer ? "prepared" : "not-yet", fresh: !calm }] }));
+      setExtra((x) => ({ ...x, [key]: [...(x[key] ?? []), { id: `s${seq.current}`, from: "syxoria", at: "Now", blocks, tag: answer ? "prepared" : "not-yet", fresh: !calm }] }));
       setWork(null);
       setPhase("answering");
       later(calm ? 0 : Math.min(arrival(blocks) + 500, 4200), () => setPhase("idle"));
@@ -107,14 +163,19 @@ export function AssistantRoom({ data, initialQuestion, initialConversation }: { 
     const q = question.trim();
     if (!q || phase !== "idle") return;
     seq.current += 1;
-    const key = desk.kind === "exchange" ? desk.id : `new${seq.current}`;
-    if (desk.kind !== "exchange") {
-      setThreads((t) => [{ id: key, title: q, group: "Today", updated: data.day.now, messages: [], actions: [], fresh: true }, ...t]);
-      setDesk({ kind: "exchange", id: key });
-    }
-    setExtra((x) => ({ ...x, [key]: [...(x[key] ?? []), { id: `u${seq.current}`, from: "you", at: data.day.now, text: q, fresh: !calm }] }));
-    setPhase("thinking");
-    setWork({ reads: answerFor(q, data.answers)?.reads ?? ["your connected tools"], step: 0 });
+    const fresh = open === null;
+    const key = open ?? `new${seq.current}`;
+    const begin = () => {
+      if (fresh) {
+        setThreads((t) => [{ id: key, title: q, group: "Today", updated: "Now", messages: [], actions: [], fresh: true }, ...t]);
+        setOpen(key);
+      }
+      setExtra((x) => ({ ...x, [key]: [...(x[key] ?? []), { id: `u${seq.current}`, from: "you", at: "Now", text: q, fresh: !calm }] }));
+      setPhase("thinking");
+      setWork({ reads: answerFor(q, data.answers)?.reads ?? ["your connected tools"], step: 0 });
+    };
+    if (fresh) go(begin);
+    else begin();
     respond(key, q);
   };
 
@@ -128,153 +189,176 @@ export function AssistantRoom({ data, initialQuestion, initialConversation }: { 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // where the day scrolls (phones), it opens on now
+  // a conversation opens at its beginning; what is said next comes into view
+  const current = open ? threads.find((t) => t.id === open) : undefined;
+  const turns: Turn[] = current ? [...current.messages, ...(extra[current.id] ?? [])] : [];
   useEffect(() => {
-    const el = score.current;
-    if (el && el.scrollWidth > el.clientWidth) el.scrollLeft = el.scrollWidth - el.clientWidth;
-  }, []);
+    scroller.current?.scrollTo({ top: 0 });
+  }, [open]);
+  const said = open ? (extra[open]?.length ?? 0) : 0;
+  useEffect(() => {
+    if (!said) return;
+    const el = scroller.current;
+    el?.scrollTo({ top: el.scrollHeight, behavior: calm ? "auto" : "smooth" });
+  }, [said, work?.step, calm]);
 
+  /* The conversations: docked and toggled on wide screens (they stay open while the owner moves
+     between conversations), over the page on narrow ones (closed once one is chosen) */
+  const wide = useSyncExternalStore(onWide, () => window.matchMedia(wideQuery).matches, () => false);
+  const docked = useSyncExternalStore(panel.subscribe, panel.get, () => false);
+  const panelOpen = wide ? docked : drawer;
+  const togglePanel = () => (wide ? panel.set(!docked) : setDrawer((d) => !d));
+  const closePanel = useCallback(() => {
+    if (wide) return panel.set(false);
+    setDrawer(false);
+    opener.current?.focus();
+  }, [wide]);
   useEffect(() => {
-    if (desk.kind === "day") return;
+    if (wide || !drawer) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setDesk({ kind: "day" });
+      if (e.key === "Escape") closePanel();
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [desk.kind]);
+  }, [wide, drawer, closePanel]);
 
-  /* ---------- What is open ---------- */
-  const exchangeId = desk.kind === "exchange" ? desk.id : null;
-  const thread = exchangeId ? threads.find((t) => t.id === exchangeId) : undefined;
-  const turns: Turn[] = thread ? [...thread.messages, ...(extra[thread.id] ?? [])] : [];
-  const focus = desk.kind === "item" ? items.find((i) => i.id === desk.id) : undefined;
-
-  // what was just said comes into view on the desk
-  const said = exchangeId ? (extra[exchangeId]?.length ?? 0) : 0;
-  useEffect(() => {
-    if (said) end.current?.scrollIntoView({ behavior: calm ? "auto" : "smooth", block: "end" });
-  }, [said, work?.step, calm]);
-
-  // what stays lit on the day: what shares the chosen item's action, client or exchange, or what the open exchange is about
-  const related = new Set<string>();
-  if (focus)
-    for (const i of items)
-      if (i.id !== focus.id && ((focus.actionId && i.actionId === focus.actionId) || (focus.clientId && i.clientId === focus.clientId) || (focus.conversationId && i.conversationId === focus.conversationId))) related.add(i.id);
-  if (thread) {
-    const ids = new Set([...thread.actions, ...turns.flatMap((t) => t.blocks?.flatMap((b) => (b.kind === "action" ? [b.actionId] : [])) ?? [])]);
-    const people = new Set([...(thread.people ?? []), ...turns.flatMap((t) => (t.from === "you" ? (answerFor(t.text ?? "", data.answers)?.people ?? []) : []))]);
-    for (const i of items) if ((i.actionId && ids.has(i.actionId)) || (i.clientId && people.has(i.clientId)) || i.conversationId === thread.id) related.add(i.id);
-  }
-
-  const exchanges: ExchangeMark[] = threads
-    .filter((t) => t.group === "Today")
-    .map((t) => {
-      const all = [...t.messages, ...(extra[t.id] ?? [])];
-      const moments = t.fresh ? [data.day.now] : all.map((m) => m.at);
-      return { id: t.id, title: t.title, from: moments[0] ?? t.updated, to: moments[moments.length - 1] ?? t.updated, moments };
-    });
-
-  /* ---------- What Syxoria says first ---------- */
-  const watching = items.filter((i) => i.lane === "monitoring").length;
-  const waiting = items.filter((i) => i.lane === "deciding" && i.state === "waiting");
-  const oldest = waiting[0]?.at;
-  const right = [
-    ...items.filter((i) => !i.day && i.state === "ongoing" && i.lane === "doing"),
-    ...items.filter((i) => !i.day && i.state === "ongoing" && i.lane === "analysing"),
-    ...items.filter((i) => !i.day && i.state === "ahead").slice(0, 1),
-  ];
+  const openThread = (id: string) => {
+    if (!wide) setDrawer(false);
+    if (id === open) return;
+    if (open === null) go(() => setOpen(id));
+    else setOpen(id);
+  };
+  const newConversation = () => {
+    if (!wide) setDrawer(false);
+    if (open !== null) go(() => setOpen(null));
+    window.setTimeout(() => field.current?.focus(), 0);
+  };
 
   const onSubmit = (e: FormEvent) => {
     e.preventDefault();
     ask(text);
     setText("");
   };
+
+  /* ---------- What Syxoria shows of itself ---------- */
   const listening = voice.listening;
-  const asked = new Set(turns.filter((t) => t.from === "you").map((t) => answerFor(t.text ?? "", data.answers)?.id));
-  const offer = thread
+  const presence: PresenceState = held ? "held" : listening ? "listening" : phase !== "idle" ? "busy" : "here";
+  const turn = useRotation(data.doing.length, calm || held || phase !== "idle" || listening);
+  const doing = data.doing[turn];
+  const activity = held ? (
+    <span className="ar-activity__line" data-tone="held">
+      <span className="ar-activity__verb">{copy.status.held}</span>
+      {copy.held}
+    </span>
+  ) : listening || phase !== "idle" ? (
+    <span className="ar-activity__line">
+      <span className="ar-activity__verb">{listening ? copy.status.listening : phase === "thinking" ? copy.status.thinking : copy.status.answering}</span>
+    </span>
+  ) : (
+    doing && (
+      <span key={turn} className="ar-activity__line">
+        <span className="ar-activity__verb">{doing.verb}</span>
+        {doing.text}
+      </span>
+    )
+  );
+
+  const action = (id: string) => data.actions.find((a) => a.id === id);
+  const statusOf = (id: string) => action(id)?.status;
+
+  // one click away: in a conversation, what follows from it; before one, a question of each kind
+  const already = new Set(turns.filter((t) => t.from === "you").map((t) => answerFor(t.text ?? "", data.answers)?.id));
+  const offer = current
     ? data.answers
-        .filter((a) => !asked.has(a.id) && answerFor(thread.title, data.answers)?.id !== a.id)
+        .filter((a) => !already.has(a.id) && answerFor(current.title, data.answers)?.id !== a.id)
         .slice(0, 3)
         .map((a) => a.question)
     : data.prompts.slice(0, 3).map((p) => p.text);
 
-  const focusItem = (id: string) => setDesk((d) => (d.kind === "item" && d.id === id ? { kind: "day" } : { kind: "item", id }));
-  const openExchange = (id: string) => setDesk((d) => (d.kind === "exchange" && d.id === id ? { kind: "day" } : { kind: "exchange", id }));
-
   return (
-    <div className="sw" data-desk={desk.kind} data-phase={listening ? "listening" : phase} data-held={held || undefined}>
-      <section className="sw-main" aria-labelledby="sw-statement">
-        <header className="sw-head">
-          <div className="sw-voice">
-            <p className="sw-eyebrow">
-              <span className="sw-live" aria-hidden="true" />
-              {copy.eyebrow(data.date, data.day.now)}
-            </p>
-            <h1 id="sw-statement" className="sw-statement">
-              <span>{data.greeting}</span>{" "}
-              {held ? (
-                copy.statement.held
-              ) : (
-                <>
-                  {copy.statement.watching(watching)}, {copy.statement.deciding(waiting.length)}
-                </>
-              )}
-            </h1>
-            {!held && oldest && <p className="sw-sub">{copy.statement.oldest(oldest)}</p>}
-          </div>
+    <div className="ar" data-view={open ? "thread" : "opening"} data-phase={listening ? "listening" : phase} data-docked={(wide && docked) || undefined}>
+      <Threads threads={threads} open={open} statusOf={statusOf} onOpen={openThread} onNew={newConversation} drawer={panelOpen} modal={!wide} onClose={closePanel} mode={ctx.levelName} />
+      {!wide && drawer && <div className="ar-scrim" aria-hidden="true" onClick={closePanel} />}
 
-          <div className="sw-now" aria-label={copy.now.label}>
-            <p className="cx-label">{copy.now.label}</p>
-            <ul>
-              {right.map((i) => (
-                <li key={i.id}>
-                  <button type="button" className="sw-now__row" data-state={i.state} data-held={(i.lane === "doing" && holds(i.actionId)) || undefined} onClick={() => focusItem(i.id)}>
-                    <span className="sw-now__when">{i.lane === "doing" && holds(i.actionId) ? copy.now.paused : i.state === "ahead" ? `${copy.now.next} ${i.at}` : copy.lanes[i.lane].name}</span>
-                    <span className="sw-now__title">{i.title}</span>
-                    {i.progress && (
-                      <span className="sw-now__bar" aria-hidden="true">
-                        <span style={{ width: `${(i.progress.done / i.progress.of) * 100}%` }} />
-                      </span>
-                    )}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
+      <section className="ar-stage" aria-label={copy.name}>
+        <header className="ar-top">
+          <button ref={opener} type="button" className="ar-tool ar-tool--panel" onClick={togglePanel} aria-expanded={panelOpen} title={panelOpen ? copy.threads.hide : copy.threads.show}>
+            {panelOpen && wide ? <PanelLeftClose aria-hidden="true" /> : <MessagesSquare aria-hidden="true" />}
+            <span>{copy.threads.open}</span>
+          </button>
+          {open && (
+            <p className="ar-presence">
+              <PresenceMark state={presence} vtName="ar-core" className="ar-presence__mark" />
+              <span className="ar-name">{copy.name}</span>
+              <span className="ar-activity" aria-live="off">
+                {activity}
+              </span>
+            </p>
+          )}
+          {open && (
+            <button type="button" className="ar-tool ar-tool--new" onClick={newConversation}>
+              <Plus aria-hidden="true" />
+              <span>{copy.threads.newConversation}</span>
+            </button>
+          )}
         </header>
 
-        <div ref={score} className="sw-score">
-          <DayScore
-            day={data.day}
-            items={items}
-            exchanges={exchanges}
-            focus={focus?.id ?? null}
-            related={related}
-            onFocus={focusItem}
-            onExchange={openExchange}
-            onHistory={() => setDesk({ kind: "history" })}
-            isHeld={holds}
-            openExchange={exchangeId}
-          />
+        <div ref={scroller} className="ar-scroll">
+          {open === null ? (
+            <div className="ar-open">
+              <PresenceMark state={presence} vtName="ar-core" className="ar-open__mark" />
+              <p className="ar-open__who">
+                <span className="ar-name">{copy.name}</span>
+                <span className="ar-activity" aria-live="off">
+                  {activity}
+                </span>
+              </p>
+              <h1 className="ar-open__greet">{data.greeting}</h1>
+              <p className="ar-open__lead">{data.lead}</p>
+              <div className="ar-brought">
+                <p className="cx-label">{copy.opening.brought}</p>
+                <ul>
+                  {data.brought.map((b) => {
+                    const a = action(b.actionId);
+                    return (
+                      <li key={b.id}>
+                        <button type="button" className="ar-row" onClick={() => openThread(b.conversationId)}>
+                          <span className="ar-row__mark" data-tone={a?.status === "unsuccessful" ? "failed" : "yours"} aria-hidden="true" />
+                          <span className="ar-row__text">
+                            <span className="ar-row__title">{b.title}</span>
+                            <span className="ar-row__line">{b.line}</span>
+                            {a && <span className="sr-only">{briefingCopy.actions.statuses[a.status]}</span>}
+                          </span>
+                          <span className="ar-row__go" aria-hidden="true">
+                            {copy.opening.talk}
+                            <ArrowRight />
+                          </span>
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            </div>
+          ) : (
+            <div className="ar-thread">
+              <h1 className={current?.fresh ? "sr-only" : "ar-thread__title"}>{current?.title}</h1>
+              {turns.map((t) => (
+                <TurnView key={t.id} turn={t} action={action} isHeld={isHeld} />
+              ))}
+              {work && <Working reads={work.reads} step={work.step} />}
+            </div>
+          )}
         </div>
 
-        <div className="sw-compose">
+        <div className="ar-composer">
           <form onSubmit={onSubmit} className="ar-ask" data-listening={listening || undefined}>
-            {thread && (
-              <span className="sw-in">
-                <span className="sw-in__label">{copy.composer.in}</span>
-                <span className="sw-in__title">{thread.title}</span>
-                <button type="button" onClick={() => setDesk({ kind: "day" })} aria-label={copy.composer.leave}>
-                  <X aria-hidden="true" />
-                </button>
-              </span>
-            )}
-            <label htmlFor="sw-field" className="sr-only">
+            <label htmlFor="ar-field" className="sr-only">
               {copy.composer.label}
             </label>
             <textarea
               ref={field}
-              id="sw-field"
+              id="ar-field"
               rows={1}
               value={listening ? voice.heard : text}
               readOnly={listening}
@@ -304,49 +388,17 @@ export function AssistantRoom({ data, initialQuestion, initialConversation }: { 
             </p>
           ) : (
             offer.length > 0 && (
-              <p className="sw-try">
-                <span>{copy.composer.try}</span>
+              <div className="ar-suggest" role="group" aria-label={copy.composer.suggestions}>
                 {offer.map((q) => (
                   <button key={q} type="button" onClick={() => ask(q)} disabled={phase !== "idle" || listening}>
                     {q}
                   </button>
                 ))}
-              </p>
+              </div>
             )
           )}
         </div>
       </section>
-
-      <aside className="sw-desk" aria-label={desk.kind === "exchange" ? copy.exchange : copy.desk.waiting}>
-        {desk.kind === "day" && <DeskDay items={items} mode={ctx.levelName} onFocus={focusItem} held={held} />}
-        {desk.kind === "item" && focus && (
-          <DeskItem
-            item={focus}
-            action={focus.actionId ? data.actions.find((a) => a.id === focus.actionId) : undefined}
-            client={focus.clientId ? data.clients.find((c) => c.id === focus.clientId) : undefined}
-            held={focus.lane === "doing" && holds(focus.actionId) && (focus.state === "ahead" || focus.state === "ongoing")}
-            onBack={() => setDesk({ kind: "day" })}
-            onAsk={ask}
-            onExchange={openExchange}
-            canAsk={phase === "idle"}
-          />
-        )}
-        {desk.kind === "exchange" && (
-          <DeskExchange
-            conversation={thread}
-            turns={turns}
-            work={work}
-            initials={data.initials}
-            action={(id) => data.actions.find((a) => a.id === id)}
-            isHeld={isHeld}
-            onBack={() => setDesk({ kind: "day" })}
-            end={end}
-          />
-        )}
-        {desk.kind === "history" && <DeskHistory conversations={threads} open={exchangeId} onOpen={(id) => setDesk({ kind: "exchange", id })} onBack={() => setDesk({ kind: "day" })} />}
-        <p className="sw-preview">{copy.previewNote}</p>
-      </aside>
-      {desk.kind !== "day" && <div className="sw-scrim" aria-hidden="true" onClick={() => setDesk({ kind: "day" })} />}
     </div>
   );
 }
